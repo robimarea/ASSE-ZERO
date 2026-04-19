@@ -8,9 +8,10 @@ import { useRef, useEffect, useState } from 'react';
 
 interface ServicesProps {
   section: 'video' | 'smm';
+  overlapNext?: boolean;
 }
 
-export function Services({ section }: ServicesProps) {
+export function Services({ section, overlapNext = false }: ServicesProps) {
   const isVideo = section === 'video';
   const containerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -37,20 +38,20 @@ export function Services({ section }: ServicesProps) {
 
       const rect = container.getBoundingClientRect();
       const scrolled = -rect.top;
-      const scrollableDistance = container.offsetHeight - window.innerHeight;
+      
+      // If overlapNext is true, the next section overlaps the last 100vh of this container.
+      // We reduce scrollableDistance by 100vh so the horizontal scroll finishes BEFORE the overlap happens.
+      const deadZoneMultiplier = overlapNext ? 2 : 1;
+      const scrollableDistance = container.offsetHeight - (deadZoneMultiplier * window.innerHeight);
       
       // Calcolo ultra-safe della larghezza: se il DOM fallisce fallback su stima sicura (8 cards * 400px = ~3200px)
       const trackWidth = track.scrollWidth > 0 ? track.scrollWidth : cards.length * 400;
       const trackScrollableWidth = Math.max(0, trackWidth - window.innerWidth);
 
-      if (scrolled > 0 && scrolled <= scrollableDistance) {
-        const progress = scrolled / scrollableDistance;
-        setTranslateX(progress * trackScrollableWidth);
-      } else if (scrolled <= 0) {
-        setTranslateX(0);
-      } else if (scrolled > scrollableDistance) {
-        setTranslateX(trackScrollableWidth);
-      }
+      let progress = scrolled / scrollableDistance;
+      progress = Math.max(0, Math.min(1, progress)); // Clamp progress tra 0 e 1
+      
+      setTranslateX(progress * trackScrollableWidth);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -60,13 +61,13 @@ export function Services({ section }: ServicesProps) {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [cards.length]);
+  }, [cards.length, overlapNext]);
 
   return (
     <section
       ref={containerRef}
       id={isVideo ? 'servizi' : 'services-smm'}
-      className="relative w-full bg-dark"
+      className="relative w-full bg-dark z-0"
       style={{ height: '400vh' }}
     >
       <div className="sticky top-0 z-10 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 md:py-24">

@@ -12,6 +12,7 @@ import { Services } from '@/components/sections/Services';
 import { Philosophy } from '@/components/sections/Philosophy';
 import { Team } from '@/components/sections/Team';
 import { Contact } from '@/components/sections/Contact';
+import { CurtainReveal } from '@/components/layout/CurtainReveal';
 
 function App() {
   return (
@@ -19,17 +20,24 @@ function App() {
       <SEO />
       <Navbar />
 
-      <main>
-        <Hero />
-        <Showreel />
-        <Services section="video" />
-        <Services section="smm" />
-        <Philosophy />
-        <Team />
-        <Contact />
-      </main>
+      <main className="bg-dark">
+        <CurtainReveal curtain={<Hero />} zIndex={50}>
+          <Showreel />
+        </CurtainReveal>
 
-      <Footer />
+        <Services section="video" />
+        <Services section="smm" overlapNext={true} />
+
+        <CurtainReveal curtain={<Philosophy />} zIndex={40} overlapPrev={true} extraStickyDistanceH={1}>
+          <Team />
+        </CurtainReveal>
+
+        <CurtainReveal curtain={<Contact />} zIndex={30} overlapPrev={true}>
+          <div className="bg-dark w-full">
+            <Footer />
+          </div>
+        </CurtainReveal>
+      </main>
     </HelmetProvider>
   );
 }
