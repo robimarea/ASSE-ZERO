@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-interface CurtainRevealProps {
+interface MaskChangeProps {
   curtain: React.ReactNode;
   children: React.ReactNode;
   zIndex?: number;
@@ -8,13 +8,13 @@ interface CurtainRevealProps {
   extraStickyDistanceH?: number;
 }
 
-export function CurtainReveal({ 
+export function MaskChangeUI({ 
   curtain, 
   children, 
   zIndex = 10,
   overlapPrev = false,
   extraStickyDistanceH = 0 
-}: CurtainRevealProps) {
+}: MaskChangeProps) {
   const curtainRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [wrapperHeight, setWrapperHeight] = useState('200vh');
