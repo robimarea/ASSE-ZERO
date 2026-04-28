@@ -1,8 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, type ReactNode } from 'react';
 
 interface MaskChangeProps {
-  curtain: React.ReactNode;
-  children: React.ReactNode;
+  curtain: ReactNode;
+  children: ReactNode;
   zIndex?: number;
   overlapPrev?: boolean;
   extraStickyDistanceH?: number;

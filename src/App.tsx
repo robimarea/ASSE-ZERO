@@ -14,11 +14,24 @@ import { Team } from '@/components/sections/Team';
 import { Contact } from '@/components/sections/Contact';
 import { MaskChangeUI } from '@/components/layout/MaskChange';
 import { ScrollProgress } from '@/components/ui/ScrollProgress';
+import SplashCursor from '@/components/ui/SplashCursor';
 
 function App() {
   return (
     <HelmetProvider>
       <SEO />
+      <SplashCursor
+        DENSITY_DISSIPATION={5}
+        VELOCITY_DISSIPATION={8}
+        PRESSURE={0.15}
+        CURL={5}
+        SPLAT_RADIUS={0.07}
+        SPLAT_FORCE={11000}
+        COLOR_UPDATE_SPEED={9}
+        SHADING
+        RAINBOW_MODE={false}
+        COLOR="var(--color-primary)"
+      />
       <ScrollProgress />
       <Navbar />
 
