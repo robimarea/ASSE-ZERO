@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 interface ColorRGB {
   r: number;
@@ -53,6 +53,9 @@ function pointerPrototype(): Pointer {
   };
 }
 
+// Default stabilizzato fuori dal componente per evitare ricreazione referenziale
+const DEFAULT_BACK_COLOR: ColorRGB = { r: 0.5, g: 0, b: 0 };
+
 export default function SplashCursor({
   SIM_RESOLUTION = 128,
   DYE_RESOLUTION = 1440,
@@ -66,12 +69,18 @@ export default function SplashCursor({
   SPLAT_FORCE = 6000,
   SHADING = true,
   COLOR_UPDATE_SPEED = 10,
-  BACK_COLOR = { r: 0.5, g: 0, b: 0 },
+  BACK_COLOR = DEFAULT_BACK_COLOR,
   TRANSPARENT = true,
   RAINBOW_MODE = true,
   COLOR = '#ff0000',
 }: SplashCursorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Serializza BACK_COLOR per stabilizzare il dep array di useEffect
+  const backColorKey = useMemo(
+    () => `${BACK_COLOR.r},${BACK_COLOR.g},${BACK_COLOR.b}`,
+    [BACK_COLOR.r, BACK_COLOR.g, BACK_COLOR.b]
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -231,11 +240,20 @@ export default function SplashCursor({
       glCtx.texImage2D(glCtx.TEXTURE_2D, 0, internalFormat, 4, 4, 0, format, type, null);
 
       const fbo = glCtx.createFramebuffer();
-      if (!fbo) return false;
+      if (!fbo) {
+        glCtx.deleteTexture(texture);
+        return false;
+      }
 
       glCtx.bindFramebuffer(glCtx.FRAMEBUFFER, fbo);
       glCtx.framebufferTexture2D(glCtx.FRAMEBUFFER, glCtx.COLOR_ATTACHMENT0, glCtx.TEXTURE_2D, texture, 0);
       const status = glCtx.checkFramebufferStatus(glCtx.FRAMEBUFFER);
+
+      // Pulizia risorse di test — previene GPU memory leak
+      glCtx.bindFramebuffer(glCtx.FRAMEBUFFER, null);
+      glCtx.deleteFramebuffer(fbo);
+      glCtx.deleteTexture(texture);
+
       return status === glCtx.FRAMEBUFFER_COMPLETE;
     }
 
@@ -862,11 +880,33 @@ export default function SplashCursor({
     updateKeywords();
     initFramebuffers();
 
+    // Cache risoluzione CSS var una sola volta (evita getComputedStyle per frame)
+    let resolvedColorCache: string | null = null;
+
     let lastUpdateTime = Date.now();
     let colorUpdateTimer = 0;
+    let paused = false;
+
+    // Page Visibility API — ferma la simulazione GPU quando il tab non è visibile
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        paused = true;
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = 0;
+        }
+      } else {
+        paused = false;
+        lastUpdateTime = Date.now();
+        if (started && !disposed) {
+          rafId = requestAnimationFrame(updateFrame);
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     function updateFrame() {
-      if (disposed) return;
+      if (disposed || paused) return;
       const dt = calcDeltaTime();
       if (resizeCanvas()) initFramebuffers();
       updateColors(dt);
@@ -1143,11 +1183,18 @@ export default function SplashCursor({
     }
 
     function resolveColorInput(input: string): string {
+      // Cache: risolvi la CSS var una volta sola, non su ogni frame
+      if (resolvedColorCache !== null) return resolvedColorCache;
+
       const varMatch = input.trim().match(/^var\((--[^)]+)\)$/);
-      if (!varMatch) return input;
+      if (!varMatch) {
+        resolvedColorCache = input;
+        return input;
+      }
       const cssVarName = varMatch[1];
       const resolved = getComputedStyle(document.documentElement).getPropertyValue(cssVarName).trim();
-      return resolved || '#ff0000';
+      resolvedColorCache = resolved || '#ff0000';
+      return resolvedColorCache;
     }
 
     function hexToRGB(hex: string): ColorRGB {
@@ -1284,6 +1331,7 @@ export default function SplashCursor({
     return () => {
       disposed = true;
       if (rafId) cancelAnimationFrame(rafId);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('touchstart', onTouchStart, false);
@@ -1291,6 +1339,7 @@ export default function SplashCursor({
       window.removeEventListener('touchend', onTouchEnd);
       pointers = [];
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     SIM_RESOLUTION,
     DYE_RESOLUTION,
@@ -1304,7 +1353,7 @@ export default function SplashCursor({
     SPLAT_FORCE,
     SHADING,
     COLOR_UPDATE_SPEED,
-    BACK_COLOR,
+    backColorKey,
     TRANSPARENT,
     RAINBOW_MODE,
     COLOR,

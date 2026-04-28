@@ -1,60 +1,73 @@
 // ============================================
 // ASSE ZERO — Footer Component
+// Zero React re-renders: uses ref-based DOM manipulation
 // ============================================
 
 import { SITE_NAME } from '@/lib/constants';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-  const [revealProgress, setRevealProgress] = useState(0);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
+    let rafId = 0;
+
+    const updateReveal = () => {
+      rafId = 0;
+      if (!wrapperRef.current || !contentRef.current) return;
+
       const scrollY = window.scrollY;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const distanceToBottom = maxScroll - scrollY;
-      
+
+      let progress: number;
       if (distanceToBottom <= window.innerHeight && distanceToBottom >= 0) {
-        const progress = 1 - (distanceToBottom / window.innerHeight);
-        setRevealProgress(progress);
+        progress = 1 - (distanceToBottom / window.innerHeight);
       } else if (distanceToBottom < 0) {
-        setRevealProgress(1);
+        progress = 1;
       } else {
-        setRevealProgress(0);
+        progress = 0;
       }
+
+      const currentScale = 0.5 + (progress * 0.5);
+      const currentOpacity = Math.min(1, progress * 1.5);
+
+      wrapperRef.current.style.height = `${progress * 100}vh`;
+      contentRef.current.style.transform = `scale(${currentScale})`;
+      contentRef.current.style.opacity = `${currentOpacity}`;
+    };
+
+    const handleScroll = () => {
+      if (rafId !== 0) return;
+      rafId = requestAnimationFrame(updateReveal);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll);
-    handleScroll();
+    window.addEventListener('resize', handleScroll, { passive: true });
+    updateReveal();
 
     return () => {
+      if (rafId !== 0) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
   }, []);
 
-  // La scala passa da 0.5 a 1 per allargare il testo dinamicamente col resize della finestra
-  const currentScale = 0.5 + (revealProgress * 0.5);
-  const currentOpacity = Math.min(1, revealProgress * 1.5); 
-
   return (
     <footer className="bg-primary text-dark overflow-hidden w-full h-screen relative" id="footer">
-      {/* 
-        Il wrapper interno si attacca al fondo e CRESCE in altezza 
-        all'esatta velocità della finestra che viene svelata dalla tenda.
-        Così centrerà gli elementi esattamente dentro lo specchio visibile.
-      */}
-      <div 
+      <div
+        ref={wrapperRef}
         className="absolute bottom-0 w-full flex flex-col justify-center items-center overflow-hidden will-change-[height]"
-        style={{ height: `${revealProgress * 100}vh` }}
+        style={{ height: '0vh' }}
       >
-        <div 
+        <div
+          ref={contentRef}
           className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-12 md:py-24 will-change-transform"
           style={{
-            transform: `scale(${currentScale})`,
-            opacity: currentOpacity,
+            transform: 'scale(0.5)',
+            opacity: 0,
             transformOrigin: 'center center',
           }}
         >

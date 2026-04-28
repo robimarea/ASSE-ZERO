@@ -36,11 +36,9 @@ export function MaskChangeUI({
     const observer = new ResizeObserver(updateHeight);
     if (curtainRef.current) observer.observe(curtainRef.current);
     if (contentRef.current) observer.observe(contentRef.current);
-    window.addEventListener('resize', updateHeight);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', updateHeight);
     };
   }, [extraStickyDistanceH]);
 
