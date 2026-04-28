@@ -34,7 +34,15 @@ function App() {
           <Team />
         </MaskChangeUI>
 
-        {/* Contact come tenda finale: copre Team, rivela Footer */}
+        {/* Contact acts as a curtain over Team! Wait, MaskChangeUI takes Contact as curtain, but what is its child?
+            If it has no child, it can't act as a curtain?
+            Actually, the logic is: MaskChangeUI(Philosophy) has child Team.
+            So Team is revealed when Philosophy lifts.
+            Then we need Contact to cover Team.
+            So Contact MUST be a MaskChangeUI with overlapPrev={true}.
+            But what is the child of Contact? The Footer!
+            If we make Footer the child, we must ensure it doesn't stick to the top and get hidden.
+        */}
         <MaskChangeUI curtain={<Contact />} zIndex={30} overlapPrev={true}>
           <div className="bg-primary w-full flex flex-col justify-end min-h-screen">
              <Footer />

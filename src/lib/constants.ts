@@ -11,7 +11,6 @@ export const SITE_URL = 'https://assezero.com';
 export const SECTION_IDS = {
   home: 'home',
   services: 'servizi',
-  servicesSMM: 'services-smm',
   team: 'team',
   contact: 'contatti',
 } as const;

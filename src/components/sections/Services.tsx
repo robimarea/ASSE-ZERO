@@ -11,13 +11,12 @@ interface ServicesProps {
   overlapNext?: boolean;
 }
 
-// Card placeholder — da sostituire con case study reali
-const CARD_COUNT = 8;
-
 export function Services({ section, overlapNext = false }: ServicesProps) {
   const isVideo = section === 'video';
   const containerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+
+  // Usiamo lo State di React per forzare il re-render in modo sicuro
   const [translateX, setTranslateX] = useState(0);
 
   const title = isVideo ? 'VIDEO' : (
@@ -27,6 +26,8 @@ export function Services({ section, overlapNext = false }: ServicesProps) {
   const pills = isVideo
     ? ['Spot Pubblicitari', 'Videoclip', 'Cortometraggi', 'Recap Eventi', 'Video Corporate', 'Documentari', 'Content Social', 'Motion Graphics', 'Interviste']
     : ['Gestione Profilo', 'Content Strategy', 'Trending', 'Algorithm Following', 'Strategia Personalizzata', 'Consulenze'];
+
+  const cards = [1, 2, 3, 4, 5, 6, 7, 8];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,26 +39,29 @@ export function Services({ section, overlapNext = false }: ServicesProps) {
       const rect = container.getBoundingClientRect();
       const scrolled = -rect.top;
 
-      // Se overlapNext è true, la sezione successiva sovrappone gli ultimi 100vh:
-      // riduciamo scrollableDistance di 100vh così lo scroll orizzontale
-      // finisce prima che inizi l'overlap.
+      // If overlapNext is true, the next section overlaps the last 100vh of this container.
+      // We reduce scrollableDistance by 100vh so the horizontal scroll finishes BEFORE the overlap happens.
       const deadZoneMultiplier = overlapNext ? 2 : 1;
       const scrollableDistance = container.offsetHeight - (deadZoneMultiplier * window.innerHeight);
 
-      const trackScrollableWidth = Math.max(0, track.scrollWidth - window.innerWidth);
+      // Calcolo ultra-safe della larghezza: se il DOM fallisce fallback su stima sicura (8 cards * 400px = ~3200px)
+      const trackWidth = track.scrollWidth > 0 ? track.scrollWidth : cards.length * 400;
+      const trackScrollableWidth = Math.max(0, trackWidth - window.innerWidth);
 
-      const progress = Math.max(0, Math.min(1, scrolled / scrollableDistance));
+      let progress = scrolled / scrollableDistance;
+      progress = Math.max(0, Math.min(1, progress)); // Clamp progress tra 0 e 1
+
       setTranslateX(progress * trackScrollableWidth);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll);
-    handleScroll();
+    handleScroll(); // Init
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [overlapNext]);
+  }, [cards.length, overlapNext]);
 
   return (
     <section
@@ -99,10 +103,10 @@ export function Services({ section, overlapNext = false }: ServicesProps) {
             style={{
               width: 'max-content',
               transform: `translate3d(-${translateX}px, 0, 0)`,
-              willChange: 'transform',
+              willChange: 'transform'
             }}
           >
-            {Array.from({ length: CARD_COUNT }, (_, i) => i + 1).map((num) => (
+            {cards.map((num) => (
               <div
                 key={`${section}-card-${num}`}
                 className="shrink-0 w-64 sm:w-80 md:w-96 aspect-[4/3] bg-secondary rounded-2xl flex items-center justify-center shadow-lg"
