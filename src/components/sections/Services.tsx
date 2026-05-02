@@ -57,14 +57,18 @@ export function Services({ section, overlapNext = false }: ServicesProps) {
       rafId = requestAnimationFrame(syncTranslate);
     };
 
+    const handleResize = () => {
+      handleScroll();
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
     syncTranslate();
 
     return () => {
       if (rafId !== 0) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
+      window.removeEventListener('resize', handleResize);
     };
   }, [overlapNext]);
 

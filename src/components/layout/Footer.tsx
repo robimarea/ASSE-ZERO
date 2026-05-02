@@ -40,6 +40,8 @@ export function Footer() {
     };
 
     const handleScroll = () => {
+      const distanceToBottom = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+      if (distanceToBottom > window.innerHeight * 1.5) return;
       if (rafId !== 0) return;
       rafId = requestAnimationFrame(updateReveal);
     };

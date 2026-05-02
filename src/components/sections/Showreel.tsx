@@ -1,276 +1,332 @@
-// ============================================
-// ASSE ZERO - Showreel Section
-// Suspended gallery driven by scroll depth
-// ============================================
-
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SHOWREEL_ASSETS, type ShowreelAsset } from '@/data/showreelAssets';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 
-
-type Lane = {
-  x: number;
-  y: number;
-};
-
-type SceneConfig = {
-  perspective: number;
+type TunnelConfig = {
   sectionHeight: string;
-  centerX: number;
-  centerY: number;
+  travelPadding: number;
   depthStep: number;
-  rearDepth: number;
-  frontDepth: number;
-  passDistance: number;
-  cardWidthVw: number;
-  minCardWidth: string;
-  maxCardWidth: string;
-  fogSize: string;
-  lanes: Lane[];
-  laneOrder: number[];
-  vignette: string;
+  relativeCull: number;
+  visibleWindow: number;
+  focusWindow: number;
+  rearScale: number;
+  focusScale: number;
+  frontScale: number;
+  tunnelRadiusX: number;
+  tunnelRadiusY: number;
+  driftX: number;
+  driftY: number;
+  trailSpreadX: number;
+  trailSpreadY: number;
+  scatterJitterX: number;
+  scatterJitterY: number;
+  pointerInfluenceX: number;
+  pointerInfluenceY: number;
+  rearBlur: number;
+  frontBlur: number;
+  rearOpacity: number;
+  frontOpacity: number;
+  followLambda: number;
+  pointerLambda: number;
+  focusLift: number;
 };
 
-type DepthState = {
-  z: number;
-  depthMix: number;
-  passMix: number;
-};
-
-type CardLayout = {
-  asset: ShowreelAsset;
-  isActive: boolean;
-  shouldPlayVideo: boolean;
-  mediaSrc: string;
-  x: number;
-  y: number;
-  z: number;
-  rotateX: number;
-  rotateY: number;
-  scale: number;
-  opacity: number;
-  zIndex: number;
-};
-
-const DESKTOP_SCENE: SceneConfig = {
-  perspective: 1200,
-  sectionHeight: '600vh',
-  centerX: 50,
-  centerY: 50,
-  depthStep: 520,
-  rearDepth: -1400,
-  frontDepth: 280,
-  passDistance: 280,
-  cardWidthVw: 24,
-  minCardWidth: '108px',
-  maxCardWidth: '56vw',
-  fogSize: '10rem',
-  lanes: [
-    { x: 0, y: -18 },
-    { x: -22, y: -10 },
-    { x: 22, y: -10 },
-    { x: -16, y: 10 },
-    { x: 16, y: 10 },
-    { x: 0, y: 16 },
-    { x: 0, y: -2 },
-  ],
-  laneOrder: [0, 1, 2, 6, 3, 4, 5],
-  vignette:
-    'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.10), transparent 30%), radial-gradient(circle at 14% 24%, rgba(233,172,6,0.10), transparent 22%), radial-gradient(circle at 84% 76%, rgba(191,51,32,0.10), transparent 24%)',
-};
-
-const MOBILE_SCENE: SceneConfig = {
-  perspective: 900,
+const DESKTOP_CONFIG: TunnelConfig = {
   sectionHeight: '680vh',
-  centerX: 50,
-  centerY: 50,
-  depthStep: 420,
-  rearDepth: -1100,
-  frontDepth: 220,
-  passDistance: 220,
-  cardWidthVw: 32,
-  minCardWidth: '82px',
-  maxCardWidth: '86vw',
-  fogSize: '6rem',
-  lanes: [
-    { x: 0, y: -14 },
-    { x: -12, y: -6 },
-    { x: 12, y: -6 },
-    { x: -8, y: 10 },
-    { x: 8, y: 10 },
-  ],
-  laneOrder: [0, 1, 2, 3, 4],
-  vignette:
-    'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.10), transparent 26%), radial-gradient(circle at 18% 22%, rgba(233,172,6,0.10), transparent 20%), radial-gradient(circle at 82% 78%, rgba(191,51,32,0.10), transparent 22%)',
+  travelPadding: 0.58,
+  depthStep: 210,
+  relativeCull: 1.28,
+  visibleWindow: 1.18,
+  focusWindow: 0.58,
+  rearScale: 0.64,
+  focusScale: 0.82,
+  frontScale: 0.78,
+  tunnelRadiusX: 38,
+  tunnelRadiusY: 24,
+  driftX: 2,
+  driftY: 2,
+  trailSpreadX: 0,
+  trailSpreadY: 0,
+  scatterJitterX: 46,
+  scatterJitterY: 28,
+  pointerInfluenceX: 28,
+  pointerInfluenceY: 22,
+  rearBlur: 13,
+  frontBlur: 24,
+  rearOpacity: 0.12,
+  frontOpacity: 0.04,
+  followLambda: 6.8,
+  pointerLambda: 7.4,
+  focusLift: 4,
+};
+
+const MOBILE_CONFIG: TunnelConfig = {
+  sectionHeight: '760vh',
+  travelPadding: 0.62,
+  depthStep: 168,
+  relativeCull: 1.24,
+  visibleWindow: 1.14,
+  focusWindow: 0.6,
+  rearScale: 0.7,
+  focusScale: 0.86,
+  frontScale: 0.82,
+  tunnelRadiusX: 22,
+  tunnelRadiusY: 14,
+  driftX: 1.5,
+  driftY: 1.5,
+  trailSpreadX: 0,
+  trailSpreadY: 0,
+  scatterJitterX: 24,
+  scatterJitterY: 16,
+  pointerInfluenceX: 18,
+  pointerInfluenceY: 14,
+  rearBlur: 11,
+  frontBlur: 18,
+  rearOpacity: 0.14,
+  frontOpacity: 0.05,
+  followLambda: 6.2,
+  pointerLambda: 6.8,
+  focusLift: 3,
 };
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function easeInCubic(value: number) {
-  return value * value * value;
+function smoothstep(min: number, max: number, value: number) {
+  const t = clamp((value - min) / Math.max(max - min, 0.0001), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+function lerp(start: number, end: number, amount: number) {
+  return start + (end - start) * amount;
+}
+
+function damp(current: number, target: number, lambda: number, deltaSeconds: number) {
+  return lerp(current, target, 1 - Math.exp(-lambda * deltaSeconds));
 }
 
 function getPreviewSource(asset: ShowreelAsset) {
   return asset.kind === 'video' ? asset.poster : asset.src;
 }
 
-function getScrollProgress(container: HTMLElement) {
-  const rect = container.getBoundingClientRect();
-  const scrolled = -rect.top;
-  const scrollableDistance = Math.max(container.offsetHeight - window.innerHeight, 1);
-  return clamp(scrolled / scrollableDistance, 0, 1);
-}
-
-function getDepthState(relative: number, scene: SceneConfig): DepthState {
-  const z = scene.frontDepth - relative * scene.depthStep;
-  const depthRange = scene.frontDepth - scene.rearDepth;
-
-  return {
-    z,
-    depthMix: clamp((z - scene.rearDepth) / depthRange, 0, 1),
-    passMix: clamp((z - scene.frontDepth) / scene.passDistance, 0, 1),
-  };
-}
-
-function getLane(scene: SceneConfig, index: number) {
-  return scene.lanes[scene.laneOrder[index % scene.laneOrder.length]];
-}
-
-function buildCardLayout(
-  asset: ShowreelAsset,
-  index: number,
-  travel: number,
-  activeIndex: number,
-  scene: SceneConfig
-): CardLayout {
-  const relative = index - travel;
-  const lane = getLane(scene, index);
-  const depth = getDepthState(relative, scene);
-  const passFade = easeInCubic(depth.passMix);
-  const isActive = index === activeIndex;
-
-  // Fluido effetto "magnete": mentre la card si avvicina alla camera (relative -> 0),
-  // l'offset della corsia viene dolcemente azzerato per evitare che la prospettiva
-  // faccia "scappare via" o "afflosciare" le card verso i bordi dello schermo.
-  const distanceToCenter = Math.abs(relative);
-  const centerMix = clamp(1 - distanceToCenter / 1.5, 0, 1);
-  const smoothCenter = centerMix * centerMix * (3 - 2 * centerMix); // Ease in-out
-
-  const currentOffsetX = lane.x * (1 - smoothCenter);
-  const currentOffsetY = lane.y * (1 - smoothCenter);
-
-  // Tilt cinematografico che si raddrizza quando la card è al centro
-  const tiltStrength = clamp(1 - depth.depthMix * 1.4, 0, 1);
-  const rawRotateY = lane.x * 0.28;
-  const rawRotateX = lane.y * -0.14;
-  const rotateY = rawRotateY * tiltStrength * (1 - smoothCenter);
-  const rotateX = rawRotateX * tiltStrength * (1 - smoothCenter);
-  
-  const scale = isActive && depth.depthMix > 0.82 ? 1.04 : 1;
-
-  return {
-    asset,
-    isActive,
-    shouldPlayVideo:
-      asset.kind === 'video' && isActive && depth.depthMix > 0.72 && depth.passMix < 0.2,
-    mediaSrc: getPreviewSource(asset),
-    x: scene.centerX + currentOffsetX,
-    y: scene.centerY + currentOffsetY,
-    z: depth.z,
-    rotateX,
-    rotateY,
-    scale,
-    opacity: clamp(0.05 + depth.depthMix * 1.02 - passFade * 1.16, 0, 1),
-    zIndex: 180 + Math.round(depth.depthMix * 140) - Math.round(depth.passMix * 30),
-  };
-}
-
 export function Showreel() {
   const containerRef = useRef<HTMLElement>(null);
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
+  const targetTravelRef = useRef(0);
+  const travelRef = useRef(0);
+  const pointerTargetRef = useRef({ x: 0, y: 0 });
+  const pointerRef = useRef({ x: 0, y: 0 });
+  const activeIndexRef = useRef(0);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeIndexRef = useRef(0);
-
-  const scene = isMobile ? MOBILE_SCENE : DESKTOP_SCENE;
+  const config = isMobile ? MOBILE_CONFIG : DESKTOP_CONFIG;
+  const previewSources = useMemo(() => SHOWREEL_ASSETS.map((asset) => getPreviewSource(asset)), []);
 
   useEffect(() => {
     let frameId = 0;
+    let lastFrameTime = performance.now();
+    let sectionTop = 0;
+    let sectionHeight = 0;
 
-    const syncProgress = () => {
-      frameId = 0;
+    const updateMetrics = () => {
       if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      sectionTop = rect.top + window.scrollY;
+      sectionHeight = containerRef.current.offsetHeight;
+    };
 
-      const progress = getScrollProgress(containerRef.current);
-      const travel = progress * (SHOWREEL_ASSETS.length - 1);
-      const newActiveIndex = clamp(Math.round(travel), 0, SHOWREEL_ASSETS.length - 1);
+    const updateTargetTravel = () => {
+      if (!containerRef.current) return;
+      const scrollY = window.scrollY;
+      const sectionEnd = sectionTop + sectionHeight - window.innerHeight;
+      const progress = clamp((scrollY - sectionTop) / Math.max(sectionEnd - sectionTop, 1), 0, 1);
+      const travelStart = -config.travelPadding;
+      const travelEnd = (SHOWREEL_ASSETS.length - 1) + config.travelPadding;
+      targetTravelRef.current = lerp(travelStart, travelEnd, progress);
+    };
 
-      // ZERO RE-RENDER: Aggiorniamo direttamente il DOM invece di usare setState su ogni frame
-      cardRefs.current.forEach((el, index) => {
-        if (!el) return;
-        const layout = buildCardLayout(SHOWREEL_ASSETS[index], index, travel, newActiveIndex, scene);
-        
-        el.style.left = `${layout.x}%`;
-        el.style.top = `${layout.y}%`;
-        el.style.transform = `translate3d(-50%, -50%, ${layout.z}px) rotateX(${layout.rotateX}deg) rotateY(${layout.rotateY}deg) scale(${layout.scale})`;
-        el.style.opacity = `${layout.opacity}`;
-        el.style.zIndex = `${layout.zIndex}`;
+    const animate = (now: number) => {
+      const deltaSeconds = Math.min((now - lastFrameTime) / 1000, 0.05);
+      lastFrameTime = now;
 
-        const innerDiv = el.firstChild as HTMLDivElement;
-        if (innerDiv) {
-          innerDiv.style.borderColor = layout.isActive ? 'rgba(191,51,32,0.35)' : 'rgba(255,255,255,0.08)';
-          innerDiv.style.boxShadow = layout.isActive
-            ? '0 32px 80px rgba(0,0,0,0.38), 0 0 0 1px rgba(191,51,32,0.25), 0 0 40px 4px rgba(191,51,32,0.12)'
-            : '0 16px 42px rgba(0,0,0,0.18)';
+      const scrollDelta = Math.abs(targetTravelRef.current - travelRef.current);
+      travelRef.current = scrollDelta > 0.9
+        ? targetTravelRef.current
+        : damp(travelRef.current, targetTravelRef.current, config.followLambda, deltaSeconds);
+      pointerRef.current.x = damp(pointerRef.current.x, pointerTargetRef.current.x, config.pointerLambda, deltaSeconds);
+      pointerRef.current.y = damp(pointerRef.current.y, pointerTargetRef.current.y, config.pointerLambda, deltaSeconds);
+
+      const travel = travelRef.current;
+      const active = clamp(Math.round(travel), 0, SHOWREEL_ASSETS.length - 1);
+      if (active !== activeIndexRef.current) {
+        activeIndexRef.current = active;
+        setActiveIndex(active);
+      }
+
+      const time = now * 0.001;
+      const visibleStart = clamp(Math.floor(travel), 0, SHOWREEL_ASSETS.length - 1);
+      const visibleEnd = clamp(Math.ceil(travel), 0, SHOWREEL_ASSETS.length - 1);
+
+      cardRefs.current.forEach((card, index) => {
+        if (!card) return;
+
+        const relative = index - travel;
+        const distance = Math.abs(relative);
+
+        const isVisiblePair = index === visibleStart || index === visibleEnd;
+        if (!isVisiblePair || distance > config.visibleWindow) {
+          if (card.style.display !== 'none') card.style.display = 'none';
+          return;
         }
+        if (card.style.display !== 'block') card.style.display = 'block';
+
+        const laneMix = clamp(distance / config.visibleWindow, 0, 1);
+        const focusMix = smoothstep(config.focusWindow, 0, distance);
+        const rearAmount = clamp(relative / config.relativeCull, 0, 1);
+        const frontAmount = clamp(-relative / config.relativeCull, 0, 1);
+        const isPastFocus = relative < 0;
+        const rearCurve = rearAmount * rearAmount;
+        const frontCurve = frontAmount * frontAmount;
+
+        const baseOffsetX =
+          Math.sin(index * 2.37 + 0.6) * config.scatterJitterX +
+          Math.cos(index * 1.41) * config.tunnelRadiusX;
+        const baseOffsetY =
+          Math.cos(index * 1.93 + 0.2) * config.scatterJitterY +
+          Math.sin(index * 1.17) * config.tunnelRadiusY;
+        const dreamDriftX = Math.sin(time * 0.22 + index * 1.61) * config.driftX;
+        const dreamDriftY = Math.cos(time * 0.2 + index * 1.27) * config.driftY;
+        const pointerX = pointerRef.current.x * config.pointerInfluenceX * (0.34 + focusMix * 0.72);
+        const pointerY = pointerRef.current.y * config.pointerInfluenceY * (0.34 + focusMix * 0.72);
+        const x = baseOffsetX + dreamDriftX + pointerX;
+        const y = baseOffsetY + dreamDriftY - pointerY - focusMix * config.focusLift;
+        const z = -relative * config.depthStep;
+
+        const scale = isPastFocus
+          ? lerp(config.focusScale, config.frontScale, frontCurve)
+          : lerp(config.focusScale, config.rearScale, rearCurve);
+
+        const blur = isPastFocus
+          ? lerp(1.2, config.frontBlur, frontCurve)
+          : lerp(0.4, config.rearBlur, rearCurve);
+
+        const opacity = isPastFocus
+          ? lerp(1, config.frontOpacity, frontCurve)
+          : lerp(1, config.rearOpacity, rearCurve);
+
+        const brightness = isPastFocus
+          ? lerp(1.02, 0.62, frontCurve)
+          : lerp(1.04, 0.68, rearCurve);
+
+        const contrast = isPastFocus
+          ? lerp(1.05, 0.7, frontCurve)
+          : lerp(1.03, 0.78, rearCurve);
+
+        const saturate = isPastFocus
+          ? lerp(1.04, 0.64, frontCurve)
+          : lerp(1.02, 0.72, rearCurve);
+
+        const rotateX = dreamDriftY * 0.08 - pointerRef.current.y * 2.3 * (0.18 + focusMix * 0.34);
+        const rotateY = dreamDriftX * 0.08 + pointerRef.current.x * 2.9 * (0.18 + focusMix * 0.34);
+        const rotateZ = Math.sin(time * 0.16 + index) * 0.45 * laneMix;
+
+        card.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y}px, ${z}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`;
+        card.style.opacity = `${opacity}`;
+        card.style.filter = `blur(${blur}px) brightness(${brightness}) contrast(${contrast}) saturate(${saturate})`;
+        card.style.zIndex = `${1000 - Math.round(relative * 100)}`;
       });
 
-      // Triggera React solo quando cambia la card attiva
-      if (newActiveIndex !== activeIndexRef.current) {
-        activeIndexRef.current = newActiveIndex;
-        setActiveIndex(newActiveIndex);
-      }
+      frameId = window.requestAnimationFrame(animate);
     };
 
     const handleScroll = () => {
-      if (frameId !== 0) return;
-      frameId = window.requestAnimationFrame(syncProgress);
+      updateTargetTravel();
     };
+
+    const handleResize = () => {
+      updateMetrics();
+      updateTargetTravel();
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      pointerTargetRef.current.x = ((event.clientX / window.innerWidth) * 2 - 1) * -1;
+      pointerTargetRef.current.y = ((event.clientY / window.innerHeight) * 2 - 1) * -1;
+    };
+
+    const handlePointerLeave = () => {
+      pointerTargetRef.current.x = 0;
+      pointerTargetRef.current.y = 0;
+    };
+
+    updateMetrics();
+    updateTargetTravel();
+    frameId = window.requestAnimationFrame(animate);
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll);
-    syncProgress();
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pointerleave', handlePointerLeave);
 
     return () => {
-      if (frameId !== 0) window.cancelAnimationFrame(frameId);
+      window.cancelAnimationFrame(frameId);
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerleave', handlePointerLeave);
     };
-  }, [scene]);
+  }, [config]);
 
-  const activeAsset = SHOWREEL_ASSETS[activeIndex];
+  const activeAsset = SHOWREEL_ASSETS[activeIndex] ?? SHOWREEL_ASSETS[0];
 
   return (
     <section
       ref={containerRef}
       className="relative z-0 w-full bg-dark"
-      style={{ height: scene.sectionHeight }}
+      style={{ height: config.sectionHeight }}
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-dark">
-        <div className="absolute inset-0" style={{ backgroundImage: scene.vignette }} />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,4,6,0.22),rgba(4,4,6,0.72))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_44%,rgba(255,255,255,0.08),transparent_34%),radial-gradient(circle_at_18%_24%,rgba(233,172,6,0.07),transparent_22%),radial-gradient(circle_at_82%_74%,rgba(191,51,32,0.08),transparent_25%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,8,0.08),rgba(5,5,8,0.74))]" />
 
-        {/* Vignetta radiale tunnel — oscura i bordi, luce al centro */}
-        <div
-          className="pointer-events-none absolute inset-0 z-[35]"
-          style={{ background: 'radial-gradient(ellipse 55% 60% at 50% 50%, transparent 0%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.92) 100%)' }}
-        />
+        <div className="absolute inset-0 [perspective:1600px]">
+          <div className="relative h-full w-full [transform-style:preserve-3d]">
+            {SHOWREEL_ASSETS.map((asset, index) => (
+              <article
+                key={asset.id}
+                ref={(el) => { cardRefs.current[index] = el; }}
+                className="pointer-events-none absolute left-1/2 top-1/2 w-[min(68vw,20rem)] md:w-[min(38vw,28rem)] will-change-transform"
+                style={{
+                  opacity: 0,
+                  transform: 'translate(-50%, -50%) translate3d(0, 0, -300px) scale(0.8)',
+                }}
+              >
+                <div className="overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#09090b] shadow-[0_28px_90px_rgba(0,0,0,0.28)]">
+                  <div className="relative aspect-[235/160]">
+                    <img
+                      src={previewSources[index]}
+                      alt={asset.title}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,4,6,0.02),rgba(4,4,6,0.26))]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_16%,rgba(255,255,255,0.10),transparent_26%),radial-gradient(circle_at_80%_82%,rgba(233,172,6,0.10),transparent_24%)] mix-blend-screen" />
 
-        {/* Letterbox cinematografico — barre anamorfiche 2.39:1 */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-40 h-[10vh] bg-gradient-to-b from-black to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-[10vh] bg-gradient-to-t from-black to-transparent" />
+                    <div className="absolute inset-x-3 bottom-3 rounded-[1.15rem] bg-white/92 px-4 py-3 text-left text-dark shadow-[0_18px_28px_rgba(0,0,0,0.18)] md:inset-x-4 md:bottom-4 md:px-5 md:py-4">
+                      <div className="font-heading text-lg font-black leading-[0.95] tracking-[-0.05em] md:text-[2rem]">
+                        {asset.title}
+                      </div>
+                      <div className="mt-2 text-[0.62rem] uppercase tracking-[0.28em] text-primary md:text-[0.7rem]">
+                        {asset.label}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
 
         <div className="pointer-events-none absolute left-7 top-7 z-30 text-white md:left-10 md:top-8">
           <div className="font-heading text-3xl font-black tracking-[-0.08em] md:text-4xl">02</div>
@@ -279,94 +335,11 @@ export function Showreel() {
           </div>
         </div>
 
-        <div className="pointer-events-none absolute inset-0 z-10">
-          {scene.lanes.map((lane, index) => (
-            <span
-              key={`fog-${index}`}
-              className="absolute rounded-full bg-white/8 blur-3xl"
-              style={{
-                left: `${scene.centerX + lane.x * 1.3}%`,
-                top: `${scene.centerY + lane.y * 1.15}%`,
-                width: scene.fogSize,
-                height: scene.fogSize,
-                transform: 'translate(-50%, -50%)',
-              }}
-            />
-          ))}
-        </div>
-
-        <div
-          className="absolute inset-0 z-20"
-          style={{ perspective: `${scene.perspective}px`, perspectiveOrigin: `${scene.centerX}% ${scene.centerY}%`, transformStyle: 'preserve-3d' }}
-        >
-          {SHOWREEL_ASSETS.map((asset, index) => {
-            const isActive = index === activeIndex;
-            // Layout iniziale solo per il primo render, poi controllato via DOM
-            const initialLayout = buildCardLayout(asset, index, 0, 0, scene);
-            
-            return (
-              <article
-                key={asset.id}
-                ref={(el) => { cardRefs.current[index] = el; }}
-                className="absolute"
-                style={{
-                  left: `${initialLayout.x}%`,
-                  top: `${initialLayout.y}%`,
-                  width: `${scene.cardWidthVw}vw`,
-                  minWidth: scene.minCardWidth,
-                  maxWidth: scene.maxCardWidth,
-                  transform: `translate3d(-50%, -50%, ${initialLayout.z}px) rotateX(${initialLayout.rotateX}deg) rotateY(${initialLayout.rotateY}deg) scale(${initialLayout.scale})`,
-                  opacity: initialLayout.opacity,
-                  zIndex: initialLayout.zIndex,
-                  willChange: 'transform, opacity',
-                  backfaceVisibility: 'hidden',
-                }}
-              >
-                <div
-                  className="overflow-hidden rounded-[0.95rem] border bg-white/6 transition-colors duration-300"
-                  style={{
-                    borderColor: initialLayout.isActive ? 'rgba(191,51,32,0.35)' : 'rgba(255,255,255,0.08)',
-                    boxShadow: initialLayout.isActive
-                      ? '0 32px 80px rgba(0,0,0,0.38), 0 0 0 1px rgba(191,51,32,0.25), 0 0 40px 4px rgba(191,51,32,0.12)'
-                      : '0 16px 42px rgba(0,0,0,0.18)',
-                  }}
-                >
-                  <div className="relative aspect-[1.45/1] overflow-hidden bg-black">
-                    {asset.kind === 'video' && isActive ? (
-                    <video
-                      key={`${asset.id}-video`}
-                      src={asset.src}
-                      poster={asset.poster}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <img
-                      src={initialLayout.mediaSrc}
-                      alt={asset.title}
-                      loading={isActive ? 'eager' : 'lazy'}
-                      decoding="async"
-                      fetchPriority={isActive ? 'high' : 'low'}
-                      className="h-full w-full object-cover"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.16))]" />
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-
-        <div className="pointer-events-none absolute bottom-8 left-1/2 z-30 w-[min(28rem,calc(100%-2rem))] -translate-x-1/2 rounded-full border border-white/10 bg-black/24 px-5 py-3 text-center backdrop-blur-xl md:bottom-10">
-          <div className="text-[0.62rem] uppercase tracking-[0.28em] text-white/52 md:text-[0.72rem]">
+        <div className="pointer-events-none absolute bottom-8 left-1/2 z-30 w-[min(32rem,calc(100%-2rem))] -translate-x-1/2 px-5 py-3 text-center md:bottom-10">
+          <div className="text-[0.62rem] uppercase tracking-[0.34em] text-white/38 md:text-[0.72rem]">
             {activeAsset.label}
           </div>
-          <div className="mt-1 font-heading text-xl font-black tracking-[-0.06em] text-white md:text-3xl">
+          <div className="mt-2 font-heading text-xl font-black tracking-[-0.08em] text-white md:text-3xl">
             {activeAsset.title}
           </div>
         </div>

@@ -86,11 +86,29 @@ export default function SplashCursor({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const canvasEl = canvas;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    const isSmallScreen = window.innerWidth < 768;
+    const baseQuality = prefersReducedMotion ? 0.45 : isCoarsePointer || isSmallScreen ? 0.65 : 1;
+    const maxPixelRatio = prefersReducedMotion ? 1 : isCoarsePointer ? 1.05 : isSmallScreen ? 1.2 : 1.35;
+    const interactionIdleMs = prefersReducedMotion ? 900 : 1800;
 
     let pointers: Pointer[] = [pointerPrototype()];
     let rafId = 0;
     let started = false;
     let disposed = false;
+    let lastInteractionAt = 0;
+    let pointerInsideViewport = false;
+    let avgDt = 0.016;
+    let qualityTier = 2;
+    let pendingMove:
+      | {
+          type: 'mouse' | 'touch';
+          id: number;
+          x: number;
+          y: number;
+        }
+      | null = null;
 
     const config = {
       SIM_RESOLUTION,
@@ -111,6 +129,24 @@ export default function SplashCursor({
       RAINBOW_MODE,
       COLOR,
     };
+
+    function getQualityMultiplier(tier: number) {
+      const tierMultiplier = tier === 2 ? 1 : tier === 1 ? 0.82 : 0.66;
+      return baseQuality * tierMultiplier;
+    }
+
+    function applyQualityPreset(tier: number) {
+      const multiplier = getQualityMultiplier(tier);
+      config.SIM_RESOLUTION = Math.max(64, Math.round(SIM_RESOLUTION * multiplier));
+      config.DYE_RESOLUTION = Math.max(384, Math.round(DYE_RESOLUTION * multiplier));
+      config.PRESSURE_ITERATIONS = Math.max(6, Math.round(PRESSURE_ITERATIONS * multiplier));
+      config.COLOR_UPDATE_SPEED = Math.max(4, Math.round(COLOR_UPDATE_SPEED * Math.max(0.6, multiplier)));
+      if (tier === 0 && !prefersReducedMotion) {
+        config.DYE_RESOLUTION = Math.max(320, Math.round(config.DYE_RESOLUTION * 0.9));
+      }
+    }
+
+    applyQualityPreset(qualityTier);
 
     const { gl, ext } = getWebGLContext(canvasEl);
     if (!gl || !ext || !ext.formatRGBA || !ext.formatRG || !ext.formatR) return;
@@ -873,7 +909,7 @@ export default function SplashCursor({
     }
 
     function scaleByPixelRatio(input: number) {
-      const pixelRatio = window.devicePixelRatio || 1;
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, maxPixelRatio);
       return Math.floor(input * pixelRatio);
     }
 
@@ -908,20 +944,45 @@ export default function SplashCursor({
     function updateFrame() {
       if (disposed || paused) return;
       const dt = calcDeltaTime();
+      maybeTuneQuality(dt);
       if (resizeCanvas()) initFramebuffers();
       updateColors(dt);
       applyInputs();
       step(dt);
       render(null);
+      if (!hasRecentInteraction()) {
+        rafId = 0;
+        return;
+      }
       rafId = requestAnimationFrame(updateFrame);
+    }
+
+    function hasRecentInteraction() {
+      if (!started) return false;
+      if (pointerInsideViewport) return true;
+      if (pointers.some((pointer) => pointer.down || pointer.moved)) return true;
+      return Date.now() - lastInteractionAt < interactionIdleMs;
     }
 
     function calcDeltaTime() {
       const now = Date.now();
       let dt = (now - lastUpdateTime) / 1000;
-      dt = Math.min(dt, 0.016666);
+      dt = Math.min(dt, 0.0333);
       lastUpdateTime = now;
       return dt;
+    }
+
+    function maybeTuneQuality(dt: number) {
+      avgDt = avgDt * 0.92 + dt * 0.08;
+      if (avgDt > 0.024 && qualityTier > 0) {
+        qualityTier -= 1;
+        applyQualityPreset(qualityTier);
+        initFramebuffers();
+      } else if (avgDt < 0.0155 && qualityTier < 2 && pointerInsideViewport) {
+        qualityTier += 1;
+        applyQualityPreset(qualityTier);
+        initFramebuffers();
+      }
     }
 
     function resizeCanvas() {
@@ -946,6 +1007,13 @@ export default function SplashCursor({
     }
 
     function applyInputs() {
+      if (pendingMove) {
+        const pointer = pointers[0];
+        if (pointer.id === -1 || pendingMove.type === 'mouse' || pointer.id === pendingMove.id) {
+          updatePointerMoveData(pointer, pendingMove.x, pendingMove.y, pointer.color);
+        }
+        pendingMove = null;
+      }
       for (const p of pointers) {
         if (p.moved) {
           p.moved = false;
@@ -1270,12 +1338,16 @@ export default function SplashCursor({
     }
 
     function ensureStarted() {
-      if (started) return;
-      started = true;
-      updateFrame();
+      lastInteractionAt = Date.now();
+      if (!started) started = true;
+      if (rafId === 0 && !paused) {
+        lastUpdateTime = Date.now();
+        rafId = requestAnimationFrame(updateFrame);
+      }
     }
 
     const onMouseDown = (e: MouseEvent) => {
+      pointerInsideViewport = true;
       ensureStarted();
       const pointer = pointers[0];
       const posX = scaleByPixelRatio(e.clientX);
@@ -1285,14 +1357,28 @@ export default function SplashCursor({
     };
 
     const onMouseMove = (e: MouseEvent) => {
+      pointerInsideViewport = true;
       ensureStarted();
-      const pointer = pointers[0];
-      const posX = scaleByPixelRatio(e.clientX);
-      const posY = scaleByPixelRatio(e.clientY);
-      updatePointerMoveData(pointer, posX, posY, pointer.color);
+      pendingMove = {
+        type: 'mouse',
+        id: -1,
+        x: scaleByPixelRatio(e.clientX),
+        y: scaleByPixelRatio(e.clientY),
+      };
+    };
+
+    const onMouseEnter = () => {
+      pointerInsideViewport = true;
+      ensureStarted();
+    };
+
+    const onMouseLeave = () => {
+      pointerInsideViewport = false;
+      lastInteractionAt = Date.now();
     };
 
     const onTouchStart = (e: TouchEvent) => {
+      pointerInsideViewport = true;
       ensureStarted();
       const touches = e.targetTouches;
       const pointer = pointers[0];
@@ -1304,17 +1390,22 @@ export default function SplashCursor({
     };
 
     const onTouchMove = (e: TouchEvent) => {
+      pointerInsideViewport = true;
       ensureStarted();
       const touches = e.targetTouches;
-      const pointer = pointers[0];
-      for (let i = 0; i < touches.length; i++) {
-        const posX = scaleByPixelRatio(touches[i].clientX);
-        const posY = scaleByPixelRatio(touches[i].clientY);
-        updatePointerMoveData(pointer, posX, posY, pointer.color);
+      if (touches.length > 0) {
+        pendingMove = {
+          type: 'touch',
+          id: touches[0].identifier,
+          x: scaleByPixelRatio(touches[0].clientX),
+          y: scaleByPixelRatio(touches[0].clientY),
+        };
       }
     };
 
     const onTouchEnd = (e: TouchEvent) => {
+      pointerInsideViewport = false;
+      lastInteractionAt = Date.now();
       const touches = e.changedTouches;
       const pointer = pointers[0];
       for (let i = 0; i < touches.length; i++) {
@@ -1322,20 +1413,24 @@ export default function SplashCursor({
       }
     };
 
-    window.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('touchstart', onTouchStart, false);
-    window.addEventListener('touchmove', onTouchMove, false);
-    window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('mouseenter', onMouseEnter, { passive: true });
+    window.addEventListener('mouseleave', onMouseLeave, { passive: true });
+    window.addEventListener('mousedown', onMouseDown, { passive: true });
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
 
     return () => {
       disposed = true;
       if (rafId) cancelAnimationFrame(rafId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('mouseenter', onMouseEnter);
+      window.removeEventListener('mouseleave', onMouseLeave);
       window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('touchstart', onTouchStart, false);
-      window.removeEventListener('touchmove', onTouchMove, false);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
       pointers = [];
     };

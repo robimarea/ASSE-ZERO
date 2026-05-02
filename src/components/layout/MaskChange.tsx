@@ -17,6 +17,7 @@ export function MaskChangeUI({
 }: MaskChangeProps) {
   const curtainRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const lastHeightRef = useRef('200vh');
   const [wrapperHeight, setWrapperHeight] = useState('200vh');
 
   useEffect(() => {
@@ -25,7 +26,11 @@ export function MaskChangeUI({
         const curtainH = curtainRef.current.offsetHeight;
         const contentH = contentRef.current.offsetHeight;
         const extraH = extraStickyDistanceH * window.innerHeight;
-        setWrapperHeight(`${curtainH + contentH + extraH}px`);
+        const nextHeight = `${curtainH + contentH + extraH}px`;
+        if (nextHeight !== lastHeightRef.current) {
+          lastHeightRef.current = nextHeight;
+          setWrapperHeight(nextHeight);
+        }
       }
     };
     
