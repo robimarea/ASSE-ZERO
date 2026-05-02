@@ -23,6 +23,7 @@ interface SplashCursorProps {
   TRANSPARENT?: boolean;
   RAINBOW_MODE?: boolean;
   COLOR?: string;
+  paused?: boolean;
 }
 
 interface Pointer {
@@ -60,10 +61,10 @@ export default function SplashCursor({
   SIM_RESOLUTION = 128,
   DYE_RESOLUTION = 1440,
   CAPTURE_RESOLUTION = 512,
-  DENSITY_DISSIPATION = 3.5,
-  VELOCITY_DISSIPATION = 2,
+  DENSITY_DISSIPATION = 4.0,
+  VELOCITY_DISSIPATION = 2.5,
   PRESSURE = 0.1,
-  PRESSURE_ITERATIONS = 20,
+  PRESSURE_ITERATIONS = 16,
   CURL = 3,
   SPLAT_RADIUS = 0.2,
   SPLAT_FORCE = 6000,
@@ -73,6 +74,7 @@ export default function SplashCursor({
   TRANSPARENT = true,
   RAINBOW_MODE = true,
   COLOR = '#ff0000',
+  paused = false,
 }: SplashCursorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -1421,6 +1423,11 @@ export default function SplashCursor({
     window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('touchend', onTouchEnd, { passive: true });
 
+    if (paused) {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+
     return () => {
       disposed = true;
       if (rafId) cancelAnimationFrame(rafId);
@@ -1452,6 +1459,7 @@ export default function SplashCursor({
     TRANSPARENT,
     RAINBOW_MODE,
     COLOR,
+    paused,
   ]);
 
   return (

@@ -38,14 +38,16 @@ export const Viewport = memo(({
     className
   ].filter(Boolean).join(' ');
 
+  const ContainerTag = Component as any;
+
   return (
-    <Component
+    <ContainerTag
       ref={containerRef as any}
       id={id}
       className={classes}
       data-visible={isVisible}
     >
       {typeof children === 'function' ? children(isVisible) : children}
-    </Component>
+    </ContainerTag>
   );
 });

@@ -1,7 +1,3 @@
-// ============================================
-// ASSE ZERO — App Root Component
-// ============================================
-
 import { lazy, Suspense } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
 import { SEO } from '@/lib/seo';
@@ -26,12 +22,13 @@ function App() {
       <Suspense fallback={null}>
         <SplashCursor
           DENSITY_DISSIPATION={5}
-          VELOCITY_DISSIPATION={8}
-          PRESSURE={0.15}
-          CURL={5}
-          SPLAT_RADIUS={0.07}
-          SPLAT_FORCE={11000}
-          COLOR_UPDATE_SPEED={9}
+          VELOCITY_DISSIPATION={4}
+          PRESSURE={0.08}
+          PRESSURE_ITERATIONS={12}
+          CURL={4}
+          SPLAT_RADIUS={0.08}
+          SPLAT_FORCE={8000}
+          COLOR_UPDATE_SPEED={8}
           SHADING
           RAINBOW_MODE={false}
           COLOR="var(--color-primary)"

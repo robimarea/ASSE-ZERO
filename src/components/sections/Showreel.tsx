@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { SHOWREEL_ASSETS, type ShowreelAsset } from '@/data/showreelAssets';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { clamp, damp, lerp, smoothstep } from '@/lib/math';
@@ -38,8 +38,8 @@ const DESKTOP_CONFIG: TunnelConfig = {
   sectionHeight: '680vh',
   travelPadding: 0.58,
   depthStep: 290,
-  relativeCull: 1.28,
-  visibleWindow: 1.18,
+  relativeCull: 1.4,
+  visibleWindow: 1.4,
   focusWindow: 0.58,
   rearScale: 0.64,
   focusScale: 0.82,
@@ -56,12 +56,12 @@ const DESKTOP_CONFIG: TunnelConfig = {
   spreadAnchorY: 210,
   pointerInfluenceX: 28,
   pointerInfluenceY: 22,
-  rearBlur: 13,
-  frontBlur: 24,
-  rearOpacity: 0.12,
-  frontOpacity: 0.04,
-  followLambda: 6.8,
-  pointerLambda: 7.4,
+  rearBlur: 14,
+  frontBlur: 28,
+  rearOpacity: 0.02,
+  frontOpacity: 0.01,
+  followLambda: 5.5,
+  pointerLambda: 6.0,
   focusLift: 4,
 };
 
@@ -69,8 +69,8 @@ const MOBILE_CONFIG: TunnelConfig = {
   sectionHeight: '760vh',
   travelPadding: 0.62,
   depthStep: 230,
-  relativeCull: 1.24,
-  visibleWindow: 1.14,
+  relativeCull: 1.35,
+  visibleWindow: 1.35,
   focusWindow: 0.6,
   rearScale: 0.7,
   focusScale: 0.86,
@@ -88,11 +88,11 @@ const MOBILE_CONFIG: TunnelConfig = {
   pointerInfluenceX: 18,
   pointerInfluenceY: 14,
   rearBlur: 11,
-  frontBlur: 18,
-  rearOpacity: 0.14,
-  frontOpacity: 0.05,
-  followLambda: 6.2,
-  pointerLambda: 6.8,
+  frontBlur: 20,
+  rearOpacity: 0.03,
+  frontOpacity: 0.02,
+  followLambda: 6.8,
+  pointerLambda: 7.0,
   focusLift: 3,
 };
 
@@ -113,9 +113,10 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
   const pointerRef = useRef({ x: 0, y: 0 });
   const activeIndexRef = useRef(0);
   const visibleIndicesRef = useRef<Set<number>>(new Set());
+  const activeTitleRef = useRef<HTMLDivElement>(null);
+  const activeLabelRef = useRef<HTMLDivElement>(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const [activeIndex, setActiveIndex] = useState(0);
   const config = isMobile ? MOBILE_CONFIG : DESKTOP_CONFIG;
 
   const previewSources = useMemo(() => SHOWREEL_ASSETS.map(getPreviewSource), []);
@@ -166,10 +167,13 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
 
       // Physics/Damping
       const scrollDelta = Math.abs(targetTravelRef.current - travelRef.current);
-      // Snap if very close, otherwise damp
-      travelRef.current = scrollDelta > 0.9
-        ? targetTravelRef.current
-        : damp(travelRef.current, targetTravelRef.current, config.followLambda, deltaSeconds);
+      
+      // Snap only if extremely close to avoid floating point jitter, otherwise keep damping
+      if (scrollDelta < 0.001) {
+        travelRef.current = targetTravelRef.current;
+      } else {
+        travelRef.current = damp(travelRef.current, targetTravelRef.current, config.followLambda, deltaSeconds);
+      }
 
       pointerRef.current.x = damp(pointerRef.current.x, pointerTargetRef.current.x, config.pointerLambda, deltaSeconds);
       pointerRef.current.y = damp(pointerRef.current.y, pointerTargetRef.current.y, config.pointerLambda, deltaSeconds);
@@ -177,14 +181,14 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
       const travel = travelRef.current;
       const time = now * 0.001;
 
-      // Update active index for UI
       const active = clamp(Math.round(travel), 0, SHOWREEL_ASSETS.length - 1);
       if (active !== activeIndexRef.current) {
         activeIndexRef.current = active;
-        setActiveIndex(active);
+        const asset = SHOWREEL_ASSETS[active];
+        if (activeTitleRef.current) activeTitleRef.current.textContent = asset.title;
+        if (activeLabelRef.current) activeLabelRef.current.textContent = asset.label;
       }
 
-      // 1. Calculate currently visible range
       const visibleStart = Math.max(0, Math.floor(travel - config.visibleWindow));
       const visibleEnd = Math.min(SHOWREEL_ASSETS.length - 1, Math.ceil(travel + config.visibleWindow));
 
@@ -225,10 +229,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
         const focusMix = smoothstep(config.focusWindow, 0, distance);
         const isPastFocus = relative < 0;
 
-        // Curves for non-linear movement
-        const curveAmount = clamp(Math.abs(relative) / config.relativeCull, 0, 1);
-        const curve = curveAmount * curveAmount;
-
         // Spatial Calculations
         const dreamDriftX = Math.sin(time * 0.22 + index * 1.61) * config.driftX;
         const dreamDriftY = Math.cos(time * 0.2 + index * 1.27) * config.driftY;
@@ -241,32 +241,28 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
         const y = offset.baseY + dreamDriftY - pointerY - focusMix * config.focusLift;
         const z = -relative * config.depthStep;
 
+        const curveAmount = clamp(distance / config.relativeCull, 0, 1);
+        const curve = smoothstep(0, 1, curveAmount);
+
         // Aesthetic Factors
         const scale = isPastFocus
           ? lerp(config.focusScale, config.frontScale, curve)
           : lerp(config.focusScale, config.rearScale, curve);
 
-        const blur = isPastFocus
-          ? lerp(1.2, config.frontBlur, curve)
-          : lerp(0.4, config.rearBlur, curve);
 
         const opacity = isPastFocus
           ? lerp(1, config.frontOpacity, curve)
           : lerp(1, config.rearOpacity, curve);
 
-        // Filter optimization: batch visual changes
-        const brightness = isPastFocus ? lerp(1.02, 0.62, curve) : lerp(1.04, 0.68, curve);
-        const contrast = isPastFocus ? lerp(1.05, 0.7, curve) : lerp(1.03, 0.78, curve);
-        const saturate = isPastFocus ? lerp(1.04, 0.64, curve) : lerp(1.02, 0.72, curve);
-
         const rotateX = dreamDriftY * 0.08 - pointerRef.current.y * 2.3 * (0.18 + focusMix * 0.34);
         const rotateY = dreamDriftX * 0.08 + pointerRef.current.x * 2.9 * (0.18 + focusMix * 0.34);
-        const rotateZ = Math.sin(time * 0.16 + index) * 0.45 * clamp(distance / config.visibleWindow, 0, 1);
 
-        // Apply styles with template literals for faster execution
-        card.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, ${z.toFixed(1)}px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) rotateZ(${rotateZ.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+        // Apply styles - High Performance Sharp Rendering
+        card.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(0)}px) rotateX(${rotateX.toFixed(1)}deg) rotateY(${rotateY.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
         card.style.opacity = `${opacity.toFixed(3)}`;
-        card.style.filter = `blur(${blur.toFixed(1)}px) brightness(${brightness.toFixed(2)}) contrast(${contrast.toFixed(2)}) saturate(${saturate.toFixed(2)})`;
+        
+        // Ensure no filters are weighing down the GPU
+        if (card.style.filter !== 'none') card.style.filter = 'none';
         card.style.zIndex = `${1000 - Math.round(relative * 100)}`;
       });
 
@@ -311,7 +307,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     };
   }, [config, cardOffsets, isVisible]);
 
-  const activeAsset = SHOWREEL_ASSETS[activeIndex] ?? SHOWREEL_ASSETS[0];
 
   return (
     <section
@@ -376,11 +371,17 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
 
         {/* Active Asset Info */}
         <div className="pointer-events-none absolute bottom-8 left-1/2 z-30 w-[min(32rem,calc(100%-2rem))] -translate-x-1/2 px-5 py-3 text-center md:bottom-10">
-          <div className="text-[0.62rem] uppercase tracking-[0.34em] text-white/38 md:text-[0.72rem]">
-            {activeAsset.label}
+          <div 
+            ref={activeLabelRef}
+            className="text-[0.62rem] uppercase tracking-[0.34em] text-white/38 md:text-[0.72rem]"
+          >
+            {SHOWREEL_ASSETS[0].label}
           </div>
-          <div className="mt-2 font-heading text-xl font-black tracking-[-0.08em] text-white md:text-3xl">
-            {activeAsset.title}
+          <div 
+            ref={activeTitleRef}
+            className="mt-2 font-heading text-xl font-black tracking-[-0.08em] text-white md:text-3xl"
+          >
+            {SHOWREEL_ASSETS[0].title}
           </div>
         </div>
       </div>
