@@ -20,7 +20,11 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-export function VideoGallery() {
+interface VideoGalleryProps {
+  isVisible?: boolean;
+}
+
+export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   const containerRef = useRef<HTMLElement>(null);
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
   const overlayRefs = useRef<(HTMLElement | null)[]>([]);
@@ -103,6 +107,8 @@ export function VideoGallery() {
       handleScroll();
     };
 
+    if (!isVisible) return;
+
     updateMetrics();
     window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -113,10 +119,10 @@ export function VideoGallery() {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [isVisible]);
 
   return (
-    <section ref={containerRef} id="servizi" className="relative w-full bg-dark z-0" style={{ height: '400vh' }}>
+    <section ref={containerRef} className="relative w-full bg-dark z-0" style={{ height: '400vh' }}>
       <div className="sticky top-0 z-10 w-full h-screen overflow-hidden bg-dark flex flex-col md:flex-row items-center justify-center">
         
         {/* Left Side: Video Slider Column */}

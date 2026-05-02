@@ -10,6 +10,7 @@ import { useRef, useEffect } from 'react';
 interface ServicesProps {
   section: 'video' | 'smm';
   overlapNext?: boolean;
+  isVisible?: boolean;
 }
 
 // Costanti estratte fuori dal componente per evitare ricreazione ad ogni render
@@ -17,7 +18,7 @@ const VIDEO_PILLS = ['Spot Pubblicitari', 'Videoclip', 'Cortometraggi', 'Recap E
 const SMM_PILLS = ['Gestione Profilo', 'Content Strategy', 'Trending', 'Algorithm Following', 'Strategia Personalizzata', 'Consulenze'];
 const CARDS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
-export function Services({ section, overlapNext = false }: ServicesProps) {
+export function Services({ section, overlapNext = false, isVisible = true }: ServicesProps) {
   const isVideo = section === 'video';
   const containerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -61,6 +62,8 @@ export function Services({ section, overlapNext = false }: ServicesProps) {
       handleScroll();
     };
 
+    if (!isVisible) return;
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
     syncTranslate();
@@ -70,12 +73,11 @@ export function Services({ section, overlapNext = false }: ServicesProps) {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
-  }, [overlapNext]);
+  }, [overlapNext, isVisible]);
 
   return (
     <section
       ref={containerRef}
-      id={isVideo ? 'servizi' : 'services-smm'}
       className="relative w-full bg-dark z-0"
       style={{ height: '400vh' }}
     >

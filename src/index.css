@@ -209,3 +209,36 @@ h1, h2, h3, h4, h5, h6 {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary);
 }
+/* ============================================
+   Viewport Reveal Animations
+   ============================================ */
+
+.viewport-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 1.2s var(--ease-out-expo), transform 1.2s var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+
+.viewport-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children support */
+.viewport-reveal.stagger-children > * {
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+}
+
+.viewport-reveal[data-visible="true"].stagger-children > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(1) { transition-delay: 0.1s; }
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(2) { transition-delay: 0.2s; }
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(3) { transition-delay: 0.3s; }
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(4) { transition-delay: 0.4s; }
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(5) { transition-delay: 0.5s; }

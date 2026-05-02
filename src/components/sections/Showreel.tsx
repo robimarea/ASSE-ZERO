@@ -100,7 +100,11 @@ function getPreviewSource(asset: ShowreelAsset) {
   return asset.kind === 'video' ? asset.poster : asset.src;
 }
 
-export function Showreel() {
+interface ShowreelProps {
+  isVisible?: boolean;
+}
+
+export function Showreel({ isVisible = true }: ShowreelProps) {
   const containerRef = useRef<HTMLElement>(null);
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
   const targetTravelRef = useRef(0);
@@ -288,7 +292,10 @@ export function Showreel() {
 
     updateMetrics();
     updateTargetTravel();
-    frameId = window.requestAnimationFrame(animate);
+    
+    if (isVisible) {
+      frameId = window.requestAnimationFrame(animate);
+    }
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
@@ -302,7 +309,7 @@ export function Showreel() {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerleave', handlePointerLeave);
     };
-  }, [config, cardOffsets]);
+  }, [config, cardOffsets, isVisible]);
 
   const activeAsset = SHOWREEL_ASSETS[activeIndex] ?? SHOWREEL_ASSETS[0];
 
