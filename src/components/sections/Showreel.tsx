@@ -20,6 +20,8 @@ type TunnelConfig = {
   trailSpreadY: number;
   scatterJitterX: number;
   scatterJitterY: number;
+  spreadAnchorX: number;
+  spreadAnchorY: number;
   pointerInfluenceX: number;
   pointerInfluenceY: number;
   rearBlur: number;
@@ -41,14 +43,16 @@ const DESKTOP_CONFIG: TunnelConfig = {
   rearScale: 0.64,
   focusScale: 0.82,
   frontScale: 0.78,
-  tunnelRadiusX: 38,
-  tunnelRadiusY: 24,
+  tunnelRadiusX: 72,
+  tunnelRadiusY: 46,
   driftX: 2,
   driftY: 2,
   trailSpreadX: 0,
   trailSpreadY: 0,
-  scatterJitterX: 46,
-  scatterJitterY: 28,
+  scatterJitterX: 96,
+  scatterJitterY: 58,
+  spreadAnchorX: 220,
+  spreadAnchorY: 132,
   pointerInfluenceX: 28,
   pointerInfluenceY: 22,
   rearBlur: 13,
@@ -70,14 +74,16 @@ const MOBILE_CONFIG: TunnelConfig = {
   rearScale: 0.7,
   focusScale: 0.86,
   frontScale: 0.82,
-  tunnelRadiusX: 22,
-  tunnelRadiusY: 14,
+  tunnelRadiusX: 40,
+  tunnelRadiusY: 28,
   driftX: 1.5,
   driftY: 1.5,
   trailSpreadX: 0,
   trailSpreadY: 0,
-  scatterJitterX: 24,
-  scatterJitterY: 16,
+  scatterJitterX: 44,
+  scatterJitterY: 28,
+  spreadAnchorX: 104,
+  spreadAnchorY: 68,
   pointerInfluenceX: 18,
   pointerInfluenceY: 14,
   rearBlur: 11,
@@ -189,12 +195,16 @@ export function Showreel() {
         const rearCurve = rearAmount * rearAmount;
         const frontCurve = frontAmount * frontAmount;
 
+        const anchorXDirection = index % 2 === 0 ? -1 : 1;
+        const anchorYDirection = index % 3 === 0 ? -1 : 1;
+        const anchorX = anchorXDirection * (config.spreadAnchorX + Math.sin(index * 1.83) * config.tunnelRadiusX);
+        const anchorY = anchorYDirection * (config.spreadAnchorY + Math.cos(index * 1.29) * config.tunnelRadiusY);
         const baseOffsetX =
-          Math.sin(index * 2.37 + 0.6) * config.scatterJitterX +
-          Math.cos(index * 1.41) * config.tunnelRadiusX;
+          anchorX +
+          Math.sin(index * 2.37 + 0.6) * config.scatterJitterX;
         const baseOffsetY =
-          Math.cos(index * 1.93 + 0.2) * config.scatterJitterY +
-          Math.sin(index * 1.17) * config.tunnelRadiusY;
+          anchorY +
+          Math.cos(index * 1.93 + 0.2) * config.scatterJitterY;
         const dreamDriftX = Math.sin(time * 0.22 + index * 1.61) * config.driftX;
         const dreamDriftY = Math.cos(time * 0.2 + index * 1.27) * config.driftY;
         const pointerX = pointerRef.current.x * config.pointerInfluenceX * (0.34 + focusMix * 0.72);
