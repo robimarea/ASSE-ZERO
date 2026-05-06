@@ -2,35 +2,38 @@
 // ASSE ZERO — Services Section
 // Scroll Orizzontale guidato dallo Scroll Verticale
 // (Sticky Horizontal Scroll)
+// Zero React re-renders: uses ref-based DOM manipulation
 // ============================================
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 
 interface ServicesProps {
   section: 'video' | 'smm';
   overlapNext?: boolean;
+  isVisible?: boolean;
 }
 
-export function Services({ section, overlapNext = false }: ServicesProps) {
+// Costanti estratte fuori dal componente per evitare ricreazione ad ogni render
+const VIDEO_PILLS = ['Spot Pubblicitari', 'Videoclip', 'Cortometraggi', 'Recap Eventi', 'Video Corporate', 'Documentari', 'Content Social', 'Motion Graphics', 'Interviste'];
+const SMM_PILLS = ['Gestione Profilo', 'Content Strategy', 'Trending', 'Algorithm Following', 'Strategia Personalizzata', 'Consulenze'];
+const CARDS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+
+export function Services({ section, overlapNext = false, isVisible = true }: ServicesProps) {
   const isVideo = section === 'video';
   const containerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  
-  // Usiamo lo State di React per forzare il re-render in modo sicuro
-  const [translateX, setTranslateX] = useState(0);
 
   const title = isVideo ? 'VIDEO' : (
     <>SOCIAL MEDIA<br/>MANAGEMENT</>
   );
 
-  const pills = isVideo
-    ? ['Spot Pubblicitari', 'Videoclip', 'Cortometraggi', 'Recap Eventi', 'Video Corporate', 'Documentari', 'Content Social', 'Motion Graphics', 'Interviste']
-    : ['Gestione Profilo', 'Content Strategy', 'Trending', 'Algorithm Following', 'Strategia Personalizzata', 'Consulenze'];
-
-  const cards = [1, 2, 3, 4, 5, 6, 7, 8];
+  const pills = isVideo ? VIDEO_PILLS : SMM_PILLS;
 
   useEffect(() => {
-    const handleScroll = () => {
+    let rafId = 0;
+
+    const syncTranslate = () => {
+      rafId = 0;
       if (!containerRef.current || !trackRef.current) return;
 
       const container = containerRef.current;
@@ -38,40 +41,48 @@ export function Services({ section, overlapNext = false }: ServicesProps) {
 
       const rect = container.getBoundingClientRect();
       const scrolled = -rect.top;
-      
-      // If overlapNext is true, the next section overlaps the last 100vh of this container.
-      // We reduce scrollableDistance by 100vh so the horizontal scroll finishes BEFORE the overlap happens.
+
       const deadZoneMultiplier = overlapNext ? 2 : 1;
       const scrollableDistance = container.offsetHeight - (deadZoneMultiplier * window.innerHeight);
-      
-      // Calcolo ultra-safe della larghezza: se il DOM fallisce fallback su stima sicura (8 cards * 400px = ~3200px)
-      const trackWidth = track.scrollWidth > 0 ? track.scrollWidth : cards.length * 400;
+
+      const trackWidth = track.scrollWidth > 0 ? track.scrollWidth : CARDS.length * 400;
       const trackScrollableWidth = Math.max(0, trackWidth - window.innerWidth);
 
-      let progress = scrolled / scrollableDistance;
-      progress = Math.max(0, Math.min(1, progress)); // Clamp progress tra 0 e 1
-      
-      setTranslateX(progress * trackScrollableWidth);
+      const progress = Math.max(0, Math.min(1, scrolled / scrollableDistance));
+
+      track.style.transform = `translate3d(-${progress * trackScrollableWidth}px, 0, 0)`;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll);
-    handleScroll(); // Init
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
+    const handleScroll = () => {
+      if (rafId !== 0) return;
+      rafId = requestAnimationFrame(syncTranslate);
     };
-  }, [cards.length, overlapNext]);
+
+    const handleResize = () => {
+      handleScroll();
+    };
+
+    if (!isVisible) return;
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
+    syncTranslate();
+
+    return () => {
+      if (rafId !== 0) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [overlapNext, isVisible]);
 
   return (
     <section
       ref={containerRef}
-      id={isVideo ? 'servizi' : 'services-smm'}
       className="relative w-full bg-dark z-0"
       style={{ height: '400vh' }}
     >
       <div className="sticky top-0 z-10 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 md:py-24">
-        
+
         <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-center mb-8 shrink-0">
           <h2
             className={`font-heading font-black text-primary tracking-tighter text-center mb-6 md:mb-12 ${
@@ -97,16 +108,16 @@ export function Services({ section, overlapNext = false }: ServicesProps) {
         </div>
 
         <div className="w-full flex-1 flex items-center relative overflow-hidden">
-          <div 
+          <div
             ref={trackRef}
-            className="flex gap-4 md:gap-6 px-4 md:px-[10vw]" 
-            style={{ 
+            className="flex gap-4 md:gap-6 px-4 md:px-[10vw]"
+            style={{
               width: 'max-content',
-              transform: `translate3d(-${translateX}px, 0, 0)`,
+              transform: 'translate3d(0, 0, 0)',
               willChange: 'transform'
             }}
           >
-            {cards.map((num) => (
+            {CARDS.map((num) => (
               <div
                 key={`${section}-card-${num}`}
                 className="shrink-0 w-64 sm:w-80 md:w-96 aspect-[4/3] bg-secondary rounded-2xl flex items-center justify-center shadow-lg"

@@ -1,8 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, type ReactNode } from 'react';
 
 interface MaskChangeProps {
-  curtain: React.ReactNode;
-  children: React.ReactNode;
+  curtain: ReactNode;
+  children: ReactNode;
   zIndex?: number;
   overlapPrev?: boolean;
   extraStickyDistanceH?: number;
@@ -17,6 +17,7 @@ export function MaskChangeUI({
 }: MaskChangeProps) {
   const curtainRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const lastHeightRef = useRef('200vh');
   const [wrapperHeight, setWrapperHeight] = useState('200vh');
 
   useEffect(() => {
@@ -25,7 +26,11 @@ export function MaskChangeUI({
         const curtainH = curtainRef.current.offsetHeight;
         const contentH = contentRef.current.offsetHeight;
         const extraH = extraStickyDistanceH * window.innerHeight;
-        setWrapperHeight(`${curtainH + contentH + extraH}px`);
+        const nextHeight = `${curtainH + contentH + extraH}px`;
+        if (nextHeight !== lastHeightRef.current) {
+          lastHeightRef.current = nextHeight;
+          setWrapperHeight(nextHeight);
+        }
       }
     };
     
@@ -36,11 +41,9 @@ export function MaskChangeUI({
     const observer = new ResizeObserver(updateHeight);
     if (curtainRef.current) observer.observe(curtainRef.current);
     if (contentRef.current) observer.observe(contentRef.current);
-    window.addEventListener('resize', updateHeight);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', updateHeight);
     };
   }, [extraStickyDistanceH]);
 

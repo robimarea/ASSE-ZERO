@@ -29,30 +29,30 @@
 
 @theme {
   /* Brand Colors */
-  --color-primary: #E50914;      /* Rosso vibrante */
-  --color-primary-light: #FF4B4B;
-  --color-primary-dark: #B20710;
-  --color-secondary: #FFD700;    /* Giallo primario */
-  --color-secondary-light: #FFE033;
-  --color-secondary-dark: #CCAC00;
-  --color-accent: #FF8C00;       /* Arancione ponte */
-  --color-accent-light: #FFA033;
+  --color-primary: #BF3320;      /* 10% mattone (accenti) */
+  --color-primary-light: #D1523E;
+  --color-primary-dark: #8F2417;
+  --color-secondary: #E9AC06;    /* 30% ambra */
+  --color-secondary-light: #F0C24F;
+  --color-secondary-dark: #B78705;
+  --color-accent: #CC7F11;
+  --color-accent-light: #D89D43;
 
   /* Dark Palette */
-  --color-dark: #000000;
+  --color-dark: #000000;         /* 60% base */
   --color-dark-secondary: #0A0A0A;
-  --color-surface: #121212;
+  --color-surface: #111111;
   --color-surface-light: #1A1A1A;
-  --color-surface-hover: #222222;
+  --color-surface-hover: #242424;
 
   /* Text */
   --color-text-primary: #FFFFFF;
-  --color-text-secondary: #AAAAAA;
-  --color-text-muted: #555555;
+  --color-text-secondary: #D9C79B;
+  --color-text-muted: #8D7A4F;
 
   /* Glass */
   --color-glass: rgba(10, 10, 10, 0.7);
-  --color-glass-border: rgba(229, 9, 20, 0.2);
+  --color-glass-border: rgba(191, 51, 32, 0.25);
 
   /* Typography */
   --font-heading: 'Alte Haas Grotesk', sans-serif;
@@ -209,3 +209,36 @@ h1, h2, h3, h4, h5, h6 {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary);
 }
+/* ============================================
+   Viewport Reveal Animations
+   ============================================ */
+
+.viewport-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 1.2s var(--ease-out-expo), transform 1.2s var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+
+.viewport-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children support */
+.viewport-reveal.stagger-children > * {
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+}
+
+.viewport-reveal[data-visible="true"].stagger-children > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(1) { transition-delay: 0.1s; }
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(2) { transition-delay: 0.2s; }
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(3) { transition-delay: 0.3s; }
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(4) { transition-delay: 0.4s; }
+.viewport-reveal[data-visible="true"].stagger-children > *:nth-child(5) { transition-delay: 0.5s; }

@@ -9,7 +9,8 @@ export interface NavLink {
 
 export const navLinks: NavLink[] = [
   { label: 'Home', href: '#home' },
-  { label: 'Servizi', href: '#servizi' },
+  { label: 'Video', href: '#video' },
+  { label: 'SMM', href: '#smm' },
   { label: 'Team', href: '#team' },
   { label: 'Contatti', href: '#contatti' },
 ];
