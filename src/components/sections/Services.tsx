@@ -6,6 +6,8 @@
 // ============================================
 
 import { useRef, useEffect } from 'react';
+import SpotlightCard from '@/components/SpotlightCard';
+import '@/components/social-pricing.css';
 
 interface ServicesProps {
   section: 'video' | 'smm';
@@ -17,6 +19,61 @@ interface ServicesProps {
 const VIDEO_PILLS = ['Spot Pubblicitari', 'Videoclip', 'Cortometraggi', 'Recap Eventi', 'Video Corporate', 'Documentari', 'Content Social', 'Motion Graphics', 'Interviste'];
 const SMM_PILLS = ['Gestione Profilo', 'Content Strategy', 'Trending', 'Algorithm Following', 'Strategia Personalizzata', 'Consulenze'];
 const CARDS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+
+const SMM_PRICE_PLANS = [
+  {
+    name: 'Starter',
+    price: '€29/mo',
+    description: 'Perfetto per piccoli brand che vogliono iniziare a crescere sui social.',
+    features: [
+      'Gestione 1 profilo social',
+      '8 post al mese',
+      'Content strategy di base',
+      'Report mensile',
+      'Assistenza via email',
+    ],
+    cta: 'Inizia Ora',
+  },
+  {
+    name: 'Growth',
+    price: '€79/mo',
+    description: 'Per brand in crescita che vogliono aumentare la loro presenza online.',
+    features: [
+      'Gestione 2 profili social',
+      '16 post al mese',
+      'Content strategy avanzata',
+      'Consulenza mensile',
+      'Assistenza prioritaria',
+    ],
+    cta: 'Inizia Ora',
+  },
+  {
+    name: 'Pro',
+    price: '€149/mo',
+    description: 'La soluzione completa per brand che puntano a dominare i social.',
+    features: [
+      'Gestione 3 profili social',
+      '30 post al mese',
+      'Strategia personalizzata',
+      'Analisi trend & algoritmi',
+      'Consulenze bisettimanali',
+    ],
+    cta: 'Inizia Ora',
+  },
+  {
+    name: 'Agency',
+    price: '€299/mo',
+    description: 'Per agenzie e grandi brand con esigenze social complesse e multi-canale.',
+    features: [
+      'Profili illimitati',
+      'Post illimitati',
+      'Strategia multi-canale',
+      'Dedicated account manager',
+      'Report avanzati & analytics',
+    ],
+    cta: 'Contattaci',
+  },
+] as const;
 
 export function Services({ section, overlapNext = false, isVisible = true }: ServicesProps) {
   const isVideo = section === 'video';
@@ -30,6 +87,8 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
   const pills = isVideo ? VIDEO_PILLS : SMM_PILLS;
 
   useEffect(() => {
+    if (!isVideo) return;
+
     let rafId = 0;
 
     const syncTranslate = () => {
@@ -73,7 +132,7 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
-  }, [overlapNext, isVisible]);
+  }, [overlapNext, isVisible, isVideo]);
 
   return (
     <section
@@ -107,26 +166,58 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
           </div>
         </div>
 
-        <div className="w-full flex-1 flex items-center relative overflow-hidden">
-          <div
-            ref={trackRef}
-            className="flex gap-4 md:gap-6 px-4 md:px-[10vw]"
-            style={{
-              width: 'max-content',
-              transform: 'translate3d(0, 0, 0)',
-              willChange: 'transform'
-            }}
-          >
-            {CARDS.map((num) => (
-              <div
-                key={`${section}-card-${num}`}
-                className="shrink-0 w-64 sm:w-80 md:w-96 aspect-[4/3] bg-secondary rounded-2xl flex items-center justify-center shadow-lg"
-              >
-                <span className="text-5xl font-heading font-black text-dark/30">{num}</span>
+        {isVideo ? (
+          <div className="w-full flex-1 flex items-center relative overflow-hidden">
+            <div
+              ref={trackRef}
+              className="flex gap-4 md:gap-6 px-4 md:px-[10vw]"
+              style={{
+                width: 'max-content',
+                transform: 'translate3d(0, 0, 0)',
+                willChange: 'transform'
+              }}
+            >
+              {CARDS.map((num) => (
+                <div
+                  key={`${section}-card-${num}`}
+                  className="shrink-0 w-64 sm:w-80 md:w-96 aspect-[4/3] bg-secondary rounded-2xl flex items-center justify-center shadow-lg"
+                >
+                  <span className="text-5xl font-heading font-black text-dark/30">{num}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="price-scroll-container">
+            {SMM_PRICE_PLANS.map((plan) => (
+              <div key={plan.name} className="price-card-wrapper">
+                <SpotlightCard spotlightColor="rgba(255, 220, 0, 0.25)" className="h-full flex flex-col">
+                  <div className="flex flex-col gap-4 h-full">
+                    <div>
+                      <h3 className="text-white font-heading font-black text-2xl mb-1">{plan.name}</h3>
+                      <p className="font-heading font-black text-3xl" style={{ color: '#FFD600' }}>{plan.price}</p>
+                    </div>
+                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>{plan.description}</p>
+                    <ul className="flex flex-col gap-2 flex-1">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                          <span style={{ color: '#FFD600' }}>✓</span>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      className="w-full py-3 px-6 rounded-xl font-heading font-black text-sm tracking-wide transition-opacity hover:opacity-90 cursor-pointer"
+                      style={{ backgroundColor: '#FFD600', color: '#000' }}
+                    >
+                      {plan.cta}
+                    </button>
+                  </div>
+                </SpotlightCard>
               </div>
             ))}
           </div>
-        </div>
+        )}
 
       </div>
     </section>

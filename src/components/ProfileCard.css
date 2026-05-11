@@ -1,0 +1,322 @@
+/* ============================================
+   ProfileCard — base styles
+   ============================================ */
+
+.pc-card-wrapper {
+  --pointer-x: 50%;
+  --pointer-y: 50%;
+  --background-x: 50%;
+  --background-y: 50%;
+  --pointer-from-center: 0;
+  --pointer-from-top: 0.5;
+  --pointer-from-left: 0.5;
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  --card-radius: 20px;
+  --card-w: 280px;
+  --card-h: 380px;
+  position: relative;
+  width: var(--card-w);
+  perspective: 800px;
+  perspective-origin: var(--pointer-x) var(--pointer-y);
+}
+
+.pc-behind {
+  position: absolute;
+  inset: -20px;
+  border-radius: calc(var(--card-radius) + 20px);
+  background: radial-gradient(
+    ellipse var(--behind-glow-size, 50%) var(--behind-glow-size, 50%) at var(--pointer-x) var(--pointer-y),
+    var(--behind-glow-color, rgba(233,172,6,0.67)),
+    transparent 80%
+  );
+  filter: blur(20px);
+  z-index: 0;
+  opacity: calc(0.4 + var(--pointer-from-center) * 0.6);
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.pc-card-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rotate-y)) rotateY(var(--rotate-x));
+  transition: transform 0.08s ease-out;
+  border-radius: var(--card-radius);
+}
+
+.pc-card-shell.entering {
+  transition: transform 0.18s ease-out;
+}
+
+.pc-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 0.72;
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.5),
+    0 2px 8px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.pc-inside {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--inner-gradient, linear-gradient(145deg,#60496e8c 0%,#71C4FF44 100%));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Shine — specular highlight che segue il mouse */
+.pc-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 80% 60% at var(--pointer-x) var(--pointer-y),
+    rgba(255,255,255,0.18) 0%,
+    rgba(255,255,255,0.05) 40%,
+    transparent 70%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 2;
+  opacity: calc(0.3 + var(--pointer-from-center) * 0.7);
+  transition: opacity 0.3s ease;
+}
+
+/* Glare — riflesso angolato */
+.pc-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    calc(var(--rotate-x) * 3 + 135deg),
+    rgba(255,255,255,0.12) 0%,
+    transparent 50%,
+    rgba(0,0,0,0.1) 100%
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Grain texture overlay */
+.pc-inside::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--grain, none);
+  background-size: 200px 200px;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.pc-content {
+  position: relative;
+  z-index: 5;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px 20px 0;
+}
+
+.pc-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pc-details h3 {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.pc-details p {
+  margin: 0;
+  font-size: 1.6em;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+
+/* Icon background */
+.pc-inside::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--icon, none);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* User info bar at bottom */
+.pc-user-info {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 16px 12px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  gap: 10px;
+}
+
+.pc-user-details {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pc-user-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pc-handle {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-status {
+  font-size: 10px;
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-contact-btn {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.pc-contact-btn:hover {
+  background: rgba(255,255,255,0.25);
+  transform: translateY(-1px);
+}
+
+.pc-contact-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   Price card overrides
+   ============================================ */
+
+.price-card-wrapper {
+  --card-radius: 24px;
+}
+
+.price-card-wrapper .pc-card {
+  background: linear-gradient(145deg, #e9ac06, #c98d00);
+  aspect-ratio: 0.75;
+  max-height: 480px;
+}
+
+.price-card-wrapper .pc-inside {
+  background: linear-gradient(145deg, #e9ac06cc, #b8790099);
+}
+
+.price-card-wrapper .pc-details h3 {
+  background-image: linear-gradient(to bottom, #000000, #333333);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.4em;
+  letter-spacing: 2px;
+}
+
+.price-card-wrapper .pc-details p {
+  background-image: linear-gradient(to bottom, #111111, #444444);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 2.2em;
+  font-weight: 800;
+  top: 0;
+}
+
+.price-card-wrapper .pc-handle {
+  color: #000000;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.price-card-wrapper .pc-status {
+  color: #222222;
+  font-size: 11px;
+}
+
+.price-card-wrapper .pc-user-info {
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.price-card-wrapper .pc-contact-btn {
+  background: #000000;
+  color: #e9ac06;
+  border: none;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.price-card-wrapper .pc-contact-btn:hover {
+  background: #222222;
+}
+
+.smm-price-section {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 0;
+}
+
+.smm-price-sticky {
+  position: sticky;
+  top: 120px;
+}
