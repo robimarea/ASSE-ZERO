@@ -143,10 +143,6 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         {/* Left Side: Video Slider Column */}
         <div className="relative w-full md:w-[55%] h-full flex items-center justify-center shrink-0">
           
-          {/* Section Marker (Background of Left Column) */}
-          <div className="absolute top-10 left-10 z-0 text-white/5 font-heading font-black text-[10vw] leading-none tracking-tighter pointer-events-none hidden md:block">
-            03
-          </div>
 
           {VIDEO_ITEMS.map((item, index) => {
             return (

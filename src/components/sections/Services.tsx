@@ -148,14 +148,14 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
 
         <div className="w-full mx-auto px-4 flex flex-col items-center mb-8 shrink-0">
           <h2
-            className={`w-full font-black text-primary tracking-tighter text-center mb-6 md:mb-12 ${
+            className={`w-full font-black tracking-tighter text-center mb-6 md:mb-12 ${
               isVideo
-                ? 'font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl'
+                ? 'font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-primary'
                 : ''
             }`}
             style={isVideo
               ? { lineHeight: 0.9, fontFamily: "'Bebas Neue', sans-serif" }
-              : { fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(5rem, 14vw, 13.4rem)', lineHeight: 0.9 }
+              : { fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(5rem, 14vw, 13.4rem)', lineHeight: 0.9, color: '#e9ac06' }
             }
           >
             {title}
