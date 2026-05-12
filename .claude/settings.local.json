@@ -6,7 +6,13 @@
       "Bash(npm run *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
       "Bash(npm install *)",
-      "Bash(node -e \"const g=require\\('./node_modules/gsap/package.json'\\); console.log\\(g.version\\)\")"
+      "Bash(node -e \"const g=require\\('./node_modules/gsap/package.json'\\); console.log\\(g.version\\)\")",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); exports=p.get\\('exports',{}\\); [print\\(k\\) for k in exports if 'GLTFLoader' in k or 'OrbitControls' in k or 'addons' in k or 'examples' in k]\")",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); exports=p.get\\('exports',{}\\); [print\\(k,'->',v\\) for k,v in exports.items\\(\\) if 'GLTFLoader' in k or 'OrbitControls' in k or 'examples' in k or 'addons' in k]\")",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); exports=p.get\\('exports',{}\\); [print\\(k\\) for k in list\\(exports.keys\\(\\)\\)[:30]]\")",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); exports=p.get\\('exports',{}\\); [print\\(k\\) for k in exports.keys\\(\\)]\")",
+      "Bash(node *)",
+      "Bash(grep -l \"GLTFLoader\\\\|OrbitControls\" \"C:\\\\Users\\\\tomai\\\\OneDrive\\\\Desktop\\\\ASSE-ZERO\\\\node_modules\\\\@types\\\\three\\\\build\"/*.d.ts)"
     ]
   }
 }

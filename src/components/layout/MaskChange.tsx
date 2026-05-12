@@ -1,22 +1,30 @@
 import { useRef, useEffect, useState, type ReactNode } from 'react';
 
+// MAX_LAYERS definisce il numero massimo di livelli MaskChangeUI nella pagina.
+// Quando si scrolla verso l'alto i layer vengono invertiti: il layer più basso (numericamente)
+// riceve lo z-index più alto, così le sezioni precedenti tornano visibili sopra quelle successive.
+const MAX_LAYERS = 60;
+
 interface MaskChangeProps {
   curtain: ReactNode;
   children: ReactNode;
   zIndex?: number;
   overlapPrev?: boolean;
   extraStickyDistanceH?: number;
+  layerOrder?: number; // 0 = primo (Hero), 1 = secondo (Philosophy), 2 = terzo (Contact), …
 }
 
-export function MaskChangeUI({ 
-  curtain, 
-  children, 
+export function MaskChangeUI({
+  curtain,
+  children,
   zIndex = 10,
   overlapPrev = false,
-  extraStickyDistanceH = 0 
+  extraStickyDistanceH = 0,
+  layerOrder = 0,
 }: MaskChangeProps) {
   const curtainRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const lastHeightRef = useRef('200vh');
   const [wrapperHeight, setWrapperHeight] = useState('200vh');
 
@@ -33,26 +41,41 @@ export function MaskChangeUI({
         }
       }
     };
-    
-    // Initial update
+
     updateHeight();
-    
-    // Use ResizeObserver for more robust updates
+
     const observer = new ResizeObserver(updateHeight);
     if (curtainRef.current) observer.observe(curtainRef.current);
     if (contentRef.current) observer.observe(contentRef.current);
 
-    return () => {
-      observer.disconnect();
-    };
+    return () => { observer.disconnect(); };
   }, [extraStickyDistanceH]);
 
+  // Z-index dinamico: scroll verso l'alto → sezioni precedenti tornano sopra
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const scrollingUp = window.scrollY < lastScrollY;
+      lastScrollY = window.scrollY;
+      if (!wrapperRef.current) return;
+      wrapperRef.current.style.zIndex = scrollingUp
+        ? String(MAX_LAYERS + layerOrder)   // es. layer 1 → z:61, layer 2 → z:62 (Contact sopra Philosophy)
+        : String(layerOrder);               // es. layer 1 → z:1,  layer 2 → z:2  (Contact sopra Philosophy)
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [layerOrder]);
+
   return (
-    <div 
-      className="relative w-full z-0 font-sans" 
-      style={{ 
+    <div
+      ref={wrapperRef}
+      className="relative w-full font-sans"
+      style={{
         minHeight: wrapperHeight,
-        marginTop: overlapPrev ? '-100vh' : '0' 
+        marginTop: overlapPrev ? '-100vh' : '0',
+        zIndex: layerOrder,
       }}
     >
       {/* The background content that will be revealed */}

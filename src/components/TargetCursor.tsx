@@ -70,7 +70,8 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
       xPercent: -50,
       yPercent: -50,
       x: window.innerWidth / 2,
-      y: window.innerHeight / 2
+      y: window.innerHeight / 2,
+      opacity: 0
     });
 
     const createSpinTimeline = () => {
@@ -111,7 +112,12 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
 
     tickerFnRef.current = tickerFn;
 
-    const moveHandler = (e: MouseEvent) => moveCursor(e.clientX, e.clientY);
+    const moveHandler = (e: MouseEvent) => {
+      moveCursor(e.clientX, e.clientY);
+      if ((gsap.getProperty(cursor, 'opacity') as number) < 1) {
+        gsap.to(cursor, { opacity: 1, duration: 0.3, ease: 'power2.out' });
+      }
+    };
     window.addEventListener('mousemove', moveHandler);
 
     const scrollHandler = () => {
@@ -144,16 +150,8 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     window.addEventListener('mouseup', mouseUpHandler);
 
     const enterHandler = (e: MouseEvent) => {
-      const directTarget = e.target as Element;
-      const allTargets: Element[] = [];
-      let current: Element | null = directTarget;
-      while (current && current !== document.body) {
-        if (current.matches(targetSelector)) {
-          allTargets.push(current);
-        }
-        current = current.parentElement;
-      }
-      const target = allTargets[0] || null;
+      // .closest() è più diretto del while loop manuale e ha lo stesso comportamento
+      const target = (e.target as Element).closest<Element>(targetSelector);
       if (!target || !cursorRef.current || !cornersRef.current) return;
       if (activeTarget === target) return;
       if (activeTarget) cleanupTarget(activeTarget);

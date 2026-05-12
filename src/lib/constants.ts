@@ -21,3 +21,9 @@ export const SECTION_IDS = {
 export const SPRING_CONFIG = {
   bouncy: { mass: 1, tension: 280, friction: 14 },
 } as const;
+
+// Endpoint del form contatti.
+// Configura la variabile VITE_FORM_ENDPOINT nel file .env con l'URL del tuo
+// provider (es. Formspree: https://formspree.io/f/YOUR_FORM_ID,
+// oppure EmailJS, Netlify Forms, ecc.)
+export const CONTACT_FORM_ENDPOINT = import.meta.env.VITE_FORM_ENDPOINT ?? '';

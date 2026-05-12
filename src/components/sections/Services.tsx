@@ -8,32 +8,16 @@
 import { useRef, useEffect } from 'react';
 import SpotlightCard from '@/components/SpotlightCard';
 import '@/components/social-pricing.css';
+import { VIDEO_PILLS, SMM_PILLS, VIDEO_DESCRIPTION } from '@/data/services';
 
 interface ServicesProps {
   section: 'video' | 'smm';
   overlapNext?: boolean;
   isVisible?: boolean;
 }
-
-// Costanti estratte fuori dal componente per evitare ricreazione ad ogni render
-const VIDEO_PILLS = ['Spot Pubblicitari', 'Videoclip', 'Cortometraggi', 'Recap Eventi', 'Video Corporate', 'Documentari', 'Content Social', 'Motion Graphics', 'Interviste'];
-const SMM_PILLS = ['Gestione Profilo', 'Content Strategy', 'Trending', 'Algorithm Following', 'Strategia Personalizzata', 'Consulenze'];
 const CARDS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 const SMM_PRICE_PLANS = [
-  {
-    name: 'Starter',
-    price: '€29/mo',
-    description: 'Perfetto per piccoli brand che vogliono iniziare a crescere sui social.',
-    features: [
-      'Gestione 1 profilo social',
-      '8 post al mese',
-      'Content strategy di base',
-      'Report mensile',
-      'Assistenza via email',
-    ],
-    cta: 'Inizia Ora',
-  },
   {
     name: 'Growth',
     price: '€79/mo',
@@ -85,6 +69,26 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
   );
 
   const pills = isVideo ? VIDEO_PILLS : SMM_PILLS;
+
+  // SMM: z-index dinamico in base alla direzione di scroll
+  // Quando si scrolla verso l'alto, la sezione sale sopra la Philosophy curtain (zIndex 40)
+  // così il titolo rimane visibile
+  useEffect(() => {
+    if (isVideo) return;
+    const section = containerRef.current;
+    if (!section) return;
+
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const scrollingUp = window.scrollY < lastScrollY;
+      lastScrollY = window.scrollY;
+      section.style.zIndex = scrollingUp ? '50' : '0';
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isVideo]);
 
   useEffect(() => {
     if (!isVideo) return;
@@ -140,30 +144,43 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
       className="relative w-full bg-dark z-0"
       style={{ height: '400vh' }}
     >
-      <div className="sticky top-0 z-10 w-full h-screen flex flex-col items-center justify-center overflow-hidden py-12 md:py-24">
+      <div className="sticky top-0 z-10 w-full h-screen flex flex-col items-center justify-center overflow-visible py-12 md:py-24">
 
-        <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-center mb-8 shrink-0">
+        <div className="w-full mx-auto px-4 flex flex-col items-center mb-8 shrink-0">
           <h2
-            className={`font-heading font-black text-primary tracking-tighter text-center mb-6 md:mb-12 ${
+            className={`w-full font-black text-primary tracking-tighter text-center mb-6 md:mb-12 ${
               isVideo
-                ? 'text-6xl sm:text-7xl md:text-8xl lg:text-9xl'
-                : 'text-5xl sm:text-6xl md:text-7xl lg:text-[7rem]'
+                ? 'font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl'
+                : ''
             }`}
-            style={{ lineHeight: 0.9 }}
+            style={isVideo
+              ? { lineHeight: 0.9, fontFamily: "'Bebas Neue', sans-serif" }
+              : { fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(5rem, 14vw, 13.4rem)', lineHeight: 0.9 }
+            }
           >
             {title}
           </h2>
 
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-4xl">
-            {pills.map((pill) => (
-              <span
-                key={pill}
-                className="px-3 py-1.5 md:px-4 md:py-2 text-xs sm:text-sm font-medium text-white/70 bg-white/5 border border-white/10 rounded-full whitespace-nowrap"
-              >
-                {pill}
-              </span>
-            ))}
-          </div>
+
+          {isVideo ? (
+            <p
+              className="text-white/70 text-center max-w-3xl mb-2"
+              style={{ fontSize: '1rem', lineHeight: 1.7 }}
+            >
+              {VIDEO_DESCRIPTION}
+            </p>
+          ) : (
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-4xl">
+              {pills.map((pill) => (
+                <span
+                  key={pill}
+                  className="px-3 py-1.5 md:px-4 md:py-2 text-xs sm:text-sm font-medium text-white/70 bg-white/5 border border-white/10 rounded-full whitespace-nowrap"
+                >
+                  {pill}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {isVideo ? (

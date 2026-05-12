@@ -30,7 +30,7 @@ function App() {
       <Navbar />
 
       <main className="bg-dark">
-        <MaskChangeUI curtain={<Hero />} zIndex={50}>
+        <MaskChangeUI curtain={<Hero />} zIndex={50} layerOrder={0}>
           <ErrorBoundary fallback={<section className="min-h-screen bg-dark" />}>
             <Suspense fallback={<section className="min-h-screen bg-dark" />}>
               <Viewport id="showreel">
@@ -47,13 +47,13 @@ function App() {
           {(isVisible) => <Services section="smm" overlapNext={true} isVisible={isVisible} />}
         </Viewport>
 
-        <MaskChangeUI curtain={<Philosophy />} zIndex={40} overlapPrev={true} extraStickyDistanceH={1}>
+        <MaskChangeUI curtain={<Philosophy />} zIndex={40} overlapPrev={true} extraStickyDistanceH={1} layerOrder={1}>
           <Viewport id="team" reveal stagger>
             <Team />
           </Viewport>
         </MaskChangeUI>
 
-        <MaskChangeUI curtain={<Contact />} zIndex={30} overlapPrev={true}>
+        <MaskChangeUI curtain={<Contact />} zIndex={30} overlapPrev={true} layerOrder={2}>
           <Viewport id="contatti" reveal stagger>
             <div className="bg-primary w-full flex flex-col justify-end min-h-screen">
                <Footer />

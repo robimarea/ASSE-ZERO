@@ -6,7 +6,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { navLinks } from '@/data/navigation';
 import DarkVeil from '@/components/DarkVeil';
-import BorderGlow from '@/components/BorderGlow';
 
 const PANEL_WIDTH = '75%';
 const EASING = 'cubic-bezier(0.76, 0, 0.24, 1)';
@@ -38,41 +37,28 @@ export function Navbar() {
 
   return (
     <>
-      {/* ── TRIGGER con BorderGlow ── */}
-      <BorderGlow
-        borderRadius={999}
-        backgroundColor="transparent"
-        glowColor="45 100 60"
-        glowIntensity={2.2}
-        glowRadius={30}
-        edgeSensitivity={10}
-        coneSpread={20}
-        colors={['#e9ac06', '#ffffff', '#e9ac06']}
-        animated
-        className="menu-trigger-glow cursor-target"
+      {/* ── TRIGGER ── */}
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Apri menu"
+        aria-expanded={open}
+        className="cursor-target"
         style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          zIndex: 197,
+          background: 'transparent',
+          border: 'none',
+          cursor: 'none',
+          padding: '18px 32px',
           opacity: open ? 0 : 1,
           pointerEvents: open ? 'none' : 'auto',
           transition: 'opacity 0.3s ease',
-        } as React.CSSProperties}
+        }}
       >
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="Apri menu"
-          aria-expanded={open}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '18px 32px',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'none',
-            color: 'white',
-          }}
-        >
-          <span style={{ fontSize: '16px', letterSpacing: '3px', fontWeight: 600 }}>MENU</span>
-        </button>
-      </BorderGlow>
+        <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '28px', color: '#ffffff', letterSpacing: '2px' }}>Menù</span>
+      </button>
 
       {/* ── BACKDROP semitrasparente (lato sinistro) ── */}
       <div
@@ -106,16 +92,18 @@ export function Navbar() {
         aria-label="Menu di navigazione"
         aria-hidden={!open}
       >
-        {/* DarkVeil sfondo */}
+        {/* DarkVeil sfondo — montato solo quando il pannello è aperto per non consumare GPU a pannello chiuso */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          <DarkVeil
-            speed={3}
-            hueShift={211}
-            noiseIntensity={0}
-            scanlineFrequency={5}
-            scanlineIntensity={0.18}
-            warpAmount={4.3}
-          />
+          {open && (
+            <DarkVeil
+              speed={3}
+              hueShift={211}
+              noiseIntensity={0}
+              scanlineFrequency={5}
+              scanlineIntensity={0.18}
+              warpAmount={4.3}
+            />
+          )}
         </div>
 
         {/* Contenuto sopra DarkVeil */}

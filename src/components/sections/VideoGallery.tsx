@@ -5,6 +5,7 @@
 // ============================================
 
 import { useRef, useEffect } from 'react';
+import { VIDEO_PILLS, VIDEO_DESCRIPTION } from '@/data/services';
 
 // TODO: sostituire i gradient con immagini locali in /public/video/ (es. spot.jpg, videoclip.jpg, ...)
 const VIDEO_ITEMS = [
@@ -29,8 +30,6 @@ const VIDEO_ITEMS = [
     gradient: 'linear-gradient(135deg, #D1523E 0%, #2a0a05 60%, #000 100%)',
   },
 ];
-
-const VIDEO_PILLS = ['Spot Pubblicitari', 'Videoclip', 'Cortometraggi', 'Recap Eventi', 'Video Corporate', 'Documentari', 'Content Social', 'Motion Graphics', 'Interviste'];
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -203,41 +202,41 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         </div>
 
         {/* Right Side: Content Column */}
-        <div className="relative w-full md:w-[45%] h-full flex flex-col justify-center px-6 md:px-12 lg:pr-24 z-20 pb-20 md:pb-0 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
+        <div className="relative w-full md:w-[45%] h-full flex flex-col justify-start pt-12 md:pt-16 px-6 md:px-12 lg:pr-24 z-20 pb-20 md:pb-0 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
           
           {/* Big Solid Title */}
-          <h2 
+          <h2
             className="font-heading font-black text-[5rem] md:text-[6rem] lg:text-[8rem] leading-none tracking-tighter mb-6 text-white drop-shadow-2xl"
+            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
           >
             Video
           </h2>
 
-          {/* Description Box */}
-          <div className="border border-primary/40 rounded-2xl p-6 md:p-8 bg-black/40 backdrop-blur-md shadow-2xl relative overflow-hidden mb-8">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-transparent opacity-50" />
-            
-            <h3 className="text-primary font-heading font-bold text-xl md:text-2xl mb-2 tracking-wide">
+          {/* Description Box — occupa tutto lo spazio rimanente fino al fondo */}
+          <div className="flex-1 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden flex flex-col gap-4" style={{ backgroundColor: '#000' }}>
+
+            <h3 className="font-bold tracking-wide" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: '#e9ac06', lineHeight: 1.1 }}>
               SERVIZI SU MISURA
             </h3>
-            
-            <p className="text-white/70 text-sm md:text-base leading-relaxed">
-              Crediamo che ogni brand abbia una storia unica da raccontare. Per questo non offriamo pacchetti standardizzati: ogni produzione video viene quotata solo in seguito a un'attenta analisi delle tue esigenze, obiettivi e target, garantendoti un prodotto altamente personalizzato.
-            </p>
-          </div>
 
-          {/* Floating Keyword Pills */}
-          <div className="flex flex-wrap gap-3">
-            {VIDEO_PILLS.map((pill) => (
-              <div
-                key={pill}
-                className="group relative px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_12px_40px_rgba(191,51,32,0.25)] hover:bg-primary/20 hover:border-primary/40 cursor-pointer pointer-events-auto overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <span className="relative text-xs md:text-sm font-medium text-white/70 group-hover:text-white tracking-widest transition-colors duration-300">
-                  {pill}
-                </span>
-              </div>
-            ))}
+            {/* Pills */}
+            <div className="flex flex-wrap gap-3">
+              {VIDEO_PILLS.map((pill) => (
+                <div
+                  key={pill}
+                  className="px-4 py-2.5 rounded-xl border cursor-pointer pointer-events-auto"
+                  style={{ borderColor: 'rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.08)' }}
+                >
+                  <span className="text-xs md:text-sm font-medium tracking-widest" style={{ color: '#fff' }}>
+                    {pill}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <p className="leading-relaxed" style={{ fontSize: 'clamp(1rem, 1.5vw, 1.4rem)', color: '#fff' }}>
+              {VIDEO_DESCRIPTION}
+            </p>
           </div>
         </div>
 
