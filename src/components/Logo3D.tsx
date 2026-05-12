@@ -1,21 +1,18 @@
 // ============================================
 // ASSE ZERO — Logo 3D
-// "JELLY PHYSICS" — Effetto gommoso integrale
-// Squash & Stretch reattivo al cursore
+// CINEMATICA "DYNAMIC JELLY MAGNET"
+// Attivazione a soglia + Ritorno con Wiggling elastico
 // ============================================
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/addons';
 
-// ── Parametri Fisici Jelly ────────────────────────────────
-const SPRING_K = 110;   // Rigidità delle molle
-const SPRING_D = 8;     // Smorzamento (Damping) - basso = più rimbalzo
-const MASS     = 1;
-
-const IMPULSE_ROT   = 0.0025; // Forza rotazione
-const IMPULSE_SCALE = 0.0035; // Forza deformazione (Squash)
-const PROXIMITY     = 1.2;    // Raggio d'azione
+// ── Parametri Fisici ──────────────────────────────────────
+const SPRING_K     = 120;  // Più rigidità per un ritorno più pronto
+const MASS         = 1;
+const MAGNET_STRENGTH = 0.22; // Rinforzato di nuovo per essere più reattivo
+const TRIGGER_RADIUS_MULT = 0.6;
 
 export function Logo3D() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,13 +25,19 @@ export function Logo3D() {
     const scene = new THREE.Scene();
     const w = container.clientWidth;
     const h = container.clientHeight;
-    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(65, w / h, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
+    
+    renderer.domElement.style.display = 'block';
+    renderer.domElement.style.maxWidth = 'none';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    
     container.appendChild(renderer.domElement);
 
     // ── Luci ──────────────────────────────────────────────
@@ -47,28 +50,25 @@ export function Logo3D() {
     scene.add(rimLight);
 
     // ── Stato Fisico ──────────────────────────────────────
-    // Rotazione (x, y)
     let rot = { x: 0, y: 0 }, velRot = { x: 0, y: 0 };
-    // Scala (x, y, z) - base 1.0
-    let scl = { x: 1, y: 1, z: 1 }, velScl = { x: 0, y: 0, z: 0 };
+    let scl = { x: 0, y: 0, z: 0 }, velScl = { x: 0, y: 0, z: 0 };
+    let pos = { x: 0, y: 0 }, velPos = { x: 0, y: 0 };
     
-    // Mouse tracking
     let mx = -9999, my = -9999;
-    let mvx = 0, mvy = 0;
+    let targetPosX = 0, targetPosY = 0;
+    let isMagnetized = false;
 
     const onMouseMove = (e: MouseEvent) => {
-      mvx = (e.clientX - mx) * 0.6 + mvx * 0.4;
-      mvy = (e.clientY - my) * 0.6 + mvy * 0.4;
       mx = e.clientX;
       my = e.clientY;
     };
     window.addEventListener('mousemove', onMouseMove, { passive: true });
 
+
     // ── Caricamento GLB ────────────────────────────────────
     let model: THREE.Group | null = null;
-    let pivot: THREE.Group | null = null;
-    let targetSize = 13.0;
     let baseScale = 1;
+    let targetSize = 28.0; // Dimensione monumentale
 
     const loader = new GLTFLoader();
     loader.load(
@@ -76,26 +76,29 @@ export function Logo3D() {
       (gltf: GLTF) => {
         const gltfScene = gltf.scene;
         const box = new THREE.Box3().setFromObject(gltfScene);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        const size = new THREE.Vector3();
+        box.getSize(size);
         
-        pivot = new THREE.Group();
+        const pivot = new THREE.Group();
         pivot.add(gltfScene);
-        gltfScene.position.sub(center);
-        
+        gltfScene.position.set(-center.x, -center.y, -center.z);
+
+
         baseScale = targetSize / Math.max(size.x, size.y, size.z);
-        pivot.scale.setScalar(baseScale);
+        pivot.scale.setScalar(0); 
         scene.add(pivot);
         model = pivot;
 
-        camera.position.set(0, 0, targetSize * 1.2);
+        camera.position.set(0, 0, targetSize * 0.9); // Più spazio per l'overshoot del pop-in
         camera.updateProjectionMatrix();
       },
       undefined,
-      (err: ErrorEvent) => console.error('[Logo3D] GLB error:', err),
+      (err: ErrorEvent) => console.error('[Logo3D] error:', err),
     );
 
-    // ── Loop di Animazione (Fisica Jelly) ──────────────────
+    // ── Loop Fisico ────────────────────────────────────────
     let frameId = 0;
     let lastT = performance.now();
 
@@ -107,69 +110,80 @@ export function Logo3D() {
       const t = now * 0.001;
 
       if (model) {
-        // 1. Calcolo Prossimità e Impulso
         const rect = container.getBoundingClientRect();
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
-        const rad = Math.hypot(rect.width, rect.height) * PROXIMITY;
         const dist = Math.hypot(mx - cx, my - cy);
+        const triggerRadius = Math.hypot(rect.width, rect.height) * TRIGGER_RADIUS_MULT;
 
-        if (dist < rad) {
-          const power = Math.max(0, 1 - dist / rad);
-          // Impulso Rotazione
-          velRot.x += mvy * IMPULSE_ROT * power;
-          velRot.y += mvx * IMPULSE_ROT * power;
-          
-          // Impulso "Squash" (deformazione gommosa)
-          // Se muovo il mouse veloce, il logo si schiaccia
-          const squash = Math.abs(mvx + mvy) * IMPULSE_SCALE * power;
-          velScl.x -= squash;
-          velScl.y += squash; // Si allunga su Y se si schiaccia su X
-          velScl.z -= squash * 0.5;
+        // 1. Gestione Soglia Magnetica con impulso one-shot al rilascio
+        const wasMagnetized = isMagnetized;
+        isMagnetized = dist < triggerRadius;
+
+        // Impulso one-shot solo quando si ESCE dalla soglia → wiggling di ritorno
+        if (wasMagnetized && !isMagnetized) {
+          // Diamo una "frustata" alla velocità attuale di pos e rot
+          // proporzionale a quanto ci stavamo spostando
+          velPos.x *= -0.6; // Rimbalzo invertito
+          velPos.y *= -0.6;
+          velRot.x += pos.y * 3.0; // Rotazione residua basata sulla posizione
+          velRot.y += pos.x * 3.0;
         }
 
-        // Dissipazione inerzia mouse
-        mvx *= 0.85;
-        mvy *= 0.85;
+        if (isMagnetized) {
+          const rawPower = 1 - dist / triggerRadius;
+          const power = rawPower * rawPower; 
+          targetPosX = (mx - cx) * 0.04 * power * MAGNET_STRENGTH;
+          targetPosY = -(my - cy) * 0.04 * power * MAGNET_STRENGTH;
+          
+          // Tilt ripristinato a livelli visibili ma non fastidiosi
+          velRot.x += (targetPosY * 1.0 - rot.x) * 0.12;
+          velRot.y += (targetPosX * 0.3 - rot.y) * 0.08;
+        } else {
+          targetPosX = 0;
+          targetPosY = 0;
+        }
 
-        // 2. Integrazione Molle (Spring Physics)
-        // Rotazione torna a 0
-        const axR = (-SPRING_K * rot.x - SPRING_D * velRot.x) / MASS;
-        const ayR = (-SPRING_K * rot.y - SPRING_D * velRot.y) / MASS;
-        velRot.x += axR * dt;
-        velRot.y += ayR * dt;
-        rot.x += velRot.x * dt;
-        rot.y += velRot.y * dt;
+        // 2. Damping separato: 
+        //    - Pos/Rot: rigido durante magnet, morbidissimo durante wiggle di ritorno
+        //    - Scala: sempre morbida per il breathing
+        const dampPosRot = isMagnetized ? 14 : 3.0; // 3.0 → oscillazione lunga come budino
+        const dampScale = 5.5; // Underdamped: spring visibile, breathing fluido
 
-        // Scala torna a 1.0
-        const axS = (-SPRING_K * (scl.x - 1) - SPRING_D * velScl.x) / MASS;
-        const ayS = (-SPRING_K * (scl.y - 1) - SPRING_D * velScl.y) / MASS;
-        const azS = (-SPRING_K * (scl.z - 1) - SPRING_D * velScl.z) / MASS;
-        velScl.x += axS * dt;
-        velScl.y += ayS * dt;
-        velScl.z += azS * dt;
+        // 3. Integrazione Molle — Posizione
+        const axP = (-SPRING_K * (pos.x - targetPosX) - dampPosRot * velPos.x) / MASS;
+        const ayP = (-SPRING_K * (pos.y - targetPosY) - dampPosRot * velPos.y) / MASS;
+        velPos.x += axP * dt; velPos.y += ayP * dt;
+        pos.x += velPos.x * dt; pos.y += velPos.y * dt;
+
+        // Integrazione Molle — Rotazione
+        const axR = (-SPRING_K * rot.x - dampPosRot * velRot.x) / MASS;
+        const ayR = (-SPRING_K * rot.y - dampPosRot * velRot.y) / MASS;
+        velRot.x += axR * dt; velRot.y += ayR * dt;
+        rot.x += velRot.x * dt; rot.y += velRot.y * dt;
+
+        // Integrazione Molle — Scala (Breathing organico, damping separato)
+        const breatheX = 1 + Math.sin(t * 1.5) * 0.025;
+        const breatheY = 1 + Math.cos(t * 1.2) * 0.025;
+        const breatheZ = 1 + Math.sin(t * 0.9) * 0.015;
+        velScl.x += (-SPRING_K * (scl.x - breatheX) - dampScale * velScl.x) / MASS * dt;
+        velScl.y += (-SPRING_K * (scl.y - breatheY) - dampScale * velScl.y) / MASS * dt;
+        velScl.z += (-SPRING_K * (scl.z - breatheZ) - dampScale * velScl.z) / MASS * dt;
         scl.x += velScl.x * dt;
         scl.y += velScl.y * dt;
         scl.z += velScl.z * dt;
 
-        // 3. Applicazione Trasformazioni
-        // Rotazione Base (per tenerlo dritto) + Spring + Floating
+        // 4. Applicazione
+        model.position.set(pos.x, pos.y, 0);
         model.rotation.x = Math.PI/2 + rot.x + Math.sin(t * 0.5) * 0.05;
         model.rotation.y = rot.y + Math.cos(t * 0.4) * 0.07;
-        
-        // Applicazione Scala Jelly
-        model.scale.set(
-          baseScale * scl.x, 
-          baseScale * scl.y, 
-          baseScale * scl.z
-        );
+        model.scale.set(baseScale * scl.x, baseScale * scl.y, baseScale * scl.z);
       }
 
       renderer.render(scene, camera);
     };
     animate();
 
-    // ── Resize ─────────────────────────────────────────────
     const ro = new ResizeObserver(() => {
       camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
@@ -177,7 +191,6 @@ export function Logo3D() {
     });
     ro.observe(container);
 
-    // ── Cleanup ────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(frameId);
       ro.disconnect();
@@ -195,7 +208,7 @@ export function Logo3D() {
   return (
     <div
       ref={containerRef}
-      className="w-[90vw] h-[50vh] sm:h-[80vh] mx-auto overflow-visible"
+      className="w-[100vw] h-[75vh] cursor-none"
     />
   );
 }
