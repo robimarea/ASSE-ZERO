@@ -8,9 +8,9 @@ import { SECTION_IDS } from '@/lib/constants';
 // Avatar SVG placeholder locale — nessuna dipendenza esterna
 function AvatarPlaceholder({ index }: { index: number }) {
   const gradients = [
-    ['#BF3320', '#8F2417'],
-    ['#E9AC06', '#B78705'],
-    ['#CC7F11', '#8F5800'],
+    ['#E9AC06', '#B78705'], // Yellow
+    ['#FFFFFF', '#D1D1D1'], // White/Gray
+    ['#333333', '#111111'], // Dark
   ];
   const [from, to] = gradients[index % gradients.length];
   const id = `avatar-grad-${index}`;

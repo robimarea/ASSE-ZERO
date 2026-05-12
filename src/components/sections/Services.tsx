@@ -155,7 +155,7 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
             }`}
             style={isVideo
               ? { lineHeight: 0.9, fontFamily: "'Bebas Neue', sans-serif" }
-              : { fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(5rem, 14vw, 13.4rem)', lineHeight: 0.9, color: '#e9ac06' }
+              : { fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(5rem, 14vw, 13.4rem)', lineHeight: 0.9, color: 'var(--color-primary)' }
             }
           >
             {title}
@@ -208,24 +208,23 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
           <div className="price-scroll-container">
             {SMM_PRICE_PLANS.map((plan) => (
               <div key={plan.name} className="price-card-wrapper">
-                <SpotlightCard spotlightColor="rgba(255, 220, 0, 0.25)" className="h-full flex flex-col">
+                <SpotlightCard spotlightColor="rgba(233, 172, 6, 0.25)" className="h-full flex flex-col">
                   <div className="flex flex-col gap-4 h-full">
                     <div>
                       <h3 className="text-white font-heading font-black text-2xl mb-1">{plan.name}</h3>
-                      <p className="font-heading font-black text-3xl" style={{ color: '#FFD600' }}>{plan.price}</p>
+                      <p className="font-heading font-black text-3xl text-primary">{plan.price}</p>
                     </div>
                     <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>{plan.description}</p>
                     <ul className="flex flex-col gap-2 flex-1">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                          <span style={{ color: '#FFD600' }}>✓</span>
+                          <span className="text-primary">✓</span>
                           <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
                     <button
-                      className="w-full py-3 px-6 rounded-xl font-heading font-black text-sm tracking-wide transition-opacity hover:opacity-90 cursor-pointer"
-                      style={{ backgroundColor: '#FFD600', color: '#000' }}
+                      className="w-full py-3 px-6 rounded-xl font-heading font-black text-sm tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-primary text-dark"
                     >
                       {plan.cta}
                     </button>

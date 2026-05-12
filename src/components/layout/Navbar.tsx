@@ -165,7 +165,7 @@ export function Navbar() {
                     textDecoration: 'none',
                     lineHeight: 1.05,
                     letterSpacing: '-0.02em',
-                    color: isHovered ? '#e9ac06' : 'transparent',
+                    color: isHovered ? 'var(--color-primary)' : 'transparent',
                     WebkitTextStroke: isHovered ? '0px transparent' : '1.5px rgba(255,255,255,0.85)',
                     transition: 'color 0.4s ease, -webkit-text-stroke-color 0.4s ease',
                     cursor: 'none',

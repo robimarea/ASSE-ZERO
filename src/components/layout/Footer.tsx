@@ -58,7 +58,7 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="bg-primary text-dark overflow-hidden w-full h-screen relative" id="footer">
+    <footer className="bg-dark text-white overflow-hidden w-full h-screen relative" id="footer">
       <div
         ref={wrapperRef}
         className="absolute bottom-0 w-full flex flex-col justify-end items-start overflow-hidden will-change-[height]"
@@ -74,41 +74,41 @@ export function Footer() {
           }}
         >
           {/* Brand */}
-          <h3 className="text-5xl font-heading font-black text-dark tracking-tighter">
+          <h3 className="text-5xl font-heading font-black text-primary tracking-tighter">
             {SITE_NAME}
           </h3>
-          <p className="text-dark/80 text-xl leading-relaxed font-bold">
+          <p className="text-white/80 text-xl leading-relaxed font-bold max-w-2xl">
             Team creativo specializzato in produzione video professionale e social media management.
           </p>
 
           {/* Navigazione */}
-          <p className="text-base font-black text-dark uppercase tracking-wider mt-3">Navigazione</p>
+          <p className="text-base font-black text-primary uppercase tracking-wider mt-3">Navigazione</p>
           {['Home', 'Servizi', 'Team', 'Contatti'].map((label) => (
             <a
               key={label}
               href={`#${label.toLowerCase()}`}
-              className="text-lg font-bold text-dark/80 hover:text-dark hover:underline underline-offset-4 transition-all duration-300"
+              className="text-lg font-bold text-white/80 hover:text-primary hover:underline underline-offset-4 transition-all duration-300"
             >
               {label}
             </a>
           ))}
 
           {/* Servizi */}
-          <p className="text-base font-black text-dark uppercase tracking-wider mt-3">Servizi</p>
+          <p className="text-base font-black text-primary uppercase tracking-wider mt-3">Servizi</p>
           <div className="flex flex-row flex-wrap gap-x-10 gap-y-1">
             {['Produzione Video', 'Post-Produzione', 'Social Media Management', 'Content Strategy'].map((service) => (
-              <span key={service} className="text-lg font-bold text-dark/80">{service}</span>
+              <span key={service} className="text-lg font-bold text-white/80">{service}</span>
             ))}
           </div>
 
           {/* Bottom */}
-          <div className="border-t border-dark/20 mt-4 pt-3 flex flex-col gap-1">
-            <p className="text-base font-black text-dark/60 tracking-wider">
+          <div className="border-t border-white/10 mt-4 pt-3 flex flex-col gap-1">
+            <p className="text-base font-black text-white/40 tracking-wider">
               © {currentYear} {SITE_NAME}. TUTTI I DIRITTI RISERVATI.
             </p>
             <div className="flex gap-6">
-              <a href="#" className="text-base font-black text-dark/60 hover:text-dark transition-colors tracking-wider">PRIVACY POLICY</a>
-              <a href="#" className="text-base font-black text-dark/60 hover:text-dark transition-colors tracking-wider">COOKIE POLICY</a>
+              <a href="#" className="text-base font-black text-white/40 hover:text-primary transition-colors tracking-wider">PRIVACY POLICY</a>
+              <a href="#" className="text-base font-black text-white/40 hover:text-primary transition-colors tracking-wider">COOKIE POLICY</a>
             </div>
           </div>
         </div>

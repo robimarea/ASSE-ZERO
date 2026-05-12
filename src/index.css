@@ -28,18 +28,17 @@
    ============================================ */
 
 @theme {
-  /* Brand Colors */
-  --color-primary: #BF3320;      /* 10% mattone (accenti) */
-  --color-primary-light: #D1523E;
-  --color-primary-dark: #8F2417;
-  --color-secondary: #E9AC06;    /* 30% ambra */
-  --color-secondary-light: #F0C24F;
-  --color-secondary-dark: #B78705;
-  --color-accent: #CC7F11;
-  --color-accent-light: #D89D43;
+  /* Brand Colors (60/30/10 Theory) */
+  --color-primary: #E9AC06;      /* 30% Giallo (Secondary focus) */
+  --color-primary-light: #F0C24F;
+  --color-primary-dark: #B78705;
+  --color-secondary: #FFFFFF;    /* 10% Bianco (Accent / Highlights) */
+  --color-secondary-light: #FFFFFF;
+  --color-secondary-dark: #F5F5F5;
+  --color-accent: #E9AC06;
 
-  /* Dark Palette */
-  --color-dark: #000000;         /* 60% base */
+  /* Dark Palette (60% Base) */
+  --color-dark: #000000;         /* 60% Nero */
   --color-dark-secondary: #0A0A0A;
   --color-surface: #111111;
   --color-surface-light: #1A1A1A;
@@ -47,8 +46,8 @@
 
   /* Text */
   --color-text-primary: #FFFFFF;
-  --color-text-secondary: #D9C79B;
-  --color-text-muted: #8D7A4F;
+  --color-text-secondary: #E9AC06;
+  --color-text-muted: #888888;
 
   /* Glass */
   --color-glass: rgba(10, 10, 10, 0.7);

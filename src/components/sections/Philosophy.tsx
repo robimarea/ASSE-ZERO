@@ -4,7 +4,7 @@
 
 export function Philosophy() {
   return (
-    <section className="w-full min-h-screen bg-secondary flex flex-col items-center justify-center py-32">
+    <section className="w-full min-h-screen bg-primary flex flex-col items-center justify-center py-32">
       <div className="w-full max-w-5xl mx-auto px-6 lg:px-12 flex flex-col items-start text-dark">
         <h2 className="text-5xl sm:text-6xl md:text-7xl font-heading font-black tracking-tight mb-8" style={{lineHeight: 1.1}}>
           "assestiamo la tua idea,<br />dalla a alla z"
