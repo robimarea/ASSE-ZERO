@@ -9,7 +9,7 @@ export function Hero() {
   return (
     <section
       id={SECTION_IDS.home}
-      className="w-full min-h-screen bg-dark text-white relative overflow-visible"
+      className="w-full min-h-screen bg-primary text-white relative overflow-visible"
     >
       {/* Logo 3D: absolute in cima, fuori dal flusso, non clippato */}
       <div
@@ -24,12 +24,11 @@ export function Hero() {
         className="relative z-0 flex flex-col items-center justify-end w-full min-h-screen pb-16"
       >
         <h1
-          className="text-primary uppercase font-black leading-none text-center"
+          className="text-white uppercase font-black leading-none text-center"
           style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: 'clamp(3rem, 12vw, 9rem)',
-            textShadow: '0 0 20px rgba(0,0,0,0.5)',
-            WebkitTextStroke: '2px var(--color-dark)'
+            fontFamily: "'Alte Haas Grotesk', sans-serif",
+            fontSize: 'clamp(3rem, 10vw, 8rem)',
+            textShadow: '0 0 20px rgba(0,0,0,0.2)',
           }}
         >
           Video &amp; Media

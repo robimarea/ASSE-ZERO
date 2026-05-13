@@ -8,56 +8,13 @@
 import { useRef, useEffect } from 'react';
 import SpotlightCard from '@/components/SpotlightCard';
 import '@/components/social-pricing.css';
-import { VIDEO_PILLS, SMM_PILLS, VIDEO_DESCRIPTION } from '@/data/services';
+import { VIDEO_PILLS, SMM_PILLS, VIDEO_DESCRIPTION, SMM_PRICE_PLANS, VIDEO_PLANS } from '@/data/services';
 
 interface ServicesProps {
   section: 'video' | 'smm';
   overlapNext?: boolean;
   isVisible?: boolean;
 }
-const CARDS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
-
-const SMM_PRICE_PLANS = [
-  {
-    name: 'Growth',
-    price: '€79/mo',
-    description: 'Per brand in crescita che vogliono aumentare la loro presenza online.',
-    features: [
-      'Gestione 2 profili social',
-      '16 post al mese',
-      'Content strategy avanzata',
-      'Consulenza mensile',
-      'Assistenza prioritaria',
-    ],
-    cta: 'Inizia Ora',
-  },
-  {
-    name: 'Pro',
-    price: '€149/mo',
-    description: 'La soluzione completa per brand che puntano a dominare i social.',
-    features: [
-      'Gestione 3 profili social',
-      '30 post al mese',
-      'Strategia personalizzata',
-      'Analisi trend & algoritmi',
-      'Consulenze bisettimanali',
-    ],
-    cta: 'Inizia Ora',
-  },
-  {
-    name: 'Agency',
-    price: '€299/mo',
-    description: 'Per agenzie e grandi brand con esigenze social complesse e multi-canale.',
-    features: [
-      'Profili illimitati',
-      'Post illimitati',
-      'Strategia multi-canale',
-      'Dedicated account manager',
-      'Report avanzati & analytics',
-    ],
-    cta: 'Contattaci',
-  },
-] as const;
 
 export function Services({ section, overlapNext = false, isVisible = true }: ServicesProps) {
   const isVideo = section === 'video';
@@ -141,21 +98,21 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
   return (
     <section
       ref={containerRef}
-      className="relative w-full bg-dark z-0"
+      className={`relative w-full z-0 ${isVideo ? 'bg-primary' : 'bg-dark'}`}
       style={{ height: '400vh' }}
     >
       <div className="sticky top-0 z-10 w-full h-screen flex flex-col items-center justify-center overflow-visible py-12 md:py-24">
 
         <div className="w-full mx-auto px-4 flex flex-col items-center mb-8 shrink-0">
           <h2
-            className={`w-full font-black tracking-tighter text-center mb-6 md:mb-12 ${
+            className={`font-black uppercase tracking-tighter mb-4 ${isVideo ? 'text-dark' : 'text-primary'} ${
               isVideo
-                ? 'font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-primary'
+                ? 'font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl'
                 : ''
             }`}
             style={isVideo
               ? { lineHeight: 0.9, fontFamily: "'Bebas Neue', sans-serif" }
-              : { fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(5rem, 14vw, 13.4rem)', lineHeight: 0.9, color: 'var(--color-primary)' }
+              : { fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(5rem, 14vw, 13.4rem)', lineHeight: 0.9 }
             }
           >
             {title}
@@ -163,12 +120,14 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
 
 
           {isVideo ? (
-            <p
-              className="text-white/70 text-center max-w-3xl mb-2"
-              style={{ fontSize: '1rem', lineHeight: 1.7 }}
+            <div
+              className="text-dark text-center max-w-4xl mb-8 flex flex-col gap-4"
+              style={{ fontSize: '1.1rem', lineHeight: 1.6 }}
             >
-              {VIDEO_DESCRIPTION}
-            </p>
+              {VIDEO_DESCRIPTION.map((text, idx) => (
+                <p key={idx} dangerouslySetInnerHTML={{ __html: text }} />
+              ))}
+            </div>
           ) : (
             <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-4xl">
               {pills.map((pill) => (
@@ -183,57 +142,32 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
           )}
         </div>
 
-        {isVideo ? (
-          <div className="w-full flex-1 flex items-center relative overflow-hidden">
-            <div
-              ref={trackRef}
-              className="flex gap-4 md:gap-6 px-4 md:px-[10vw]"
-              style={{
-                width: 'max-content',
-                transform: 'translate3d(0, 0, 0)',
-                willChange: 'transform'
-              }}
-            >
-              {CARDS.map((num) => (
-                <div
-                  key={`${section}-card-${num}`}
-                  className="shrink-0 w-64 sm:w-80 md:w-96 aspect-[4/3] bg-secondary rounded-2xl flex items-center justify-center shadow-lg"
-                >
-                  <span className="text-5xl font-heading font-black text-dark/30">{num}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="price-scroll-container">
-            {SMM_PRICE_PLANS.map((plan) => (
-              <div key={plan.name} className="price-card-wrapper">
-                <SpotlightCard spotlightColor="rgba(233, 172, 6, 0.25)" className="h-full flex flex-col">
-                  <div className="flex flex-col gap-4 h-full">
-                    <div>
-                      <h3 className="text-white font-heading font-black text-2xl mb-1">{plan.name}</h3>
-                      <p className="font-heading font-black text-3xl text-primary">{plan.price}</p>
-                    </div>
-                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>{plan.description}</p>
-                    <ul className="flex flex-col gap-2 flex-1">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-start gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                          <span className="text-primary">✓</span>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <button
-                      className="w-full py-3 px-6 rounded-xl font-heading font-black text-sm tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-primary text-dark"
-                    >
-                      {plan.cta}
-                    </button>
+        <div className="price-scroll-container">
+          {(isVideo ? VIDEO_PLANS : SMM_PRICE_PLANS).map((plan) => (
+            <div key={plan.name} className="price-card-wrapper">
+              <SpotlightCard spotlightColor="rgba(233, 172, 6, 0.25)" className="h-full flex flex-col bg-dark/90 backdrop-blur-sm rounded-3xl border border-white/5">
+                <div className="flex flex-col gap-5 h-full p-2">
+                  <div>
+                    <h3 className="text-white font-heading font-black text-2xl mb-1 tracking-tight">{plan.name}</h3>
+                    <p className="font-heading font-black text-3xl text-primary">{plan.price}</p>
                   </div>
-                </SpotlightCard>
-              </div>
-            ))}
-          </div>
-        )}
+                  <p className="text-sm leading-relaxed text-white/50">{plan.description}</p>
+                  <ul className="flex flex-col gap-3 flex-1">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3 text-sm text-white/80">
+                        <span className="text-primary font-bold">✓</span>
+                        <span className="leading-tight">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="w-full py-4 px-6 rounded-2xl font-heading font-black text-sm tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer bg-primary text-dark uppercase">
+                    {(plan as any).cta || 'Richiedi Info'}
+                  </button>
+                </div>
+              </SpotlightCard>
+            </div>
+          ))}
+        </div>
 
       </div>
     </section>

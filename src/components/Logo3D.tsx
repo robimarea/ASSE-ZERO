@@ -41,11 +41,11 @@ export function Logo3D() {
     container.appendChild(renderer.domElement);
 
     // ── Luci ──────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 4);
+    scene.add(new THREE.AmbientLight(0xffffff, 2.0));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 4.5);
     keyLight.position.set(4, 8, 6);
     scene.add(keyLight);
-    const rimLight = new THREE.DirectionalLight(0xe9ac06, 2);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 2.5);
     rimLight.position.set(-6, -4, -5);
     scene.add(rimLight);
 
@@ -75,6 +75,18 @@ export function Logo3D() {
       '/logo-3d.glb',
       (gltf: GLTF) => {
         const gltfScene = gltf.scene;
+
+        // Forza colore giallo su tutte le mesh
+        gltfScene.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: new THREE.Color('#FFFFFF'),
+              metalness: 0.2,
+              roughness: 0.1,
+            });
+          }
+        });
+
         const box = new THREE.Box3().setFromObject(gltfScene);
         const center = new THREE.Vector3();
         box.getCenter(center);
@@ -101,6 +113,19 @@ export function Logo3D() {
     // ── Loop Fisico ────────────────────────────────────────
     let frameId = 0;
     let lastT = performance.now();
+    let cx = 0, cy = 0, triggerRadius = 0;
+
+    const updateRect = () => {
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      cx = rect.left + rect.width / 2;
+      cy = rect.top + rect.height / 2;
+      triggerRadius = Math.hypot(rect.width, rect.height) * TRIGGER_RADIUS_MULT;
+    };
+
+    updateRect();
+    window.addEventListener('scroll', updateRect, { passive: true });
+    window.addEventListener('resize', updateRect, { passive: true });
 
     const animate = () => {
       frameId = requestAnimationFrame(animate);
@@ -110,11 +135,7 @@ export function Logo3D() {
       const t = now * 0.001;
 
       if (model) {
-        const rect = container.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
         const dist = Math.hypot(mx - cx, my - cy);
-        const triggerRadius = Math.hypot(rect.width, rect.height) * TRIGGER_RADIUS_MULT;
 
         // 1. Gestione Soglia Magnetica con impulso one-shot al rilascio
         const wasMagnetized = isMagnetized;
@@ -122,11 +143,9 @@ export function Logo3D() {
 
         // Impulso one-shot solo quando si ESCE dalla soglia → wiggling di ritorno
         if (wasMagnetized && !isMagnetized) {
-          // Diamo una "frustata" alla velocità attuale di pos e rot
-          // proporzionale a quanto ci stavamo spostando
           velPos.x *= -0.6; // Rimbalzo invertito
           velPos.y *= -0.6;
-          velRot.x += pos.y * 3.0; // Rotazione residua basata sulla posizione
+          velRot.x += pos.y * 3.0;
           velRot.y += pos.x * 3.0;
         }
 
@@ -136,7 +155,6 @@ export function Logo3D() {
           targetPosX = (mx - cx) * 0.04 * power * MAGNET_STRENGTH;
           targetPosY = -(my - cy) * 0.04 * power * MAGNET_STRENGTH;
           
-          // Tilt ripristinato a livelli visibili ma non fastidiosi
           velRot.x += (targetPosY * 1.0 - rot.x) * 0.12;
           velRot.y += (targetPosX * 0.3 - rot.y) * 0.08;
         } else {
@@ -144,11 +162,9 @@ export function Logo3D() {
           targetPosY = 0;
         }
 
-        // 2. Damping separato: 
-        //    - Pos/Rot: rigido durante magnet, morbidissimo durante wiggle di ritorno
-        //    - Scala: sempre morbida per il breathing
-        const dampPosRot = isMagnetized ? 14 : 3.0; // 3.0 → oscillazione lunga come budino
-        const dampScale = 5.5; // Underdamped: spring visibile, breathing fluido
+        // 2. Damping separato
+        const dampPosRot = isMagnetized ? 14 : 3.0;
+        const dampScale = 5.5;
 
         // 3. Integrazione Molle — Posizione
         const axP = (-SPRING_K * (pos.x - targetPosX) - dampPosRot * velPos.x) / MASS;
@@ -162,7 +178,7 @@ export function Logo3D() {
         velRot.x += axR * dt; velRot.y += ayR * dt;
         rot.x += velRot.x * dt; rot.y += velRot.y * dt;
 
-        // Integrazione Molle — Scala (Breathing organico, damping separato)
+        // Integrazione Molle — Scala
         const breatheX = 1 + Math.sin(t * 1.5) * 0.025;
         const breatheY = 1 + Math.cos(t * 1.2) * 0.025;
         const breatheZ = 1 + Math.sin(t * 0.9) * 0.015;
@@ -194,6 +210,8 @@ export function Logo3D() {
     return () => {
       cancelAnimationFrame(frameId);
       ro.disconnect();
+      window.removeEventListener('scroll', updateRect);
+      window.removeEventListener('resize', updateRect);
       window.removeEventListener('mousemove', onMouseMove);
       scene.traverse((obj) => {
         if (!(obj instanceof THREE.Mesh)) return;

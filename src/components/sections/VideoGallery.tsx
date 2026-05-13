@@ -230,9 +230,11 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               ))}
             </div>
 
-            <p className="leading-relaxed" style={{ fontSize: 'clamp(1rem, 1.5vw, 1.4rem)', color: '#fff' }}>
-              {VIDEO_DESCRIPTION}
-            </p>
+            <div className="flex flex-col gap-4 leading-relaxed" style={{ fontSize: 'clamp(1rem, 1.2vw, 1.3rem)', color: '#fff' }}>
+              {VIDEO_DESCRIPTION.map((text, idx) => (
+                <p key={idx} dangerouslySetInnerHTML={{ __html: text }} />
+              ))}
+            </div>
           </div>
         </div>
 

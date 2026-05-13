@@ -126,7 +126,7 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
       const mouseY = gsap.getProperty(cursorRef.current, 'y') as number;
       const elementUnderMouse = document.elementFromPoint(mouseX, mouseY);
       const isStillOverTarget =
-        elementUnderMouse &&
+        elementUnderMouse instanceof Element &&
         (elementUnderMouse === activeTarget || elementUnderMouse.closest(targetSelector) === activeTarget);
       if (!isStillOverTarget) {
         currentLeaveHandler?.();
@@ -150,8 +150,8 @@ const TargetCursor: React.FC<TargetCursorProps> = ({
     window.addEventListener('mouseup', mouseUpHandler);
 
     const enterHandler = (e: MouseEvent) => {
-      // .closest() è più diretto del while loop manuale e ha lo stesso comportamento
-      const target = (e.target as Element).closest<Element>(targetSelector);
+      if (!(e.target instanceof Element)) return;
+      const target = e.target.closest<Element>(targetSelector);
       if (!target || !cursorRef.current || !cornersRef.current) return;
       if (activeTarget === target) return;
       if (activeTarget) cleanupTarget(activeTarget);

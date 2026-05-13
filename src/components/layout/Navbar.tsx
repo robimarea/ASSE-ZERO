@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { navLinks } from '@/data/navigation';
 import DarkVeil from '@/components/DarkVeil';
+import { LogoSVG } from '@/components/LogoSVG';
 
 const PANEL_WIDTH = '75%';
 const EASING = 'cubic-bezier(0.76, 0, 0.24, 1)';
@@ -37,6 +38,20 @@ export function Navbar() {
 
   return (
     <>
+      {/* ── LOGO 2D (Top Left) ── */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 197,
+          padding: '18px 32px',
+          pointerEvents: 'none',
+        }}
+      >
+        <LogoSVG width={120} color="#ffffff" outlineColor="transparent" />
+      </div>
+
       {/* ── TRIGGER ── */}
       <button
         onClick={() => setOpen(true)}
@@ -57,7 +72,7 @@ export function Navbar() {
           transition: 'opacity 0.3s ease',
         }}
       >
-        <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '28px', color: '#ffffff', letterSpacing: '2px' }}>Menù</span>
+        <span style={{ fontFamily: "'Alte Haas Grotesk', sans-serif", fontWeight: 700, fontSize: '24px', color: '#ffffff', letterSpacing: '2px', textTransform: 'uppercase' }}>Menù</span>
       </button>
 
       {/* ── BACKDROP semitrasparente (lato sinistro) ── */}
