@@ -1,68 +1,144 @@
 // ============================================
-// ASSE ZERO — Team Section
-// TODO: sostituire gli avatar placeholder con foto reali in /public/team/
+// ASSE ZERO — Team Section (cerchi con foto)
+// TODO: aggiungere foto reali in /src/assets/team/
 // ============================================
 
 import { SECTION_IDS } from '@/lib/constants';
 
-// Avatar SVG placeholder locale — nessuna dipendenza esterna
-function AvatarPlaceholder({ index }: { index: number }) {
-  const gradients = [
-    ['#E9AC06', '#B78705'], // Yellow
-    ['#FFFFFF', '#D1D1D1'], // White/Gray
-    ['#333333', '#111111'], // Dark
-  ];
-  const [from, to] = gradients[index % gradients.length];
-  const id = `avatar-grad-${index}`;
-
-  return (
-    <svg
-      viewBox="0 0 200 200"
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-full h-full"
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient id={id} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={from} />
-          <stop offset="100%" stopColor={to} />
-        </linearGradient>
-      </defs>
-      <rect width="200" height="200" fill={`url(#${id})`} />
-      {/* Silhouette corpo */}
-      <circle cx="100" cy="72" r="34" fill="rgba(0,0,0,0.35)" />
-      <ellipse cx="100" cy="174" rx="56" ry="40" fill="rgba(0,0,0,0.35)" />
-    </svg>
-  );
-}
-
 const TEAM_MEMBERS = [
-  { id: 1, name: 'Membro 1', role: 'Direttore Creativo' },
-  { id: 2, name: 'Membro 2', role: 'Video Production' },
-  { id: 3, name: 'Membro 3', role: 'Social Media Manager' },
+  {
+    id: 1,
+    name: 'Alessia Debrova',
+    role: 'Social media strategist, Content manager',
+    photo: null, // TODO: import alessiaImg from '@/assets/team/alessia.jpg'
+  },
+  {
+    id: 2,
+    name: 'Vittorio Milandri',
+    role: 'Videomaker, Operatore di camera, Montatore, Sound designer',
+    photo: null, // TODO: import vittorioImg from '@/assets/team/vittorio.jpg'
+  },
+  {
+    id: 3,
+    name: 'Salvattore Muratori',
+    role: 'Regista, Direttore della fotografia',
+    photo: null, // TODO: import salvattoreImg from '@/assets/team/salvattore.jpg'
+  },
+  {
+    id: 4,
+    name: 'Gerardo Romani',
+    role: 'Montatore, Colorist',
+    photo: null, // TODO: import gerardoImg from '@/assets/team/gerardo.jpg'
+  },
 ];
+
 
 export function Team() {
   return (
-    <section id={SECTION_IDS.team} className="w-full min-h-screen bg-dark flex flex-col items-center justify-center py-24">
-      <div className="w-full max-w-6xl mx-auto px-4 flex flex-col items-center">
-        <h2 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-heading font-black text-white mb-16 tracking-tighter text-center">
+    <section
+      id={SECTION_IDS.team}
+      className="w-full bg-dark py-24 overflow-hidden"
+      style={{ paddingBottom: '120px' }}
+    >
+      {/* Titolo */}
+      <div className="w-full mb-20 flex justify-center">
+        <h2
+          className="tracking-tighter leading-none whitespace-nowrap text-center"
+          style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(3.5rem, 10vw, 9rem)', color: '#e9ac06' }}
+        >
           IL NOSTRO TEAM
         </h2>
-        <ul className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl list-none">
-          {TEAM_MEMBERS.map((member, index) => (
-            <li key={member.id} className="flex flex-col items-center gap-3">
-              <div className="w-64 h-80 bg-gray-800 rounded-3xl overflow-hidden border-2 border-white/10 shadow-xl transition-all duration-500 hover:border-primary/40 hover:shadow-[0_0_40px_rgba(191,51,32,0.2)]">
-                {/* TODO: sostituire con <img src={`/team/${member.id}.jpg`} alt={member.name} ... /> */}
-                <AvatarPlaceholder index={index} />
+      </div>
+
+      {/* Cards: 2 colonne centrate sull'asse — sx: box 1 e 3, dx: box 2 e 4 */}
+      <div className="w-full flex flex-row justify-center" style={{ gap: '380px' }}>
+
+        {/* Colonna sinistra: box 1 (Alessia) e box 3 (Salvattore) */}
+        <div className="flex flex-col gap-16 items-center">
+          {[0, 2].map((index) => {
+            const member = TEAM_MEMBERS[index];
+            return (
+              <div key={member.id} className="flex flex-col items-center text-center">
+                <div
+                  style={{
+                    width: 260,
+                    height: 260,
+                    borderRadius: '50%',
+                    backgroundColor: '#e9ac06',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                  }}
+                >
+                  {member.photo && (
+                    <img
+                      src={member.photo}
+                      alt={member.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        filter: 'grayscale(100%)',
+                        display: 'block',
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="mt-4 flex flex-col items-center gap-1 max-w-[260px]">
+                  <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.6rem', color: '#ffffff', letterSpacing: '0.05em' }}>
+                    {member.name}
+                  </p>
+                  <p style={{ fontWeight: 400, fontSize: '1rem', color: '#888888', lineHeight: 1.4 }}>
+                    {member.role}
+                  </p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-white font-heading font-bold text-lg tracking-tight">{member.name}</p>
-                <p className="text-primary text-sm tracking-widest uppercase">{member.role}</p>
+            );
+          })}
+        </div>
+
+        {/* Colonna destra: box 2 (Vittorio) e box 4 (Gerardo) */}
+        <div className="flex flex-col gap-16 items-center">
+          {[1, 3].map((index) => {
+            const member = TEAM_MEMBERS[index];
+            return (
+              <div key={member.id} className="flex flex-col items-center text-center">
+                <div
+                  style={{
+                    width: 260,
+                    height: 260,
+                    borderRadius: '50%',
+                    backgroundColor: '#e9ac06',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                  }}
+                >
+                  {member.photo && (
+                    <img
+                      src={member.photo}
+                      alt={member.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        filter: 'grayscale(100%)',
+                        display: 'block',
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="mt-4 flex flex-col items-center gap-1 max-w-[260px]">
+                  <p style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.6rem', color: '#ffffff', letterSpacing: '0.05em' }}>
+                    {member.name}
+                  </p>
+                  <p style={{ fontWeight: 400, fontSize: '1rem', color: '#888888', lineHeight: 1.4 }}>
+                    {member.role}
+                  </p>
+                </div>
               </div>
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
+
       </div>
     </section>
   );

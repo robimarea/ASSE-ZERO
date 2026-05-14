@@ -361,13 +361,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
           </div>
         </div>
 
-        {/* Section Header */}
-        <div className="pointer-events-none absolute left-7 top-7 z-30 text-white md:left-10 md:top-8">
-          <div className="mt-2 text-[0.62rem] uppercase tracking-[0.32em] text-white/52 md:text-[0.7rem]">
-            Suspended Gallery
-          </div>
-        </div>
-
         {/* Active Asset Info */}
         <div className="pointer-events-none absolute bottom-8 left-1/2 z-30 w-[min(32rem,calc(100%-2rem))] -translate-x-1/2 px-5 py-3 text-center md:bottom-10">
           <div 

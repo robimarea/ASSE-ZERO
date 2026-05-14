@@ -44,30 +44,23 @@ function App() {
           {(isVisible) => <VideoGallery isVisible={isVisible} />}
         </Viewport>
 
-        <MaskChangeUI 
-          curtain={<Services section="video" />} 
-          zIndex={45} 
-          overlapPrev={true} 
-          layerOrder={1}
-        >
-          <Viewport id="smm">
-            {(isVisible) => <Services section="smm" overlapNext={true} isVisible={isVisible} />}
-          </Viewport>
-        </MaskChangeUI>
+        <Viewport id="smm">
+          {(isVisible) => <Services section="smm" overlapNext={true} isVisible={isVisible} />}
+        </Viewport>
 
-        <MaskChangeUI curtain={<Philosophy />} zIndex={40} overlapPrev={true} extraStickyDistanceH={1} layerOrder={2}>
-          <Viewport id="team" reveal stagger>
-            <Team />
-          </Viewport>
-        </MaskChangeUI>
+        <Philosophy />
 
-        <MaskChangeUI curtain={<Contact />} zIndex={30} overlapPrev={true} layerOrder={3}>
-          <Viewport id="contatti" reveal stagger>
-            <div className="bg-primary w-full flex flex-col justify-end min-h-screen">
-               <Footer />
-            </div>
-          </Viewport>
-        </MaskChangeUI>
+        <Viewport id="team" reveal stagger>
+          <Team />
+        </Viewport>
+
+        <Viewport id="contatti" reveal stagger>
+          <Contact />
+        </Viewport>
+
+        <div className="bg-primary w-full flex flex-col justify-end min-h-screen">
+          <Footer />
+        </div>
       </main>
     </HelmetProvider>
   );

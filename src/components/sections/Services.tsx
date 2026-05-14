@@ -8,7 +8,7 @@
 import { useRef, useEffect } from 'react';
 import SpotlightCard from '@/components/SpotlightCard';
 import '@/components/social-pricing.css';
-import { VIDEO_PILLS, SMM_PILLS, VIDEO_DESCRIPTION, SMM_PRICE_PLANS, VIDEO_PLANS } from '@/data/services';
+import { VIDEO_PILLS, SMM_PILLS, SMM_PRICE_PLANS } from '@/data/services';
 
 interface ServicesProps {
   section: 'video' | 'smm';
@@ -21,9 +21,7 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
   const containerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  const title = isVideo ? 'VIDEO' : (
-    <>SOCIAL MEDIA<br/>MANAGEMENT</>
-  );
+  const title = isVideo ? 'VIDEO' : 'SOCIAL MEDIA MANAGEMENT';
 
   const pills = isVideo ? VIDEO_PILLS : SMM_PILLS;
 
@@ -65,7 +63,7 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
       const deadZoneMultiplier = overlapNext ? 2 : 1;
       const scrollableDistance = container.offsetHeight - (deadZoneMultiplier * window.innerHeight);
 
-      const trackWidth = track.scrollWidth > 0 ? track.scrollWidth : CARDS.length * 400;
+      const trackWidth = track.scrollWidth > 0 ? track.scrollWidth : SMM_PRICE_PLANS.length * 400;
       const trackScrollableWidth = Math.max(0, trackWidth - window.innerWidth);
 
       const progress = Math.max(0, Math.min(1, scrolled / scrollableDistance));
@@ -112,23 +110,14 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
             }`}
             style={isVideo
               ? { lineHeight: 0.9, fontFamily: "'Bebas Neue', sans-serif" }
-              : { fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(5rem, 14vw, 13.4rem)', lineHeight: 0.9 }
+              : { fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(2.5rem, 8vw, 9rem)', lineHeight: 0.9, whiteSpace: 'nowrap' }
             }
           >
             {title}
           </h2>
 
 
-          {isVideo ? (
-            <div
-              className="text-dark text-center max-w-4xl mb-8 flex flex-col gap-4"
-              style={{ fontSize: '1.1rem', lineHeight: 1.6 }}
-            >
-              {VIDEO_DESCRIPTION.map((text, idx) => (
-                <p key={idx} dangerouslySetInnerHTML={{ __html: text }} />
-              ))}
-            </div>
-          ) : (
+          {!isVideo && (
             <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-4xl">
               {pills.map((pill) => (
                 <span
@@ -142,32 +131,34 @@ export function Services({ section, overlapNext = false, isVisible = true }: Ser
           )}
         </div>
 
-        <div className="price-scroll-container">
-          {(isVideo ? VIDEO_PLANS : SMM_PRICE_PLANS).map((plan) => (
-            <div key={plan.name} className="price-card-wrapper">
-              <SpotlightCard spotlightColor="rgba(233, 172, 6, 0.25)" className="h-full flex flex-col bg-dark/90 backdrop-blur-sm rounded-3xl border border-white/5">
-                <div className="flex flex-col gap-5 h-full p-2">
-                  <div>
-                    <h3 className="text-white font-heading font-black text-2xl mb-1 tracking-tight">{plan.name}</h3>
-                    <p className="font-heading font-black text-3xl text-primary">{plan.price}</p>
+        {!isVideo && (
+          <div className="price-scroll-container">
+            {SMM_PRICE_PLANS.map((plan) => (
+              <div key={plan.name} className="price-card-wrapper">
+                <SpotlightCard spotlightColor="rgba(233, 172, 6, 0.25)" className="h-full flex flex-col bg-dark/90 backdrop-blur-sm rounded-3xl border border-white/5">
+                  <div className="flex flex-col gap-5 h-full p-2">
+                    <div>
+                      <h3 className="text-white font-heading font-black text-2xl mb-1 tracking-tight">{plan.name}</h3>
+                      <p className="font-heading font-black text-3xl text-primary">{plan.price}</p>
+                    </div>
+                    <p className="text-sm leading-relaxed text-white/50">{plan.description}</p>
+                    <ul className="flex flex-col gap-3 flex-1">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-3 text-sm text-white/80">
+                          <span className="text-primary font-bold">✓</span>
+                          <span className="leading-tight">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <button className="w-full py-4 px-6 rounded-2xl font-heading font-black text-sm tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer bg-primary text-dark uppercase">
+                      {(plan as any).cta || 'Richiedi Info'}
+                    </button>
                   </div>
-                  <p className="text-sm leading-relaxed text-white/50">{plan.description}</p>
-                  <ul className="flex flex-col gap-3 flex-1">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3 text-sm text-white/80">
-                        <span className="text-primary font-bold">✓</span>
-                        <span className="leading-tight">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <button className="w-full py-4 px-6 rounded-2xl font-heading font-black text-sm tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer bg-primary text-dark uppercase">
-                    {(plan as any).cta || 'Richiedi Info'}
-                  </button>
-                </div>
-              </SpotlightCard>
-            </div>
-          ))}
-        </div>
+                </SpotlightCard>
+              </div>
+            ))}
+          </div>
+        )}
 
       </div>
     </section>

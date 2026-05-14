@@ -45,11 +45,11 @@ export function Navbar() {
           top: 0,
           left: 0,
           zIndex: 197,
-          padding: '18px 32px',
+          padding: '18px 0px',
           pointerEvents: 'none',
         }}
       >
-        <LogoSVG width={120} color="#ffffff" outlineColor="transparent" />
+        <LogoSVG width={180} color="#ffffff" outlineColor="transparent" />
       </div>
 
       {/* ── TRIGGER ── */}

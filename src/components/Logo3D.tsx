@@ -31,23 +31,38 @@ export function Logo3D() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    
+    renderer.toneMappingExposure = 1.4;
+
     renderer.domElement.style.display = 'block';
     renderer.domElement.style.maxWidth = 'none';
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
-    
+
     container.appendChild(renderer.domElement);
 
     // ── Luci ──────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xffffff, 2.0));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 4.5);
-    keyLight.position.set(4, 8, 6);
+    // Ambient bassa: preserva le ombre e la forma 3D
+    scene.add(new THREE.AmbientLight(0xfff5d6, 0.5));
+
+    // Key light: bianca calda, alto-frontale, luce principale
+    const keyLight = new THREE.DirectionalLight(0xffffff, 5.0);
+    keyLight.position.set(3, 10, 8);
     scene.add(keyLight);
-    const rimLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    rimLight.position.set(-6, -4, -5);
+
+    // Fill light: fredda, laterale sinistra, riempie le ombre
+    const fillLight = new THREE.DirectionalLight(0xc8d8ff, 1.8);
+    fillLight.position.set(-8, 2, 4);
+    scene.add(fillLight);
+
+    // Rim light: gialla calda dal basso-retro — rimbalzo dallo sfondo giallo
+    const rimLight = new THREE.DirectionalLight(0xe9ac06, 3.5);
+    rimLight.position.set(0, -6, -8);
     scene.add(rimLight);
+
+    // Back light: bordo superiore per separare il logo dallo sfondo
+    const backLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    backLight.position.set(0, 12, -10);
+    scene.add(backLight);
 
     // ── Stato Fisico ──────────────────────────────────────
     let rot = { x: 0, y: 0 }, velRot = { x: 0, y: 0 };
@@ -76,13 +91,14 @@ export function Logo3D() {
       (gltf: GLTF) => {
         const gltfScene = gltf.scene;
 
-        // Forza colore giallo su tutte le mesh
+        // Materiale metallico bianco-argento — si stacca nettamente sullo sfondo giallo
         gltfScene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.material = new THREE.MeshStandardMaterial({
               color: new THREE.Color('#FFFFFF'),
-              metalness: 0.2,
-              roughness: 0.1,
+              metalness: 0.85,
+              roughness: 0.12,
+              envMapIntensity: 1.0,
             });
           }
         });

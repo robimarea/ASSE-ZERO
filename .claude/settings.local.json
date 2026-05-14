@@ -12,7 +12,8 @@
       "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); exports=p.get\\('exports',{}\\); [print\\(k\\) for k in list\\(exports.keys\\(\\)\\)[:30]]\")",
       "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); exports=p.get\\('exports',{}\\); [print\\(k\\) for k in exports.keys\\(\\)]\")",
       "Bash(node *)",
-      "Bash(grep -l \"GLTFLoader\\\\|OrbitControls\" \"C:\\\\Users\\\\tomai\\\\OneDrive\\\\Desktop\\\\ASSE-ZERO\\\\node_modules\\\\@types\\\\three\\\\build\"/*.d.ts)"
+      "Bash(grep -l \"GLTFLoader\\\\|OrbitControls\" \"C:\\\\Users\\\\tomai\\\\OneDrive\\\\Desktop\\\\ASSE-ZERO\\\\node_modules\\\\@types\\\\three\\\\build\"/*.d.ts)",
+      "Bash(unzip *)"
     ]
   }
 }

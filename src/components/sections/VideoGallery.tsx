@@ -198,7 +198,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         </div>
 
         {/* Right Side: Content Column */}
-        <div className="relative w-full md:w-[45%] h-full flex flex-col justify-start pt-12 md:pt-16 px-6 md:px-12 lg:pr-24 z-20 pb-20 md:pb-0 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
+        <div className="relative w-full md:w-[45%] h-full flex flex-col justify-start pt-24 md:pt-32 px-6 md:px-12 lg:pr-24 z-20 pb-20 md:pb-0 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
           
           {/* Big Solid Title */}
           <h2
