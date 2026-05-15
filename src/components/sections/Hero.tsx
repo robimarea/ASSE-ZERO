@@ -4,6 +4,7 @@
 
 import { SECTION_IDS } from '@/lib/constants';
 import { Logo3D } from '@/components/Logo3D';
+import { Viewport } from '@/components/layout/Viewport';
 
 export function Hero() {
   return (
@@ -16,7 +17,9 @@ export function Hero() {
         className="absolute top-0 left-0 w-full flex justify-center z-10 overflow-visible"
         style={{ pointerEvents: 'auto' }}
       >
-        <Logo3D />
+        <Viewport threshold={0.1}>
+          {(isVisible) => <Logo3D isVisible={isVisible} />}
+        </Viewport>
       </div>
 
       {/* Testo centrato sotto il logo - padding-top compensa l'altezza del logo */}

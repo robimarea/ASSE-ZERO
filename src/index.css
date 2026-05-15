@@ -29,13 +29,13 @@
 
 @theme {
   /* Brand Colors (60/30/10 Theory) */
-  --color-primary: #E9AC06;      /* 30% Giallo (Secondary focus) */
+  --color-primary: #e9ac06;      /* 30% Giallo (Secondary focus) */
   --color-primary-light: #F0C24F;
   --color-primary-dark: #B78705;
   --color-secondary: #FFFFFF;    /* 10% Bianco (Accent / Highlights) */
   --color-secondary-light: #FFFFFF;
   --color-secondary-dark: #F5F5F5;
-  --color-accent: #E9AC06;
+  --color-accent: #e9ac06;
 
   /* Dark Palette (60% Base) */
   --color-dark: #000000;         /* 60% Nero */
@@ -46,7 +46,7 @@
 
   /* Text */
   --color-text-primary: #FFFFFF;
-  --color-text-secondary: #E9AC06;
+  --color-text-secondary: #e9ac06;
   --color-text-muted: #888888;
 
   /* Glass */
@@ -241,3 +241,7 @@ h1, h2, h3, h4, h5, h6 {
 .viewport-reveal[data-visible="true"].stagger-children > *:nth-child(3) { transition-delay: 0.3s; }
 .viewport-reveal[data-visible="true"].stagger-children > *:nth-child(4) { transition-delay: 0.4s; }
 .viewport-reveal[data-visible="true"].stagger-children > *:nth-child(5) { transition-delay: 0.5s; }
+
+.ease-out-expo {
+  transition-timing-function: var(--ease-out-expo);
+}

@@ -6,7 +6,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { navLinks } from '@/data/navigation';
 import DarkVeil from '@/components/DarkVeil';
-import { LogoSVG } from '@/components/LogoSVG';
+import { useActiveSection } from '@/hooks/useActiveSection';
+
 
 const PANEL_WIDTH = '75%';
 const EASING = 'cubic-bezier(0.76, 0, 0.24, 1)';
@@ -15,6 +16,7 @@ const DURATION = '0.6s';
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
+  const activeSection = useActiveSection();
 
   // Blocca scroll e interazione col resto della pagina
   useEffect(() => {
@@ -49,7 +51,11 @@ export function Navbar() {
           pointerEvents: 'none',
         }}
       >
-        <LogoSVG width={180} color="#ffffff" outlineColor="transparent" />
+        <img
+          src="/logo.png"
+          alt="ASSE ZERO"
+          style={{ height: '64px', width: 'auto', display: 'block' }}
+        />
       </div>
 
       {/* ── TRIGGER ── */}
@@ -164,6 +170,9 @@ export function Navbar() {
           }}>
             {navLinks.map((link) => {
               const isHovered = hovered === link.href;
+              const isActive = activeSection === link.href.replace('#', '');
+              const isSelected = isHovered || isActive;
+
               return (
                 <a
                   key={link.href}
@@ -180,8 +189,8 @@ export function Navbar() {
                     textDecoration: 'none',
                     lineHeight: 1.05,
                     letterSpacing: '-0.02em',
-                    color: isHovered ? 'var(--color-primary)' : 'transparent',
-                    WebkitTextStroke: isHovered ? '0px transparent' : '1.5px rgba(255,255,255,0.85)',
+                    color: isSelected ? 'var(--color-primary)' : 'transparent',
+                    WebkitTextStroke: isSelected ? '0px transparent' : '1.5px rgba(255,255,255,0.85)',
                     transition: 'color 0.4s ease, -webkit-text-stroke-color 0.4s ease',
                     cursor: 'none',
                   }}
