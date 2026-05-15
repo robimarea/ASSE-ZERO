@@ -11,7 +11,7 @@ export function LogoSVG({
   className = '',
   width = '100%',
   height = 'auto',
-  color = '#E9AC06', // Giallo (30%)
+  color = '#e9ac06', // Giallo (30%)
   outlineColor = '#000000', // Nero (60%)
   outlineWidth = 8,
 }: LogoSVGProps) {

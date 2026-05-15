@@ -19,7 +19,7 @@ const VIDEO_ITEMS = [
   },
   {
     id: 3, title: 'DOCUMENTARI', subtitle: 'Documentary Films',
-    gradient: 'linear-gradient(135deg, #E9AC06 0%, #4a3200 60%, #000 100%)',
+    gradient: 'linear-gradient(135deg, #e9ac06 0%, #4a3200 60%, #000 100%)',
   },
   {
     id: 4, title: 'RECAP EVENTI', subtitle: 'Event Coverage',
