@@ -3,20 +3,36 @@
 // ============================================
 
 import { SECTION_IDS } from '@/lib/constants';
+import { Logo3D } from '@/components/Logo3D';
 
 export function Hero() {
   return (
     <section
       id={SECTION_IDS.home}
-      className="w-full min-h-screen bg-secondary text-dark flex flex-col items-center justify-center"
+      className="w-full min-h-screen bg-primary text-white relative overflow-visible"
     >
-      <div className="text-center px-4 w-full flex flex-col items-center">
-        <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[10rem] font-heading font-black tracking-tighter mb-4 text-dark font-sans" style={{lineHeight: 0.9}}>
+      {/* Logo 3D: absolute in cima, fuori dal flusso, non clippato */}
+      <div
+        className="absolute top-0 left-0 w-full flex justify-center z-10 overflow-visible"
+        style={{ pointerEvents: 'auto' }}
+      >
+        <Logo3D />
+      </div>
+
+      {/* Testo centrato sotto il logo - padding-top compensa l'altezza del logo */}
+      <div
+        className="relative z-0 flex flex-col items-center justify-end w-full min-h-screen pb-16"
+      >
+        <h1
+          className="text-white uppercase font-black leading-none text-center"
+          style={{
+            fontFamily: "'Alte Haas Grotesk', sans-serif",
+            fontSize: 'clamp(3rem, 10vw, 8rem)',
+            textShadow: '0 0 20px rgba(0,0,0,0.2)',
+          }}
+        >
           Video &amp; Media
         </h1>
-        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl mx-auto flex justify-center -mt-4 sm:-mt-8 md:-mt-12">
-           <img src="/logo.png" alt="ASSE ZERO Logo" className="w-[80%] h-auto drop-shadow-2xl" />
-        </div>
       </div>
     </section>
   );

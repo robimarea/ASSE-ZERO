@@ -5,16 +5,31 @@
 // ============================================
 
 import { useRef, useEffect } from 'react';
+import { VIDEO_PILLS, VIDEO_DESCRIPTION } from '@/data/services';
 
+// TODO: sostituire i gradient con immagini locali in /public/video/ (es. spot.jpg, videoclip.jpg, ...)
 const VIDEO_ITEMS = [
-  { id: 1, title: 'SPOT PUBBLICITARI', subtitle: 'Commercials & Ads', image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1600&auto=format&fit=crop' },
-  { id: 2, title: 'VIDEOCLIP', subtitle: 'Music Videos', image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1600&auto=format&fit=crop' },
-  { id: 3, title: 'DOCUMENTARI', subtitle: 'Documentary Films', image: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=1600&auto=format&fit=crop' },
-  { id: 4, title: 'RECAP EVENTI', subtitle: 'Event Coverage', image: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1600&auto=format&fit=crop' },
-  { id: 5, title: 'MOTION GRAPHICS', subtitle: '2D/3D Animation', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1600&auto=format&fit=crop' },
+  {
+    id: 1, title: 'SPOT PUBBLICITARI', subtitle: 'Commercials & Ads',
+    gradient: 'linear-gradient(135deg, #BF3320 0%, #3a0a05 60%, #000 100%)',
+  },
+  {
+    id: 2, title: 'VIDEOCLIP', subtitle: 'Music Videos',
+    gradient: 'linear-gradient(135deg, #5a1a0a 0%, #1a0505 60%, #000 100%)',
+  },
+  {
+    id: 3, title: 'DOCUMENTARI', subtitle: 'Documentary Films',
+    gradient: 'linear-gradient(135deg, #E9AC06 0%, #4a3200 60%, #000 100%)',
+  },
+  {
+    id: 4, title: 'RECAP EVENTI', subtitle: 'Event Coverage',
+    gradient: 'linear-gradient(135deg, #CC7F11 0%, #3a2000 60%, #000 100%)',
+  },
+  {
+    id: 5, title: 'MOTION GRAPHICS', subtitle: '2D/3D Animation',
+    gradient: 'linear-gradient(135deg, #D1523E 0%, #2a0a05 60%, #000 100%)',
+  },
 ];
-
-const VIDEO_PILLS = ['Spot Pubblicitari', 'Videoclip', 'Cortometraggi', 'Recap Eventi', 'Video Corporate', 'Documentari', 'Content Social', 'Motion Graphics', 'Interviste'];
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -128,10 +143,6 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         {/* Left Side: Video Slider Column */}
         <div className="relative w-full md:w-[55%] h-full flex items-center justify-center shrink-0">
           
-          {/* Section Marker (Background of Left Column) */}
-          <div className="absolute top-10 left-10 z-0 text-white/5 font-heading font-black text-[10vw] leading-none tracking-tighter pointer-events-none hidden md:block">
-            03
-          </div>
 
           {VIDEO_ITEMS.map((item, index) => {
             return (
@@ -146,27 +157,25 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               >
                 {/* Image Container */}
                 <div className="w-full h-full rounded-xl overflow-hidden border border-white/10 shadow-2xl relative bg-black">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    loading="lazy"
-                    decoding="async"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover opacity-80"
+                  <div
+                    className="w-full h-full opacity-80"
+                    style={{ background: item.gradient }}
+                    aria-hidden="true"
                   />
                   
                   {/* Diagonal Hatch Overlay for inactive items */}
-                  <div 
+                  <div
                     ref={(el) => { overlayRefs.current[index] = el; }}
                     className="video-overlay absolute inset-0 transition-opacity duration-500 pointer-events-none"
+                    aria-hidden="true"
                     style={{
                       background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.8) 10px, rgba(0,0,0,0.8) 20px), rgba(0,0,0,0.4)',
                       backdropFilter: 'grayscale(100%) brightness(0.6)',
                     }}
                   />
-                  
+
                   {/* Central Text for inactive state */}
-                  <div className="video-overlay absolute inset-0 flex items-center justify-center transition-opacity duration-500 pointer-events-none">
+                  <div className="video-overlay absolute inset-0 flex items-center justify-center transition-opacity duration-500 pointer-events-none" aria-hidden="true">
                     <span className="font-heading font-bold text-4xl tracking-widest text-white/60">VIDEO</span>
                   </div>
                 </div>
@@ -189,41 +198,43 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         </div>
 
         {/* Right Side: Content Column */}
-        <div className="relative w-full md:w-[45%] h-full flex flex-col justify-center px-6 md:px-12 lg:pr-24 z-20 pb-20 md:pb-0 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
+        <div className="relative w-full md:w-[45%] h-full flex flex-col justify-start pt-24 md:pt-32 px-6 md:px-12 lg:pr-24 z-20 pb-20 md:pb-0 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
           
           {/* Big Solid Title */}
-          <h2 
+          <h2
             className="font-heading font-black text-[5rem] md:text-[6rem] lg:text-[8rem] leading-none tracking-tighter mb-6 text-white drop-shadow-2xl"
+            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
           >
             Video
           </h2>
 
-          {/* Description Box */}
-          <div className="border border-primary/40 rounded-2xl p-6 md:p-8 bg-black/40 backdrop-blur-md shadow-2xl relative overflow-hidden mb-8">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-transparent opacity-50" />
-            
-            <h3 className="text-primary font-heading font-bold text-xl md:text-2xl mb-2 tracking-wide">
+          {/* Description Box — occupa tutto lo spazio rimanente fino al fondo */}
+          <div className="flex-1 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden flex flex-col gap-4" style={{ backgroundColor: '#000' }}>
+
+            <h3 className="font-bold tracking-wide" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: '#e9ac06', lineHeight: 1.1 }}>
               SERVIZI SU MISURA
             </h3>
-            
-            <p className="text-white/70 text-sm md:text-base leading-relaxed">
-              Crediamo che ogni brand abbia una storia unica da raccontare. Per questo non offriamo pacchetti standardizzati: ogni produzione video viene quotata solo in seguito a un'attenta analisi delle tue esigenze, obiettivi e target, garantendoti un prodotto altamente personalizzato.
-            </p>
-          </div>
 
-          {/* Floating Keyword Pills */}
-          <div className="flex flex-wrap gap-3">
-            {VIDEO_PILLS.map((pill) => (
-              <div
-                key={pill}
-                className="group relative px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.2)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_12px_40px_rgba(191,51,32,0.25)] hover:bg-primary/20 hover:border-primary/40 cursor-pointer pointer-events-auto overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <span className="relative text-xs md:text-sm font-medium text-white/70 group-hover:text-white tracking-widest transition-colors duration-300">
-                  {pill}
-                </span>
-              </div>
-            ))}
+            {/* Pills */}
+            <div className="flex flex-wrap gap-3">
+              {VIDEO_PILLS.map((pill) => (
+                <div
+                  key={pill}
+                  className="px-4 py-2.5 rounded-xl border cursor-pointer pointer-events-auto"
+                  style={{ borderColor: 'rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.08)' }}
+                >
+                  <span className="text-xs md:text-sm font-medium tracking-widest" style={{ color: '#fff' }}>
+                    {pill}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-4 leading-relaxed" style={{ fontSize: 'clamp(1rem, 1.2vw, 1.3rem)', color: '#fff' }}>
+              {VIDEO_DESCRIPTION.map((text, idx) => (
+                <p key={idx} dangerouslySetInnerHTML={{ __html: text }} />
+              ))}
+            </div>
           </div>
         </div>
 
