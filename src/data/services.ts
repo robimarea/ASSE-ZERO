@@ -6,13 +6,9 @@
 export const VIDEO_PILLS = [
   'Spot Pubblicitari',
   'Videoclip',
-  'Cortometraggi',
-  'Recap Eventi',
-  'Video Corporate',
   'Documentari',
-  'Content Social',
+  'Recap Eventi',
   'Motion Graphics',
-  'Interviste',
 ] as const;
 
 export const SMM_PILLS = [

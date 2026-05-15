@@ -31,6 +31,11 @@ const VIDEO_ITEMS = [
   },
 ];
 
+// Maps pillIndex → videoIndex (1:1, same order as VIDEO_ITEMS)
+// VIDEO_PILLS: ['Spot Pubblicitari', 'Videoclip', 'Documentari', 'Recap Eventi', 'Motion Graphics']
+// VIDEO_ITEMS:  [SPOT(0),            VIDEOCLIP(1), DOCUMENTARI(2), RECAP EVENTI(3), MOTION GRAPHICS(4)]
+const PILL_TO_VIDEO: number[] = [0, 1, 2, 3, 4];
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
@@ -44,6 +49,8 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
   const overlayRefs = useRef<(HTMLElement | null)[]>([]);
   const textRefs = useRef<(HTMLElement | null)[]>([]);
+  const pillRefs = useRef<(HTMLElement | null)[]>([]);
+  const paragraphRef = useRef<HTMLDivElement>(null);
   const activeIndexRef = useRef(0);
 
   useEffect(() => {
@@ -103,6 +110,20 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         }
       });
 
+      // Update pill scale based on distance from corresponding video
+      pillRefs.current.forEach((el, pillIdx) => {
+        if (!el) return;
+        const videoIdx = PILL_TO_VIDEO[pillIdx];
+        if (videoIdx === -1) return; // Cortometraggi: no video, stays neutral
+
+        const distance = Math.abs(videoIdx - travel);
+        // Active when distance < 0.5, fades from 1.25 → 1.0 as distance goes 0 → 1
+        const activity = clamp(1 - distance, 0, 1);
+        const scale = 1 + activity * 0.35; // 1.0 → 1.35
+
+        el.style.transform = `scale(${scale})`;
+      });
+
       if (newActiveIndex !== activeIndexRef.current) {
         activeIndexRef.current = newActiveIndex;
       }
@@ -124,6 +145,25 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
 
     if (!isVisible) return;
 
+    // Paragraph slide-up reveal on first visibility
+    const paraEl = paragraphRef.current;
+    if (paraEl) {
+      paraEl.style.opacity = '0';
+      paraEl.style.transform = 'translateY(48px)';
+      paraEl.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            paraEl.style.opacity = '1';
+            paraEl.style.transform = 'translateY(0)';
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.2 }
+      );
+      observer.observe(paraEl);
+    }
+
     updateMetrics();
     window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -137,12 +177,12 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   }, [isVisible]);
 
   return (
-    <section ref={containerRef} className="relative w-full bg-dark z-0" style={{ height: '400vh' }}>
+    <section ref={containerRef} className="relative w-full bg-dark z-0" style={{ height: '500vh' }}>
+
       <div className="sticky top-0 z-10 w-full h-screen overflow-hidden bg-dark flex flex-col md:flex-row items-center justify-center">
-        
+
         {/* Left Side: Video Slider Column */}
-        <div className="relative w-full md:w-[55%] h-full flex items-center justify-center shrink-0">
-          
+        <div className="relative w-full md:w-[50%] h-full flex items-center justify-center shrink-0">
 
           {VIDEO_ITEMS.map((item, index) => {
             return (
@@ -162,7 +202,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
                     style={{ background: item.gradient }}
                     aria-hidden="true"
                   />
-                  
+
                   {/* Diagonal Hatch Overlay for inactive items */}
                   <div
                     ref={(el) => { overlayRefs.current[index] = el; }}
@@ -181,7 +221,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
                 </div>
 
                 {/* Details under the video (Active only) */}
-                <div 
+                <div
                   ref={(el) => { textRefs.current[index] = el; }}
                   className="video-text absolute -bottom-16 left-0 transition-all duration-500 ease-out"
                 >
@@ -198,39 +238,54 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         </div>
 
         {/* Right Side: Content Column */}
-        <div className="relative w-full md:w-[45%] h-full flex flex-col justify-start pt-24 md:pt-32 px-6 md:px-12 lg:pr-24 z-20 pb-20 md:pb-0 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
-          
+        <div className="relative w-full md:w-[50%] h-full flex flex-col justify-center px-6 md:px-10 lg:pr-20 z-20 py-8 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
+
+          {/* Description Box */}
+          <div className="rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-visible flex flex-col justify-center gap-2" style={{ backgroundColor: '#000' }}>
+
           {/* Big Solid Title */}
           <h2
-            className="font-heading font-black text-[5rem] md:text-[6rem] lg:text-[8rem] leading-none tracking-tighter mb-6 text-white drop-shadow-2xl"
-            style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+            className="font-heading font-black text-[5rem] md:text-[7rem] lg:text-[9rem] leading-none tracking-tighter mb-3 drop-shadow-2xl"
+            style={{ fontFamily: "'Bebas Neue', sans-serif", color: '#e9ac06' }}
           >
             Video
           </h2>
 
-          {/* Description Box — occupa tutto lo spazio rimanente fino al fondo */}
-          <div className="flex-1 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden flex flex-col gap-4" style={{ backgroundColor: '#000' }}>
-
-            <h3 className="font-bold tracking-wide" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: '#e9ac06', lineHeight: 1.1 }}>
-              SERVIZI SU MISURA
-            </h3>
-
-            {/* Pills */}
-            <div className="flex flex-wrap gap-3">
-              {VIDEO_PILLS.map((pill) => (
-                <div
-                  key={pill}
-                  className="px-4 py-2.5 rounded-xl border cursor-pointer pointer-events-auto"
-                  style={{ borderColor: 'rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.08)' }}
-                >
-                  <span className="text-xs md:text-sm font-medium tracking-widest" style={{ color: '#fff' }}>
-                    {pill}
-                  </span>
-                </div>
-              ))}
+            {/* Pills — row 1: first 3, row 2: last 2 */}
+            <div className="flex flex-col gap-4" style={{ overflow: 'visible', marginLeft: '-0.5rem' }}>
+              {/* Row 1 */}
+              <div className="flex flex-nowrap gap-14" style={{ overflow: 'visible', paddingBlock: '8px' }}>
+                {VIDEO_PILLS.slice(0, 3).map((pill, pillIdx) => (
+                  <div
+                    key={pill}
+                    ref={(el) => { pillRefs.current[pillIdx] = el; }}
+                    className="shrink-0 px-2 py-1 cursor-pointer pointer-events-auto origin-center"
+                    style={{ transition: 'transform 0.3s ease' }}
+                  >
+                    <span className="text-base md:text-lg font-bold tracking-widest" style={{ color: '#e9ac06' }}>
+                      {pill}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {/* Row 2 */}
+              <div className="flex flex-nowrap gap-14" style={{ overflow: 'visible', paddingBlock: '8px' }}>
+                {VIDEO_PILLS.slice(3).map((pill, i) => (
+                  <div
+                    key={pill}
+                    ref={(el) => { pillRefs.current[3 + i] = el; }}
+                    className="shrink-0 px-2 py-1 cursor-pointer pointer-events-auto origin-center"
+                    style={{ transition: 'transform 0.3s ease' }}
+                  >
+                    <span className="text-base md:text-lg font-bold tracking-widest" style={{ color: '#e9ac06' }}>
+                      {pill}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="flex flex-col gap-4 leading-relaxed" style={{ fontSize: 'clamp(1rem, 1.2vw, 1.3rem)', color: '#fff' }}>
+            <div ref={paragraphRef} className="flex flex-col leading-snug" style={{ fontSize: 'clamp(1rem, 1.8vw, 1.6rem)', color: '#fff' }}>
               {VIDEO_DESCRIPTION.map((text, idx) => (
                 <p key={idx} dangerouslySetInnerHTML={{ __html: text }} />
               ))}
