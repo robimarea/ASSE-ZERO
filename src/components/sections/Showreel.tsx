@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SHOWREEL_ASSETS, type ShowreelAsset } from '@/data/showreelAssets';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { clamp, damp, lerp, smoothstep } from '@/lib/math';
+import { createPortal } from 'react-dom';
 
 type TunnelConfig = {
   sectionHeight: string;
@@ -100,6 +101,60 @@ function getPreviewSource(asset: ShowreelAsset) {
   return asset.kind === 'video' ? asset.poster : asset.src;
 }
 
+// ── LIGHTBOX COMPONENT ──
+function Lightbox({ asset, onClose }: { asset: ShowreelAsset; onClose: () => void }) {
+  const [active, setActive] = useState(false);
+  
+  useEffect(() => {
+    const timer = requestAnimationFrame(() => setActive(true));
+    return () => cancelAnimationFrame(timer);
+  }, []);
+
+  return createPortal(
+    <div 
+      className={`fixed inset-0 z-[1000] flex items-center justify-center transition-all duration-700 ease-out-expo ${active ? 'bg-black/95 backdrop-blur-md' : 'bg-black/0 backdrop-blur-none pointer-events-none'}`}
+      onClick={onClose}
+    >
+      <div 
+        className={`relative w-[min(90vw,70rem)] aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 transition-all duration-700 ease-out-expo ${active ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {asset.kind === 'video' ? (
+          <video 
+            src={asset.src} 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <img 
+            src={asset.src} 
+            alt={asset.title} 
+            className="w-full h-full object-cover"
+          />
+        )}
+        
+        {/* Info Overlay */}
+        <div className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/80 to-transparent">
+          <p className="text-primary text-xs font-black uppercase tracking-[0.3em] mb-2">{asset.label}</p>
+          <h2 className="text-white text-3xl font-heading font-black tracking-tight">{asset.title}</h2>
+        </div>
+
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl transition-colors"
+        >
+          ×
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 interface ShowreelProps {
   isVisible?: boolean;
 }
@@ -115,21 +170,20 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
   const visibleIndicesRef = useRef<Set<number>>(new Set());
   const activeTitleRef = useRef<HTMLDivElement>(null);
   const activeLabelRef = useRef<HTMLDivElement>(null);
+  
+  const [selectedAsset, setSelectedAsset] = useState<ShowreelAsset | null>(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const config = isMobile ? MOBILE_CONFIG : DESKTOP_CONFIG;
 
   const previewSources = useMemo(() => SHOWREEL_ASSETS.map(getPreviewSource), []);
 
-  // Pre-calculate card-specific spatial constants to save CPU cycles in the RAF loop
   const cardOffsets = useMemo(() => {
     return SHOWREEL_ASSETS.map((_, index) => {
       const anchorXDir = index % 2 === 0 ? -1 : 1;
       const anchorYDir = index % 3 === 0 ? -1 : 1;
-
       const anchorX = anchorXDir * (config.spreadAnchorX + Math.sin(index * 1.83) * config.tunnelRadiusX);
       const anchorY = anchorYDir * (config.spreadAnchorY + Math.cos(index * 1.29) * config.tunnelRadiusY);
-
       return {
         baseX: anchorX + Math.sin(index * 2.37 + 0.6) * config.scatterJitterX,
         baseY: anchorY + Math.cos(index * 1.93 + 0.2) * config.scatterJitterY,
@@ -165,10 +219,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
       const deltaSeconds = Math.min((now - lastFrameTime) / 1000, 0.05);
       lastFrameTime = now;
 
-      // Physics/Damping
       const scrollDelta = Math.abs(targetTravelRef.current - travelRef.current);
-      
-      // Snap only if extremely close to avoid floating point jitter, otherwise keep damping
       if (scrollDelta < 0.001) {
         travelRef.current = targetTravelRef.current;
       } else {
@@ -192,13 +243,9 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
       const visibleStart = Math.max(0, Math.floor(travel - config.visibleWindow));
       const visibleEnd = Math.min(SHOWREEL_ASSETS.length - 1, Math.ceil(travel + config.visibleWindow));
 
-      // 2. Identify newly visible, still visible, and now hidden cards
       const nextVisibleIndices = new Set<number>();
-      for (let i = visibleStart; i <= visibleEnd; i++) {
-        nextVisibleIndices.add(i);
-      }
+      for (let i = visibleStart; i <= visibleEnd; i++) nextVisibleIndices.add(i);
 
-      // 3. Hide cards that are no longer in the visible window
       visibleIndicesRef.current.forEach((prevIndex) => {
         if (!nextVisibleIndices.has(prevIndex)) {
           const card = cardRefs.current[prevIndex];
@@ -206,7 +253,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
         }
       });
 
-      // 4. Update and show visible cards
       nextVisibleIndices.forEach((index) => {
         const card = cardRefs.current[index];
         if (!card) return;
@@ -214,25 +260,19 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
         const relative = index - travel;
         const distance = Math.abs(relative);
 
-        // Double check visibility constraints
         if (distance > config.visibleWindow) {
           if (card.style.display !== 'none') card.style.display = 'none';
           return;
         }
 
-        // Show card if it was hidden
-        if (card.style.display !== 'block') {
-          card.style.display = 'block';
-        }
+        if (card.style.display !== 'block') card.style.display = 'block';
 
         const offset = cardOffsets[index];
         const focusMix = smoothstep(config.focusWindow, 0, distance);
         const isPastFocus = relative < 0;
 
-        // Spatial Calculations
         const dreamDriftX = Math.sin(time * 0.22 + index * 1.61) * config.driftX;
         const dreamDriftY = Math.cos(time * 0.2 + index * 1.27) * config.driftY;
-
         const pointerInfluence = 0.34 + focusMix * 0.72;
         const pointerX = pointerRef.current.x * config.pointerInfluenceX * pointerInfluence;
         const pointerY = pointerRef.current.y * config.pointerInfluenceY * pointerInfluence;
@@ -244,11 +284,9 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
         const curveAmount = clamp(distance / config.relativeCull, 0, 1);
         const curve = smoothstep(0, 1, curveAmount);
 
-        // Aesthetic Factors
         const scale = isPastFocus
           ? lerp(config.focusScale, config.frontScale, curve)
           : lerp(config.focusScale, config.rearScale, curve);
-
 
         const opacity = isPastFocus
           ? lerp(1, config.frontOpacity, curve)
@@ -257,11 +295,8 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
         const rotateX = dreamDriftY * 0.08 - pointerRef.current.y * 2.3 * (0.18 + focusMix * 0.34);
         const rotateY = dreamDriftX * 0.08 + pointerRef.current.x * 2.9 * (0.18 + focusMix * 0.34);
 
-        // Apply styles - High Performance Sharp Rendering
         card.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(0)}px) rotateX(${rotateX.toFixed(1)}deg) rotateY(${rotateY.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
         card.style.opacity = `${opacity.toFixed(3)}`;
-        
-        // Ensure no filters are weighing down the GPU
         if (card.style.filter !== 'none') card.style.filter = 'none';
         card.style.zIndex = `${1000 - Math.round(relative * 100)}`;
       });
@@ -271,27 +306,16 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     };
 
     const handleScroll = () => updateTargetTravel();
-    const handleResize = () => {
-      updateMetrics();
-      updateTargetTravel();
-    };
-
+    const handleResize = () => { updateMetrics(); updateTargetTravel(); };
     const handlePointerMove = (event: PointerEvent) => {
       pointerTargetRef.current.x = ((event.clientX / window.innerWidth) * 2 - 1) * -1;
       pointerTargetRef.current.y = ((event.clientY / window.innerHeight) * 2 - 1) * -1;
     };
-
-    const handlePointerLeave = () => {
-      pointerTargetRef.current.x = 0;
-      pointerTargetRef.current.y = 0;
-    };
+    const handlePointerLeave = () => { pointerTargetRef.current.x = 0; pointerTargetRef.current.y = 0; };
 
     updateMetrics();
     updateTargetTravel();
-    
-    if (isVisible) {
-      frameId = window.requestAnimationFrame(animate);
-    }
+    if (isVisible) frameId = window.requestAnimationFrame(animate);
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
@@ -307,7 +331,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     };
   }, [config, cardOffsets, isVisible]);
 
-
   return (
     <section
       ref={containerRef}
@@ -315,7 +338,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
       style={{ height: config.sectionHeight }}
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden bg-dark">
-        {/* Background Gradients */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_44%,rgba(255,255,255,0.08),transparent_34%),radial-gradient(circle_at_18%_24%,rgba(233,172,6,0.07),transparent_22%),radial-gradient(circle_at_82%_74%,rgba(191,51,32,0.08),transparent_25%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,8,0.08),rgba(5,5,8,0.74))]" />
 
@@ -326,33 +348,34 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
               <article
                 key={asset.id}
                 ref={(el) => { cardRefs.current[index] = el; }}
-                className="pointer-events-none absolute left-1/2 top-1/2 w-[min(68vw,20rem)] md:w-[min(38vw,28rem)] will-change-transform"
+                onClick={() => setSelectedAsset(asset)}
+                className="absolute left-1/2 top-1/2 w-[min(68vw,20rem)] md:w-[min(38vw,28rem)] will-change-transform cursor-pointer group"
                 style={{
                   display: 'none',
                   opacity: 0,
                   transform: 'translate(-50%, -50%) translate3d(0, 0, -300px) scale(0.8)',
                 }}
               >
-                <div className="overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#09090b] shadow-[0_28px_90px_rgba(0,0,0,0.28)]">
+                <div className="overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#09090b] shadow-[0_28px_90px_rgba(0,0,0,0.28)] transition-transform duration-500 group-hover:scale-[1.03] group-hover:border-primary/30">
                   <div className="relative aspect-[235/160]">
                     <img
                       src={previewSources[index]}
                       alt={asset.title}
                       loading={index === 0 ? 'eager' : 'lazy'}
                       decoding="async"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover grayscale-[0.2] transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,4,6,0.02),rgba(4,4,6,0.26))]" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_16%,rgba(255,255,255,0.10),transparent_26%),radial-gradient(circle_at_80%_82%,rgba(233,172,6,0.10),transparent_24%)] mix-blend-screen" />
-
-                    {/* Card Label */}
-                    <div className="absolute inset-x-3 bottom-3 rounded-[1.15rem] bg-white/92 px-4 py-3 text-left text-dark shadow-[0_18px_28px_rgba(0,0,0,0.18)] md:inset-x-4 md:bottom-4 md:px-5 md:py-4">
-                      <div className="font-heading text-lg font-black leading-[0.95] tracking-[-0.05em] md:text-[2rem]">
-                        {asset.title}
-                      </div>
-                      <div className="mt-2 text-[0.62rem] uppercase tracking-[0.28em] text-primary md:text-[0.7rem]">
-                        {asset.label}
-                      </div>
+                    
+                    {/* Hover state overlay */}
+                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-500 flex items-center justify-center">
+                       <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 scale-75 group-hover:scale-100 flex items-center justify-center">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                       </div>
                     </div>
                   </div>
                 </div>
@@ -361,23 +384,31 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
           </div>
         </div>
 
-        {/* Active Asset Info */}
-        <div className="pointer-events-none absolute bottom-8 left-1/2 z-30 w-[min(32rem,calc(100%-2rem))] -translate-x-1/2 px-5 py-3 text-center md:bottom-10">
+        {/* Active Asset Info - Bottom Center */}
+        <div className="pointer-events-none absolute bottom-12 left-1/2 z-30 w-[min(32rem,calc(100%-2rem))] -translate-x-1/2 px-5 py-3 text-center md:bottom-16">
           <div 
             ref={activeLabelRef}
-            className="text-[0.62rem] uppercase tracking-[0.34em] text-white/38 md:text-[0.72rem]"
+            className="text-[0.65rem] font-bold uppercase tracking-[0.4em] text-primary md:text-[0.75rem]"
           >
             {SHOWREEL_ASSETS[0].label}
           </div>
           <div 
             ref={activeTitleRef}
-            className="mt-2 font-heading text-xl font-black tracking-[-0.08em] text-white md:text-3xl"
+            className="mt-3 font-heading text-2xl font-black tracking-[-0.06em] text-white md:text-5xl uppercase italic"
+            style={{ textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
           >
             {SHOWREEL_ASSETS[0].title}
           </div>
         </div>
       </div>
+
+      {/* Lightbox Overlay */}
+      {selectedAsset && (
+        <Lightbox 
+          asset={selectedAsset} 
+          onClose={() => setSelectedAsset(null)} 
+        />
+      )}
     </section>
   );
 }
-

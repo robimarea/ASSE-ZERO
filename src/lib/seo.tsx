@@ -5,6 +5,8 @@
 import { Helmet } from 'react-helmet-async';
 import { SITE_NAME, SITE_URL } from '@/lib/constants';
 
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
+
 interface SEOProps {
   title?: string;
   description?: string;
@@ -14,9 +16,9 @@ interface SEOProps {
 
 export function SEO({
   title = `${SITE_NAME} — Produzione Video & Social Media Management`,
-  description = 'ASSE ZERO è un team creativo specializzato in produzione video professionale e social media management. Strategia, produzione e gestione completa per il tuo brand.',
+  description = 'ASSE ZERO è un team creativo di 4 professionisti specializzati in produzione video professionale, social media management e content strategy. Spot pubblicitari, videoclip, documentari, reel cinematografici e gestione social su misura per il tuo brand.',
   canonical = SITE_URL,
-  ogImage,
+  ogImage = DEFAULT_OG_IMAGE,
 }: SEOProps) {
   return (
     <Helmet>
@@ -28,12 +30,16 @@ export function SEO({
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonical} />
-      {ogImage && <meta property="og:image" content={ogImage} />}
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={title} />
 
-      {/* Twitter */}
+      {/* Twitter / X */}
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      {ogImage && <meta name="twitter:image" content={ogImage} />}
+      <meta name="twitter:image" content={ogImage} />
+      <meta name="twitter:image:alt" content={title} />
     </Helmet>
   );
 }
