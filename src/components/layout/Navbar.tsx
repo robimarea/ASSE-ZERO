@@ -33,7 +33,19 @@ export function Navbar() {
       if (id === 'home') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+        const element = document.getElementById(id);
+        if (element) {
+          const maskWrapper = element.closest('[data-mask-wrapper="true"]');
+          if (maskWrapper) {
+            // Il curtain è alto 100vh. Scrolliamo al top del wrapper + altezza viewport
+            // in modo che il curtain venga completamente rimosso.
+            const wrapperTop = maskWrapper.getBoundingClientRect().top + window.scrollY;
+            const targetScroll = wrapperTop + window.innerHeight;
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+          } else {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
       }
     }, 450);
   };

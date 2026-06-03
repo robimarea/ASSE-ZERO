@@ -71,6 +71,7 @@ export function MaskChangeUI({
   return (
     <div
       ref={wrapperRef}
+      data-mask-wrapper="true"
       className="relative w-full font-sans"
       style={{
         minHeight: wrapperHeight,
