@@ -14,28 +14,28 @@ const TEAM_MEMBERS = [
     name: 'Alessia Debrova',
     role: 'Social media strategist, Content manager',
     bio: 'Ho lavorato su contenuti che hanno raggiunto +800.000 visualizzazioni, relativi a canali social sia internazionali che italiani, per ben 4 profili differenti instagram e youtube, sviluppando una forte capacità nella creazione di contenuti efficaci e coerenti con le logiche delle piattaforme. Al centro della mia formazione, c\'è stato lo studio del RETENTION RATE, fondamentale per mantenere alta l\'attenzione dello spettatore e migliorare le performance dei contenuti.',
-    photo: null as string | null,
+    photo: '/AlessiaDebrova.PNG',
   },
   {
     id: 2,
     name: 'Vittorio Milandri',
     role: 'Videomaker: Operatore di camera, Montatore, Sound designer',
     bio: 'Con più di tre anni di esperienza nel settore, ho lavorato con importanti realtà come "Sanremo Newtalent", "IcaroTV", strutture turistiche di alto livello nel panorama romagnolo e in set cinematografici per la compagnia "RAI". Inoltre ho collaborato con case di produzione come "301 Filmont" e "Riccione Video Produzioni" per Aquafan. Con AsseZero, il mio obiettivo è portare qualità visiva che valorizzi l\'identità del brand e renda ogni contenuto riconoscibile ed efficace.',
-    photo: null as string | null,
+    photo: '/VittorioMilandri.png',
   },
   {
     id: 3,
     name: 'Salvattore Muratori',
     role: 'Regista, Direttore della fotografia',
     bio: "Da cinque anni a questa parte, ho gestito contenuti di canali youtube da 5 milioni di visualizzazioni totali e collaborato con streamers statunitensi. Ho inoltre lavorato per grandi realtà del territorio come Mediaset e Icaro tv. Il mio ruolo in Asse Zero è quello di curare la pre-produzione dei progetti, occupandomi della scrittura del prodotto e spalleggiando la post-produzione dei contenuti.",
-    photo: null as string | null,
+    photo: '/SalvattoreMuratori.png',
   },
   {
     id: 4,
     name: 'Gerardo Romani',
     role: 'Montatore, Colorist',
     bio: 'Per due anni, ho lavorato per eventi musicali, set cinematografici, videoclip e progetti per brand, sviluppando competenze operative in diversi contesti di produzione. Mi occupo principalmente di montaggio e post-produzione, curando ritmo, struttura e qualità del contenuto. Contribuisco alla realizzazione di contenuti efficaci e coerenti, adattati agli obiettivi e alle esigenze specifiche del cliente.',
-    photo: null as string | null,
+    photo: '/GerardoRomani.png',
   },
 ];
 
@@ -100,19 +100,24 @@ export function Team({ isVisible = true }: TeamProps) {
         const dist = Math.abs(i - travel);
 
         let opacity: number;
-        if (dist < 0.15) {
+        if (dist <= 0.2) {
           opacity = 1;
-        } else if (dist < 0.45) {
-          opacity = 1 - ((dist - 0.15) / 0.3);
+        } else if (dist < 0.5) {
+          const tOpacity = 1 - ((dist - 0.2) / 0.3);
+          // Easing fluido per la comparsa/scomparsa del testo
+          opacity = tOpacity * tOpacity * (3 - 2 * tOpacity);
         } else {
           opacity = 0;
         }
 
         const dir = i - travel;
-        const translateY = dir * 40;
+        // Movimento non lineare per accompagnare il flip (sull'asse orizzontale)
+        const moveEase = Math.sign(dir) * Math.pow(Math.abs(dir), 1.5);
+        // Moltiplichiamo per -1 così il testo va nella stessa direzione del flip visivo della card
+        const translateX = -moveEase * 100; 
 
         el.style.opacity = `${opacity.toFixed(3)}`;
-        el.style.transform = `translateY(${translateY.toFixed(1)}px)`;
+        el.style.transform = `translateX(${translateX.toFixed(1)}px)`;
         el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
       });
 
@@ -121,25 +126,33 @@ export function Team({ isVisible = true }: TeamProps) {
         const floorTravel = Math.floor(travel);
         const remainder = travel - floorTravel;
         
-        // La rotazione avviene solo tra lo 0.45 e lo 0.55 del passaggio tra membri
-        // Altrimenti la card rimane ferma a 0, 180, 360...
-        const flipZone = 0.15; // ampiezza della zona di flip
-        const startFlip = 0.5 - flipZone / 2;
-        const endFlip = 0.5 + flipZone / 2;
+        // Zona di animazione espansa per rendere il movimento più lungo e fluido
+        const flipZone = 0.6; 
+        const startFlip = 0.5 - flipZone / 2; // 0.2
+        const endFlip = 0.5 + flipZone / 2;   // 0.8
         
         let rotationValue;
-        if (remainder < startFlip) {
+        let zOffset = 0;
+
+        if (remainder <= startFlip) {
           rotationValue = floorTravel * 180;
-        } else if (remainder > endFlip) {
+        } else if (remainder >= endFlip) {
           rotationValue = (floorTravel + 1) * 180;
         } else {
-          // Interpolazione fluida nella zona di flip
+          // Interpolazione fluida nella zona di flip con easeInOutCubic
           const t = (remainder - startFlip) / flipZone;
-          const ease = t * t * (3 - 2 * t); // smoothstep
+          const ease = t < 0.5 
+            ? 4 * t * t * t 
+            : 1 - Math.pow(-2 * t + 2, 3) / 2;
           rotationValue = (floorTravel + ease) * 180;
+
+          // Effetto di "push back" (allontanamento) durante la rotazione
+          // Una parabola che vale 0 agli estremi e 1 al centro (t=0.5)
+          const push = 1 - Math.pow(2 * t - 1, 2);
+          zOffset = -push * 100; // Si allontana di max 100px
         }
 
-        cardRef.current.style.transform = `rotateY(${rotationValue.toFixed(1)}deg)`;
+        cardRef.current.style.transform = `translateZ(${zOffset.toFixed(1)}px) rotateY(${rotationValue.toFixed(1)}deg)`;
       }
 
       // ── Swap profile at midpoint ──
@@ -222,7 +235,7 @@ export function Team({ isVisible = true }: TeamProps) {
                   className="absolute inset-x-0 top-0 will-change-[transform,opacity]"
                   style={{
                     opacity: i === 0 ? 1 : 0,
-                    transform: i === 0 ? 'translateY(0)' : 'translateY(40px)',
+                    transform: i === 0 ? 'translateX(0)' : 'translateX(-100px)',
                     pointerEvents: i === 0 ? 'auto' : 'none',
                   }}
                 >
@@ -311,7 +324,7 @@ export function Team({ isVisible = true }: TeamProps) {
                         </div>
 
                         {/* Photo below name */}
-                        <div className="flex-1 w-full bg-dark/50 rounded-2xl overflow-hidden border border-white/5 relative">
+                        <div className="flex-1 w-full bg-white rounded-2xl overflow-hidden border border-white/5 relative">
                           {m.photo ? (
                             <img
                               src={m.photo}
@@ -319,9 +332,9 @@ export function Team({ isVisible = true }: TeamProps) {
                               className="w-full h-full object-cover grayscale transition-all duration-700 hover:grayscale-0"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-[#1a1a1a]">
+                            <div className="w-full h-full flex items-center justify-center bg-white">
                                <span
-                                className="text-white/5 font-black select-none"
+                                className="text-black/10 font-black select-none"
                                 style={{
                                   fontFamily: "'Bebas Neue', sans-serif",
                                   fontSize: '12rem',
