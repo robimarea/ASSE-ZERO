@@ -87,35 +87,25 @@ File chiave:
 - `src/lib/seo.tsx`
 - `src/App.tsx`
 
-### react-spring
+### CSS Transitions (Sostituito react-spring)
 
-`@react-spring/web` viene usato per le animazioni del menu mobile.
-
-Nel progetto serve a:
-
-- animare l'overlay mobile della navbar con movimento morbido
-- centralizzare la configurazione della spring in `SPRING_CONFIG`
+Le animazioni del menu mobile sono state convertite in transizioni CSS native (tramite classi utility e variabili CSS) per massimizzare le performance di rendering e minimizzare la dimensione del bundle JS.
 
 File chiave:
 
 - `src/components/layout/Navbar.tsx`
-- `src/lib/constants.ts`
 
-### three.js, @react-three/fiber, @react-three/drei, @react-spring/three
+### three.js & ogl
 
-Queste dipendenze sono installate ma al momento non risultano usate nel codice dentro `src/`.
+Librerie WebGL utilizzate per gli effetti interattivi 3D ad alte prestazioni:
 
-Probabile scopo previsto nel progetto:
+- `three.js` (e il relativo loader `GLTFLoader`) è utilizzato per renderizzare e animare in tempo reale il logo 3D interattivo nella sezione Hero (`Logo3D.tsx`).
+- `ogl` è utilizzata come renderer WebGL minimale per la canvas animata dello sfondo del menu overlay (`DarkVeil.tsx`).
 
-- introdurre scene 3D o effetti WebGL
-- rendere piu' immersivo hero, transizioni o portfolio
-- animare oggetti 3D con approccio React-friendly
+File chiave:
 
-Stato attuale:
-
-- presenti in `package.json`
-- non importate nei componenti attuali
-- quindi non partecipano ancora alla UI reale
+- `src/components/Logo3D.tsx`
+- `src/components/DarkVeil.tsx`
 
 ## Architettura generale dell'app
 
@@ -317,14 +307,13 @@ Scopo:
 
 - evidenziare il link corretto in navbar durante lo scroll
 
-#### `src/hooks/useMediaQuery.ts`
+#### `src/hooks/useInViewport.ts`
 
-Hook utility per leggere media query da JavaScript.
+Hook utility che monitora se un elemento HTML (tramite `Ref`) si trova all'interno del viewport corrente.
 
-Stato attuale:
+Scopo:
 
-- presente nel progetto
-- non risulta importato altrove al momento
+- attivare o mettere in pausa animazioni/loop WebGL pesanti solo quando l'elemento è visibile (es. usato da `Viewport`)
 
 ### Cartella `src/components/ui`
 
@@ -371,7 +360,7 @@ Osservazioni:
 
 - il reveal usa scala e opacita' legate alla distanza dal fondo pagina
 - i link rapidi generano anchor da label lowercase, quindi `Servizi -> #servizi`, ma `Contatti -> #contatti`
-- il team descritto nel progetto e' di 4 persone, ma il sito in questo momento mostra solo 3 card team
+- il team mostra correttamente le card di tutti e 4 i professionisti del progetto
 
 ### Cartella `src/components/sections`
 
@@ -392,37 +381,28 @@ Caratteristiche:
 
 #### `src/components/sections/Services.tsx`
 
-Sezione servizi con scroll orizzontale guidato da scroll verticale.
-
-Supporta due modalita':
-
-- `video`
-- `smm`
+Sezione interamente dedicata al Social Media Management (SMM) e ai piani di pricing.
 
 Caratteristiche:
 
-- heading gigante
-- pill dei servizi
-- track orizzontale di card placeholder numerate
-- comportamento speciale `overlapNext`
-
-Nota: solo la sezione `video` usa `id="servizi"`, mentre la sezione SMM usa `id="services-smm"` e non e' raggiunta da navbar.
+- Heading prominente ed elenco delle competenze (pills)
+- Griglia di card responsive con prezzi e dettagli dei piani (`BASE`, `GLOW UP`, `GAME CHANGER`)
+- Effetto Spotlight hover animato sulle card (`SpotlightCard.tsx`)
+- Struttura statica ottimizzata senza scroll fittizio per migliorare la leggibilità e l'esperienza utente
 
 #### `src/components/sections/Philosophy.tsx`
 
-Sezione manifesto del gruppo con claim e copy descrittivo.
-
-Nota: anche qui compaiono caratteri corrotti in alcune parole accentate.
+Sezione manifesto del gruppo creativo con claim ("dalla A alla Z" con lettere grafiche personalizzate) e copia descrittivo sul contatto umano e l'approccio su misura.
 
 #### `src/components/sections/Team.tsx`
 
-Sezione team con titolo e card immagine.
+Sezione team con titolo e card immagine rotante a 3D.
 
 Stato attuale:
 
-- mostra 3 membri placeholder
-- usa avatar remoti `pravatar.cc`
-- non rappresenta ancora esplicitamente i 4 ragazzi reali del progetto
+- mostra i 4 membri reali del progetto
+- utilizza foto profilo locali in `/profile_photos/`
+- implementa un effetto flip 3D interattivo guidato dallo scroll vertical (zero re-render)
 
 #### `src/components/sections/Contact.tsx`
 
