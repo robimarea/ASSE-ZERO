@@ -23,11 +23,6 @@ const VIDEO_ITEMS = [
     gradient: 'linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 50%, #3a3a3a 100%)',
     src: '/videos/smoke-beer_skateboards.mp4',
   },
-  {
-    id: 4, title: 'DELIRIO IN PIENO INVERNO', subtitle: 'Music Video',
-    gradient: 'linear-gradient(135deg, #6b0f1a 0%, #1a060a 60%, #2b2d42 100%)',
-    src: '/videos/DELIRIO-IN-PIENO%20INVERNO.mp4',
-  },
 ];
 
 function clamp(value: number, min: number, max: number) {

@@ -34,7 +34,7 @@ const TEAM_MEMBERS = [
     id: 4,
     name: 'Gerardo Romani',
     role: 'Montatore, Colorist',
-    bio: 'Per due anni, ho lavorato per eventi musicali, set cinematografici, videoclip e progetti per brand, sviluppando competenze operative in diversi contesti di produzione. Mi occupo principalmente di montaggio e post-produzione, curando ritmo, struttura e qualità del contenuto. Contribuisco alla realizzazione di contenuti efficaci e coerenti, adattati agli obiettivi e alle esigenze specifiche del cliente.',
+    bio: 'Per due anni, ho lavorato per eventi musicali, set cinematografici, videoclip e progetti per brand, sviluppando competenze operative in diversi contesti di produzione. Mi occupo principalmente di montaggio e post-produzione, curando ritmo, struttura e qualità del contenuto. Dispongo inoltre di attrezzatura professionale per riprese con drone, con cui amplio le possibilità visive di ogni progetto. Contribuisco alla realizzazione di contenuti efficaci e coerenti, adattati agli obiettivi e alle esigenze specifiche del cliente.',
     photo: '/profile_photos/GerardoRomani.png',
   },
 ];
