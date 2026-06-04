@@ -14,28 +14,28 @@ const TEAM_MEMBERS = [
     name: 'Alessia Debrova',
     role: 'Social media strategist, Content manager',
     bio: 'Ho lavorato su contenuti che hanno raggiunto +800.000 visualizzazioni, relativi a canali social sia internazionali che italiani, per ben 4 profili differenti instagram e youtube, sviluppando una forte capacità nella creazione di contenuti efficaci e coerenti con le logiche delle piattaforme. Al centro della mia formazione, c\'è stato lo studio del RETENTION RATE, fondamentale per mantenere alta l\'attenzione dello spettatore e migliorare le performance dei contenuti.',
-    photo: '/AlessiaDebrova.PNG',
+    photo: '/profile_photos/AlessiaDebrova.PNG',
   },
   {
     id: 2,
     name: 'Vittorio Milandri',
     role: 'Videomaker: Operatore di camera, Montatore, Sound designer',
     bio: 'Con più di tre anni di esperienza nel settore, ho lavorato con importanti realtà come "Sanremo Newtalent", "IcaroTV", strutture turistiche di alto livello nel panorama romagnolo e in set cinematografici per la compagnia "RAI". Inoltre ho collaborato con case di produzione come "301 Filmont" e "Riccione Video Produzioni" per Aquafan. Con AsseZero, il mio obiettivo è portare qualità visiva che valorizzi l\'identità del brand e renda ogni contenuto riconoscibile ed efficace.',
-    photo: '/VittorioMilandri.png',
+    photo: '/profile_photos/VittorioMilandri.png',
   },
   {
     id: 3,
     name: 'Salvattore Muratori',
     role: 'Regista, Direttore della fotografia',
     bio: "Da cinque anni a questa parte, ho gestito contenuti di canali youtube da 5 milioni di visualizzazioni totali e collaborato con streamers statunitensi. Ho inoltre lavorato per grandi realtà del territorio come Mediaset e Icaro tv. Il mio ruolo in Asse Zero è quello di curare la pre-produzione dei progetti, occupandomi della scrittura del prodotto e spalleggiando la post-produzione dei contenuti.",
-    photo: '/SalvattoreMuratori.png',
+    photo: '/profile_photos/SalvattoreMuratori.png',
   },
   {
     id: 4,
     name: 'Gerardo Romani',
     role: 'Montatore, Colorist',
     bio: 'Per due anni, ho lavorato per eventi musicali, set cinematografici, videoclip e progetti per brand, sviluppando competenze operative in diversi contesti di produzione. Mi occupo principalmente di montaggio e post-produzione, curando ritmo, struttura e qualità del contenuto. Contribuisco alla realizzazione di contenuti efficaci e coerenti, adattati agli obiettivi e alle esigenze specifiche del cliente.',
-    photo: '/GerardoRomani.png',
+    photo: '/profile_photos/GerardoRomani.png',
   },
 ];
 

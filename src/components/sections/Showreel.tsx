@@ -1,414 +1,384 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { SHOWREEL_ASSETS, type ShowreelAsset } from '@/data/showreelAssets';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { clamp, damp, lerp, smoothstep } from '@/lib/math';
-import { createPortal } from 'react-dom';
+// ============================================
+// ASSE ZERO — Showreel Video Section
+// Immersive premium video player with cinematic frame & expanded state
+// ============================================
 
-type TunnelConfig = {
-  sectionHeight: string;
-  travelPadding: number;
-  depthStep: number;
-  relativeCull: number;
-  visibleWindow: number;
-  focusWindow: number;
-  rearScale: number;
-  focusScale: number;
-  frontScale: number;
-  tunnelRadiusX: number;
-  tunnelRadiusY: number;
-  driftX: number;
-  driftY: number;
-  trailSpreadX: number;
-  trailSpreadY: number;
-  scatterJitterX: number;
-  scatterJitterY: number;
-  spreadAnchorX: number;
-  spreadAnchorY: number;
-  pointerInfluenceX: number;
-  pointerInfluenceY: number;
-  rearBlur: number;
-  frontBlur: number;
-  rearOpacity: number;
-  frontOpacity: number;
-  followLambda: number;
-  pointerLambda: number;
-  focusLift: number;
-};
-
-const DESKTOP_CONFIG: TunnelConfig = {
-  sectionHeight: '680vh',
-  travelPadding: 0.58,
-  depthStep: 290,
-  relativeCull: 1.4,
-  visibleWindow: 1.4,
-  focusWindow: 0.58,
-  rearScale: 0.64,
-  focusScale: 0.82,
-  frontScale: 0.78,
-  tunnelRadiusX: 110,
-  tunnelRadiusY: 68,
-  driftX: 2,
-  driftY: 2,
-  trailSpreadX: 0,
-  trailSpreadY: 0,
-  scatterJitterX: 132,
-  scatterJitterY: 82,
-  spreadAnchorX: 340,
-  spreadAnchorY: 210,
-  pointerInfluenceX: 28,
-  pointerInfluenceY: 22,
-  rearBlur: 14,
-  frontBlur: 28,
-  rearOpacity: 0.02,
-  frontOpacity: 0.01,
-  followLambda: 5.5,
-  pointerLambda: 6.0,
-  focusLift: 4,
-};
-
-const MOBILE_CONFIG: TunnelConfig = {
-  sectionHeight: '760vh',
-  travelPadding: 0.62,
-  depthStep: 230,
-  relativeCull: 1.35,
-  visibleWindow: 1.35,
-  focusWindow: 0.6,
-  rearScale: 0.7,
-  focusScale: 0.86,
-  frontScale: 0.82,
-  tunnelRadiusX: 58,
-  tunnelRadiusY: 38,
-  driftX: 1.5,
-  driftY: 1.5,
-  trailSpreadX: 0,
-  trailSpreadY: 0,
-  scatterJitterX: 72,
-  scatterJitterY: 46,
-  spreadAnchorX: 156,
-  spreadAnchorY: 102,
-  pointerInfluenceX: 18,
-  pointerInfluenceY: 14,
-  rearBlur: 11,
-  frontBlur: 20,
-  rearOpacity: 0.03,
-  frontOpacity: 0.02,
-  followLambda: 6.8,
-  pointerLambda: 7.0,
-  focusLift: 3,
-};
-
-function getPreviewSource(asset: ShowreelAsset) {
-  return asset.kind === 'video' ? asset.poster : asset.src;
-}
-
-// ── LIGHTBOX COMPONENT ──
-function Lightbox({ asset, onClose }: { asset: ShowreelAsset; onClose: () => void }) {
-  const [active, setActive] = useState(false);
-  
-  useEffect(() => {
-    const timer = requestAnimationFrame(() => setActive(true));
-    return () => cancelAnimationFrame(timer);
-  }, []);
-
-  return createPortal(
-    <div 
-      className={`fixed inset-0 z-[1000] flex items-center justify-center transition-all duration-700 ease-out-expo ${active ? 'bg-black/95 backdrop-blur-md' : 'bg-black/0 backdrop-blur-none pointer-events-none'}`}
-      onClick={onClose}
-    >
-      <div 
-        className={`relative w-[min(90vw,70rem)] aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10 transition-all duration-700 ease-out-expo ${active ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {asset.kind === 'video' ? (
-          <video 
-            src={asset.src} 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <img 
-            src={asset.src} 
-            alt={asset.title} 
-            className="w-full h-full object-cover"
-          />
-        )}
-        
-        {/* Info Overlay */}
-        <div className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/80 to-transparent">
-          <p className="text-primary text-xs font-black uppercase tracking-[0.3em] mb-2">{asset.label}</p>
-          <h2 className="text-white text-3xl font-heading font-black tracking-tight">{asset.title}</h2>
-        </div>
-
-        {/* Close Button */}
-        <button 
-          onClick={onClose}
-          className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-2xl transition-colors"
-        >
-          ×
-        </button>
-      </div>
-    </div>,
-    document.body
-  );
-}
+import { useEffect, useRef, useState } from 'react';
 
 interface ShowreelProps {
   isVisible?: boolean;
 }
 
 export function Showreel({ isVisible = true }: ShowreelProps) {
-  const containerRef = useRef<HTMLElement>(null);
-  const cardRefs = useRef<(HTMLElement | null)[]>([]);
-  const targetTravelRef = useRef(0);
-  const travelRef = useRef(0);
-  const pointerTargetRef = useRef({ x: 0, y: 0 });
-  const pointerRef = useRef({ x: 0, y: 0 });
-  const activeIndexRef = useRef(0);
-  const visibleIndicesRef = useRef<Set<number>>(new Set());
-  const activeTitleRef = useRef<HTMLDivElement>(null);
-  const activeLabelRef = useRef<HTMLDivElement>(null);
-  
-  const [selectedAsset, setSelectedAsset] = useState<ShowreelAsset | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const config = isMobile ? MOBILE_CONFIG : DESKTOP_CONFIG;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [showControls, setShowControls] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const previewSources = useMemo(() => SHOWREEL_ASSETS.map(getPreviewSource), []);
-
-  const cardOffsets = useMemo(() => {
-    return SHOWREEL_ASSETS.map((_, index) => {
-      const anchorXDir = index % 2 === 0 ? -1 : 1;
-      const anchorYDir = index % 3 === 0 ? -1 : 1;
-      const anchorX = anchorXDir * (config.spreadAnchorX + Math.sin(index * 1.83) * config.tunnelRadiusX);
-      const anchorY = anchorYDir * (config.spreadAnchorY + Math.cos(index * 1.29) * config.tunnelRadiusY);
-      return {
-        baseX: anchorX + Math.sin(index * 2.37 + 0.6) * config.scatterJitterX,
-        baseY: anchorY + Math.cos(index * 1.93 + 0.2) * config.scatterJitterY,
-        jitterSeed: index,
-      };
-    });
-  }, [config]);
-
+  // Play/pause based on section visibility
   useEffect(() => {
-    let frameId = 0;
-    let lastFrameTime = performance.now();
-    let sectionTop = 0;
-    let sectionHeight = 0;
+    const video = videoRef.current;
+    if (!video) return;
 
-    const updateMetrics = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      sectionTop = rect.top + window.scrollY;
-      sectionHeight = containerRef.current.offsetHeight;
-    };
-
-    const updateTargetTravel = () => {
-      if (!containerRef.current) return;
-      const scrollY = window.scrollY;
-      const sectionEnd = sectionTop + sectionHeight - window.innerHeight;
-      const progress = clamp((scrollY - sectionTop) / Math.max(sectionEnd - sectionTop, 1), 0, 1);
-      const travelStart = -config.travelPadding;
-      const travelEnd = (SHOWREEL_ASSETS.length - 1) + config.travelPadding;
-      targetTravelRef.current = lerp(travelStart, travelEnd, progress);
-    };
-
-    const animate = (now: number) => {
-      const deltaSeconds = Math.min((now - lastFrameTime) / 1000, 0.05);
-      lastFrameTime = now;
-
-      const scrollDelta = Math.abs(targetTravelRef.current - travelRef.current);
-      if (scrollDelta < 0.001) {
-        travelRef.current = targetTravelRef.current;
-      } else {
-        travelRef.current = damp(travelRef.current, targetTravelRef.current, config.followLambda, deltaSeconds);
+    if (isVisible) {
+      // In windowed view, we force-mute to comply with autoplay policy.
+      // If expanded view was active, we preserve the unmute state.
+      if (!isExpanded) {
+        video.muted = true;
+        setIsMuted(true);
       }
+      video.play()
+        .then(() => setIsPlaying(true))
+        .catch((err) => console.warn('Showreel autoplay delayed:', err));
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  }, [isVisible, isExpanded]);
 
-      pointerRef.current.x = damp(pointerRef.current.x, pointerTargetRef.current.x, config.pointerLambda, deltaSeconds);
-      pointerRef.current.y = damp(pointerRef.current.y, pointerTargetRef.current.y, config.pointerLambda, deltaSeconds);
+  // Hide controls after 2.5s of inactivity when expanded
+  useEffect(() => {
+    if (!isExpanded) {
+      setShowControls(true);
+      return;
+    }
 
-      const travel = travelRef.current;
-      const time = now * 0.001;
+    let timeoutId: number;
 
-      const active = clamp(Math.round(travel), 0, SHOWREEL_ASSETS.length - 1);
-      if (active !== activeIndexRef.current) {
-        activeIndexRef.current = active;
-        const asset = SHOWREEL_ASSETS[active];
-        if (activeTitleRef.current) activeTitleRef.current.textContent = asset.title;
-        if (activeLabelRef.current) activeLabelRef.current.textContent = asset.label;
-      }
-
-      const visibleStart = Math.max(0, Math.floor(travel - config.visibleWindow));
-      const visibleEnd = Math.min(SHOWREEL_ASSETS.length - 1, Math.ceil(travel + config.visibleWindow));
-
-      const nextVisibleIndices = new Set<number>();
-      for (let i = visibleStart; i <= visibleEnd; i++) nextVisibleIndices.add(i);
-
-      visibleIndicesRef.current.forEach((prevIndex) => {
-        if (!nextVisibleIndices.has(prevIndex)) {
-          const card = cardRefs.current[prevIndex];
-          if (card) card.style.display = 'none';
+    const resetControlsTimeout = () => {
+      setShowControls(true);
+      clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        if (isPlaying) {
+          setShowControls(false);
         }
-      });
-
-      nextVisibleIndices.forEach((index) => {
-        const card = cardRefs.current[index];
-        if (!card) return;
-
-        const relative = index - travel;
-        const distance = Math.abs(relative);
-
-        if (distance > config.visibleWindow) {
-          if (card.style.display !== 'none') card.style.display = 'none';
-          return;
-        }
-
-        if (card.style.display !== 'block') card.style.display = 'block';
-
-        const offset = cardOffsets[index];
-        const focusMix = smoothstep(config.focusWindow, 0, distance);
-        const isPastFocus = relative < 0;
-
-        const dreamDriftX = Math.sin(time * 0.22 + index * 1.61) * config.driftX;
-        const dreamDriftY = Math.cos(time * 0.2 + index * 1.27) * config.driftY;
-        const pointerInfluence = 0.34 + focusMix * 0.72;
-        const pointerX = pointerRef.current.x * config.pointerInfluenceX * pointerInfluence;
-        const pointerY = pointerRef.current.y * config.pointerInfluenceY * pointerInfluence;
-
-        const x = offset.baseX + dreamDriftX + pointerX;
-        const y = offset.baseY + dreamDriftY - pointerY - focusMix * config.focusLift;
-        const z = -relative * config.depthStep;
-
-        const curveAmount = clamp(distance / config.relativeCull, 0, 1);
-        const curve = smoothstep(0, 1, curveAmount);
-
-        const scale = isPastFocus
-          ? lerp(config.focusScale, config.frontScale, curve)
-          : lerp(config.focusScale, config.rearScale, curve);
-
-        const opacity = isPastFocus
-          ? lerp(1, config.frontOpacity, curve)
-          : lerp(1, config.rearOpacity, curve);
-
-        const rotateX = dreamDriftY * 0.08 - pointerRef.current.y * 2.3 * (0.18 + focusMix * 0.34);
-        const rotateY = dreamDriftX * 0.08 + pointerRef.current.x * 2.9 * (0.18 + focusMix * 0.34);
-
-        card.style.transform = `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(0)}px) rotateX(${rotateX.toFixed(1)}deg) rotateY(${rotateY.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
-        card.style.opacity = `${opacity.toFixed(3)}`;
-        if (card.style.filter !== 'none') card.style.filter = 'none';
-        card.style.zIndex = `${1000 - Math.round(relative * 100)}`;
-      });
-
-      visibleIndicesRef.current = nextVisibleIndices;
-      frameId = window.requestAnimationFrame(animate);
+      }, 2500);
     };
 
-    const handleScroll = () => updateTargetTravel();
-    const handleResize = () => { updateMetrics(); updateTargetTravel(); };
-    const handlePointerMove = (event: PointerEvent) => {
-      pointerTargetRef.current.x = ((event.clientX / window.innerWidth) * 2 - 1) * -1;
-      pointerTargetRef.current.y = ((event.clientY / window.innerHeight) * 2 - 1) * -1;
-    };
-    const handlePointerLeave = () => { pointerTargetRef.current.x = 0; pointerTargetRef.current.y = 0; };
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('mousemove', resetControlsTimeout);
+      container.addEventListener('click', resetControlsTimeout);
+    }
 
-    updateMetrics();
-    updateTargetTravel();
-    if (isVisible) frameId = window.requestAnimationFrame(animate);
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize, { passive: true });
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
-    window.addEventListener('pointerleave', handlePointerLeave);
+    resetControlsTimeout();
 
     return () => {
-      window.cancelAnimationFrame(frameId);
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerleave', handlePointerLeave);
+      if (container) {
+        container.removeEventListener('mousemove', resetControlsTimeout);
+        container.removeEventListener('click', resetControlsTimeout);
+      }
+      clearTimeout(timeoutId);
     };
-  }, [config, cardOffsets, isVisible]);
+  }, [isExpanded, isPlaying]);
+
+  // Keyboard navigation when expanded
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isExpanded) return;
+      
+      if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        minimizeVideo();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isExpanded, isPlaying]);
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlaying) {
+      video.pause();
+      setIsPlaying(false);
+    } else {
+      video.play()
+        .then(() => setIsPlaying(true))
+        .catch((err) => console.error(err));
+    }
+  };
+
+  const toggleMute = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+
+    const nextMuted = !video.muted;
+    video.muted = nextMuted;
+    setIsMuted(nextMuted);
+  };
+
+  const expandVideo = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    setIsExpanded(true);
+    // Unmute when expanded so user gets full sound experience
+    video.muted = false;
+    setIsMuted(false);
+    
+    // Smooth scroll page to showreel section to align correctly
+    const container = containerRef.current;
+    if (container) {
+      container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    video.play()
+      .then(() => setIsPlaying(true))
+      .catch((err) => console.error(err));
+  };
+
+  const minimizeVideo = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+
+    setIsExpanded(false);
+    // Re-mute when returning to windowed mode
+    video.muted = true;
+    setIsMuted(true);
+    
+    video.play()
+      .then(() => setIsPlaying(true))
+      .catch((err) => console.error(err));
+  };
+
+  const handleTimeUpdate = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const current = video.currentTime;
+    const dur = video.duration || 1;
+    setCurrentTime(current);
+    setProgress((current / dur) * 100);
+  };
+
+  const handleLoadedMetadata = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    setDuration(video.duration);
+    setIsLoading(false);
+  };
+
+  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const video = videoRef.current;
+    if (!video || duration === 0) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const width = rect.width;
+    const clickRatio = Math.max(0, Math.min(1, clickX / width));
+    const newTime = clickRatio * duration;
+    
+    video.currentTime = newTime;
+    setCurrentTime(newTime);
+    setProgress(clickRatio * 100);
+  };
+
+  const formatTime = (timeInSeconds: number) => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   return (
     <section
       ref={containerRef}
-      className="relative z-0 w-full bg-dark"
-      style={{ height: config.sectionHeight }}
+      className="relative w-full h-[100dvh] bg-dark flex items-center justify-center overflow-hidden z-0"
     >
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-dark">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_44%,rgba(255,255,255,0.08),transparent_34%),radial-gradient(circle_at_18%_24%,rgba(233,172,6,0.07),transparent_22%),radial-gradient(circle_at_82%_74%,rgba(191,51,32,0.08),transparent_25%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,8,0.08),rgba(5,5,8,0.74))]" />
+      {/* Background Gradients for depth and premium feel */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_44%,rgba(233,172,6,0.11),transparent_40%),radial-gradient(circle_at_18%_24%,rgba(191,51,32,0.06),transparent_25%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,8,0.2),rgba(5,5,8,0.8))] pointer-events-none" />
 
-        {/* 3D Container */}
-        <div className="absolute inset-0 [perspective:1600px]">
-          <div className="relative h-full w-full [transform-style:preserve-3d]">
-            {SHOWREEL_ASSETS.map((asset, index) => (
-              <article
-                key={asset.id}
-                ref={(el) => { cardRefs.current[index] = el; }}
-                onClick={() => setSelectedAsset(asset)}
-                className="absolute left-1/2 top-1/2 w-[min(68vw,20rem)] md:w-[min(38vw,28rem)] will-change-transform cursor-pointer group"
-                style={{
-                  display: 'none',
-                  opacity: 0,
-                  transform: 'translate(-50%, -50%) translate3d(0, 0, -300px) scale(0.8)',
-                }}
-              >
-                <div className="overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#09090b] shadow-[0_28px_90px_rgba(0,0,0,0.28)] transition-transform duration-500 group-hover:scale-[1.03] group-hover:border-primary/30">
-                  <div className="relative aspect-[235/160]">
-                    <img
-                      src={previewSources[index]}
-                      alt={asset.title}
-                      loading={index === 0 ? 'eager' : 'lazy'}
-                      decoding="async"
-                      className="h-full w-full object-cover grayscale-[0.2] transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,4,6,0.02),rgba(4,4,6,0.26))]" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_16%,rgba(255,255,255,0.10),transparent_26%),radial-gradient(circle_at_80%_82%,rgba(233,172,6,0.10),transparent_24%)] mix-blend-screen" />
-                    
-                    {/* Hover state overlay */}
-                    <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-500 flex items-center justify-center">
-                       <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 scale-75 group-hover:scale-100 flex items-center justify-center">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                          </svg>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))}
+      {/* Main Video Box */}
+      <div
+        style={{
+          transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+        className={`relative transition-all duration-700 bg-black overflow-hidden group ${
+          isExpanded
+            ? 'fixed inset-0 w-screen h-[100dvh] z-[999] rounded-none border-none'
+            : 'w-[90vw] md:w-[75vw] lg:w-[65vw] aspect-video rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] hover:border-primary/20 pointer-events-auto'
+        }`}
+      >
+        {/* Loading Spinner */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-black flex items-center justify-center z-30">
+            <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
           </div>
-        </div>
+        )}
 
-        {/* Active Asset Info - Bottom Center */}
-        <div className="pointer-events-none absolute bottom-12 left-1/2 z-30 w-[min(32rem,calc(100%-2rem))] -translate-x-1/2 px-5 py-3 text-center md:bottom-16">
-          <div 
-            ref={activeLabelRef}
-            className="text-[0.65rem] font-bold uppercase tracking-[0.4em] text-primary md:text-[0.75rem]"
-          >
-            {SHOWREEL_ASSETS[0].label}
-          </div>
-          <div 
-            ref={activeTitleRef}
-            className="mt-3 font-heading text-2xl font-black tracking-[-0.06em] text-white md:text-5xl uppercase italic"
-            style={{ textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
-          >
-            {SHOWREEL_ASSETS[0].title}
-          </div>
-        </div>
-      </div>
-
-      {/* Lightbox Overlay */}
-      {selectedAsset && (
-        <Lightbox 
-          asset={selectedAsset} 
-          onClose={() => setSelectedAsset(null)} 
+        {/* Video Element */}
+        <video
+          ref={videoRef}
+          src="/show_reel.mp4"
+          preload="auto"
+          playsInline
+          loop
+          muted={isMuted}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onClick={isExpanded ? togglePlay : expandVideo}
+          className={`w-full h-full object-cover select-none transition-transform duration-1000 ${
+            isExpanded ? 'cursor-pointer' : 'cursor-target scale-100 group-hover:scale-[1.02]'
+          }`}
         />
-      )}
+
+        {/* Windowed Mode: Dark gradient overlay & Title text */}
+        {!isExpanded && (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/35 opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+            {/* Title & Category text overlay */}
+            <div className="absolute bottom-8 left-8 md:bottom-12 md:left-12 transition-all duration-500 pointer-events-none">
+              <span className="text-primary text-xs md:text-sm font-black uppercase tracking-[0.35em] block mb-2 md:mb-3">
+                ASSE ZERO — SHOWREEL
+              </span>
+              <h2
+                className="text-white font-heading font-black text-4xl md:text-6xl tracking-tighter uppercase italic leading-none"
+                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+              >
+                PRODUZIONE<br />
+                <span className="text-primary">VIDEO</span>
+              </h2>
+            </div>
+
+            {/* Play Button - Windowed Mode */}
+            <button
+              onClick={expandVideo}
+              aria-label="Avvia video in modalità cinema"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-26 md:h-26 rounded-full bg-primary flex items-center justify-center shadow-[0_15px_40px_rgba(233,172,6,0.35)] hover:shadow-[0_20px_50px_rgba(233,172,6,0.55)] transition-all duration-500 hover:scale-108 active:scale-95 group/btn cursor-target z-10"
+            >
+              <svg
+                className="w-8 h-8 md:w-9 md:h-9 text-black fill-current translate-x-0.5 group-hover/btn:scale-105 transition-transform duration-300"
+                viewBox="0 0 24 24"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              {/* Outer wave rings */}
+              <div
+                className="absolute inset-0 rounded-full border border-primary/40 animate-ping"
+                style={{ animationDuration: '2.5s' }}
+              />
+            </button>
+          </>
+        )}
+
+        {/* Expanded Mode: Close Button */}
+        {isExpanded && (
+          <button
+            onClick={minimizeVideo}
+            aria-label="Esci dalla modalità cinema"
+            className={`absolute top-6 right-6 md:top-10 md:right-10 w-12 h-12 rounded-full bg-black/50 hover:bg-black/80 border border-white/10 backdrop-blur-md flex items-center justify-center text-white text-2xl transition-all duration-300 hover:scale-105 cursor-target z-[1010] ${
+              showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'
+            }`}
+          >
+            &times;
+          </button>
+        )}
+
+        {/* Expanded Mode: Bottom Controls Overlay */}
+        {isExpanded && (
+          <div
+            className={`absolute bottom-0 left-0 w-full px-6 py-8 md:px-12 md:py-10 bg-gradient-to-t from-black/95 via-black/75 to-transparent flex flex-col gap-5 transition-all duration-500 z-20 ${
+              showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
+            }`}
+          >
+            {/* Timeline slider */}
+            <div
+              onClick={handleTimelineClick}
+              className="group/timeline w-full py-2 flex items-center cursor-pointer"
+            >
+              <div className="relative h-1.5 w-full bg-white/20 rounded-full transition-all duration-300 group-hover/timeline:h-2">
+                {/* Active progress bar */}
+                <div
+                  className="absolute top-0 left-0 h-full bg-primary rounded-full"
+                  style={{ width: `${progress}%` }}
+                />
+                {/* Drag handle */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border border-primary shadow-[0_0_8px_rgba(0,0,0,0.5)] scale-0 group-hover/timeline:scale-100 transition-transform duration-200"
+                  style={{ left: `calc(${progress}% - 8px)` }}
+                />
+              </div>
+            </div>
+
+            {/* Control buttons & time display */}
+            <div className="flex items-center justify-between">
+              {/* Left Column: Play/Pause, Time */}
+              <div className="flex items-center gap-6">
+                <button
+                  onClick={togglePlay}
+                  aria-label={isPlaying ? 'Pausa' : 'Avvia'}
+                  className="text-white hover:text-primary transition-colors cursor-target"
+                >
+                  {isPlaying ? (
+                    /* Pause SVG */
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                      <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                    </svg>
+                  ) : (
+                    /* Play SVG */
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  )}
+                </button>
+
+                {/* Time Display */}
+                <span className="text-white/70 text-sm font-semibold select-none">
+                  {formatTime(currentTime)} <span className="text-white/30 font-light">/</span> {formatTime(duration)}
+                </span>
+              </div>
+
+              {/* Right Column: Audio details, Minimize */}
+              <div className="flex items-center gap-6">
+                {/* Volume Toggle */}
+                <button
+                  onClick={toggleMute}
+                  aria-label={isMuted ? 'Riattiva audio' : 'Disattiva audio'}
+                  className="text-white hover:text-primary transition-colors cursor-target"
+                >
+                  {isMuted ? (
+                    /* Volume Mute SVG */
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                      <path d="M3.63 3.63L2.36 4.9 7.47 10H4.5v4h3l4.17 4.17V14.3l3.65 3.65c-.71.55-1.51.98-2.38 1.25v2.06c1.4-.38 2.67-1.12 3.69-2.11l2.62 2.62 1.27-1.27L3.63 3.63zM10.17 6.83L12 5v4.3L10.17 7.47zM16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.24l2.48 2.48c.01-.23.02-.45.02-.69zM14 3.23v2.06c2.89.86 5 3.54 5 6.71 0 1.9-.53 3.67-1.44 5.17l1.46 1.46C20.25 16.5 21 14.34 21 12c0-4.28-2.99-7.86-7-8.77z" />
+                    </svg>
+                  ) : (
+                    /* Volume Up SVG */
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                    </svg>
+                  )}
+                </button>
+
+                {/* Minimize button (bottom-right) */}
+                <button
+                  onClick={minimizeVideo}
+                  aria-label="Riduci video"
+                  className="text-white hover:text-primary transition-colors cursor-target"
+                >
+                  <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                    <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

@@ -42,7 +42,7 @@ function App() {
       <main className="bg-dark">
 
         {/* ── Layer 0: Hero (curtain giallo) → Showreel ── */}
-        <MaskChangeUI curtain={<Hero />} zIndex={50} layerOrder={0}>
+        <MaskChangeUI curtain={<Hero />} zIndex={50} layerOrder={0} extraStickyDistanceH={2}>
           <ErrorBoundary fallback={<section className="min-h-screen bg-dark" />}>
             <Suspense fallback={<section className="min-h-screen bg-dark" />}>
               <Viewport id={SECTION_IDS.showreel}>
