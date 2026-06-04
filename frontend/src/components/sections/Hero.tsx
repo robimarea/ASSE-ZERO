@@ -22,9 +22,9 @@ export function Hero() {
         </Viewport>
       </div>
 
-      {/* Testo centrato sotto il logo - padding-top compensa l'altezza del logo */}
+      {/* Testo centrato sotto il logo */}
       <div
-        className="relative z-0 flex flex-col items-center justify-end w-full min-h-screen pb-16"
+        className="relative z-0 flex flex-col items-center justify-center md:justify-end w-full min-h-screen pt-[38vh] md:pt-0 pb-10 md:pb-16"
       >
         <h1
           className="text-white uppercase font-black leading-none text-center"

@@ -54,7 +54,7 @@ export function ScrollProgress() {
     >
       <div
         ref={barRef}
-        className="h-full bg-primary origin-left shadow-[0_0_12px_3px_rgba(191,51,32,0.8)]"
+        className="h-full bg-[#a90f21] origin-left shadow-[0_0_14px_4px_rgba(169,15,33,0.9)]"
         style={{ width: '0%' }}
       />
     </div>

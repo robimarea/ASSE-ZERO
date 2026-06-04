@@ -28,30 +28,31 @@
    ============================================ */
 
 @theme {
-  /* Brand Colors (60/30/10 Theory) */
-  --color-primary: #e9ac06;      /* 30% Giallo (Secondary focus) */
-  --color-primary-light: #F0C24F;
-  --color-primary-dark: #B78705;
-  --color-secondary: #FFFFFF;    /* 10% Bianco (Accent / Highlights) */
-  --color-secondary-light: #FFFFFF;
-  --color-secondary-dark: #F5F5F5;
-  --color-accent: #e9ac06;
+  /* Brand Colors */
+  --color-primary: #ebdb00;      /* Giallo */
+  --color-primary-light: #f5ea3a;
+  --color-primary-dark: #c4b800;
+  --color-secondary: #edf2f4;    /* Bianco perlato */
+  --color-secondary-light: #ffffff;
+  --color-secondary-dark: #d8dfe2;
+  --color-red: #a90f21;          /* Rosso */
+  --color-accent: #ebdb00;
 
-  /* Dark Palette (60% Base) */
-  --color-dark: #000000;         /* 60% Nero */
-  --color-dark-secondary: #0A0A0A;
-  --color-surface: #111111;
-  --color-surface-light: #1A1A1A;
-  --color-surface-hover: #242424;
+  /* Dark Palette (Blu scuro base) */
+  --color-dark: #2b2d42;
+  --color-dark-secondary: #232536;
+  --color-surface: #363853;
+  --color-surface-light: #404260;
+  --color-surface-hover: #4a4c6d;
 
   /* Text */
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: #e9ac06;
-  --color-text-muted: #888888;
+  --color-text-primary: #edf2f4;
+  --color-text-secondary: #ebdb00;
+  --color-text-muted: #8d8fa8;
 
   /* Glass */
-  --color-glass: rgba(10, 10, 10, 0.7);
-  --color-glass-border: rgba(191, 51, 32, 0.25);
+  --color-glass: rgba(43, 45, 66, 0.7);
+  --color-glass-border: rgba(169, 15, 33, 0.25);
 
   /* Typography */
   --font-heading: 'Alte Haas Grotesk', sans-serif;
@@ -126,7 +127,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-surface-light);
+  background: var(--color-surface);
   border-radius: var(--radius-full);
 }
 
@@ -295,6 +296,52 @@ body.video-expanded .target-cursor-wrapper {
   opacity: 0 !important;
   pointer-events: none !important;
   display: none !important;
+}
+
+/* ============================================
+   Button — fill-from-bottom (uiverse.io/adamgiebl)
+   ============================================ */
+
+.btn-fill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 2rem;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: inherit;
+  background: transparent;
+  border: 2px solid #a90f21;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.5s ease-out, box-shadow 0.5s ease-out;
+  box-shadow: inset 0 0 0 0 #a90f21;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Su sfondo scuro: testo bianco di default, resta bianco dopo il fill */
+.btn-fill--primary { color: #ffffff; }
+
+/* Su sfondo chiaro/giallo: testo rosso di default, diventa bianco dopo il fill */
+.btn-fill--light   { color: #a90f21; }
+
+.btn-fill:not(:disabled):hover {
+  color: #ffffff;
+  box-shadow: inset 0 -100px 0 0 #a90f21;
+}
+
+.btn-fill:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+.btn-fill:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ============================================

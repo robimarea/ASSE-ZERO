@@ -6,8 +6,10 @@
 
 import { useRef, useEffect } from 'react';
 import SpotlightCard from '@/components/SpotlightCard';
+import { Button } from '@/components/ui/Button';
 import '@/components/social-pricing.css';
 import { SMM_PILLS, SMM_PRICE_PLANS } from '@/data/services';
+import { SECTION_IDS } from '@/lib/constants';
 
 interface ServicesProps {
   isVisible?: boolean;
@@ -24,15 +26,24 @@ export function Services({ isVisible = true }: ServicesProps) {
     if (!section || !isVisible) return;
 
     let lastScrollY = window.scrollY;
+    let rafId = 0;
+    let pendingUp = false;
 
     const handleScroll = () => {
-      const scrollingUp = window.scrollY < lastScrollY;
+      pendingUp = window.scrollY < lastScrollY;
       lastScrollY = window.scrollY;
-      section.style.zIndex = scrollingUp ? '50' : '0';
+      if (rafId !== 0) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        section.style.zIndex = pendingUp ? '50' : '0';
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      if (rafId !== 0) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [isVisible]);
 
   return (
@@ -54,14 +65,24 @@ export function Services({ isVisible = true }: ServicesProps) {
             SOCIAL MEDIA MANAGEMENT
           </h2>
 
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 max-w-4xl">
-            {SMM_PILLS.map((pill) => (
-              <span
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-2.5 max-w-4xl">
+            {SMM_PILLS.map((pill, i) => (
+              <div
                 key={pill}
-                className="px-3 py-1.5 md:px-4 md:py-2 text-xs sm:text-sm font-medium text-white/70 bg-white/5 border border-white/10 rounded-full whitespace-nowrap"
+                className="group relative overflow-hidden cursor-default border border-white/[0.07] border-l-2 border-l-[#a90f21] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(169,15,33,0.3)]"
+                style={{ padding: '9px 16px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', whiteSpace: 'nowrap' }}
               >
-                {pill}
-              </span>
+                <span className="absolute inset-0 bg-[#a90f21] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                <span className="relative flex items-center gap-2.5">
+                  <span className="text-[9px] font-black tabular-nums text-[#a90f21] group-hover:text-white/50 transition-colors duration-200">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span className="w-px h-3 shrink-0 bg-white/10 group-hover:bg-white/20 transition-colors duration-200" />
+                  <span className="text-[11px] font-black tracking-[0.16em] uppercase text-white/55 group-hover:text-white transition-colors duration-200">
+                    {pill}
+                  </span>
+                </span>
+              </div>
             ))}
           </div>
         </div>
@@ -79,14 +100,28 @@ export function Services({ isVisible = true }: ServicesProps) {
                   <ul className="flex flex-col gap-3 flex-1">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3 text-sm text-white/80">
-                        <span className="text-primary font-bold">✓</span>
+                        <span className="font-bold" style={{ color: '#a90f21' }}>✓</span>
                         <span className="leading-tight">{feature}</span>
                       </li>
                     ))}
                   </ul>
-                  <button className="w-full py-4 px-6 rounded-2xl font-heading font-black text-sm tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer bg-primary text-dark uppercase">
+                  <Button
+                    variant="primary"
+                    className="w-full"
+                    onClick={() => {
+                      const el = document.getElementById(SECTION_IDS.contact);
+                      if (!el) return;
+                      const maskWrapper = el.closest('[data-mask-wrapper="true"]');
+                      if (maskWrapper) {
+                        const top = maskWrapper.getBoundingClientRect().top + window.scrollY + window.innerHeight;
+                        window.scrollTo({ top, behavior: 'smooth' });
+                      } else {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  >
                     {plan.cta}
-                  </button>
+                  </Button>
                 </div>
               </SpotlightCard>
             </div>

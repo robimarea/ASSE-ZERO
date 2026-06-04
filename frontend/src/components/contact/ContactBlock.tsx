@@ -7,6 +7,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { ContactHoverCard } from './ContactHoverCard';
+import { Button } from '@/components/ui/Button';
 import styles from './ContactBlock.module.css';
 import {
   CONTACT_FORM_ENDPOINT,
@@ -209,7 +210,7 @@ export function ContactBlock() {
                   id="cb-message"
                   name="message"
                   required
-                  rows={6}
+                  rows={3}
                   placeholder="Descrivici il tuo progetto, obiettivi e tempistiche..."
                   value={form.message}
                   onChange={handleChange}
@@ -225,8 +226,9 @@ export function ContactBlock() {
               )}
 
               {/* Submit */}
-              <button
+              <Button
                 type="submit"
+                variant="light"
                 disabled={status === 'sending'}
                 className={styles.submitBtn}
               >
@@ -236,7 +238,7 @@ export function ContactBlock() {
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
                 )}
-              </button>
+              </Button>
 
               {/* Feedback status */}
               {status === 'success' && (
