@@ -97,10 +97,11 @@ export function MaskChangeUI({
       </div>
 
       {/* The curtain that covers it initially and scrolls up */}
-      <div 
+      <div
         ref={curtainRef}
-        className="absolute top-0 left-0 w-full shadow-[0_30px_60px_rgba(0,0,0,0.4)]" 
-        style={{ zIndex }}
+        data-mask-curtain="true"
+        className="absolute top-0 left-0 w-full shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
+        style={{ zIndex, transform: 'translateZ(0)', willChange: 'transform' }}
       >
         {curtain}
       </div>

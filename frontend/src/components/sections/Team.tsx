@@ -13,28 +13,28 @@ const TEAM_MEMBERS = [
     id: 1,
     name: 'Alessia Debrova',
     role: 'Social media strategist, Content manager',
-    bio: 'Ho lavorato su contenuti che hanno raggiunto +800.000 visualizzazioni, relativi a canali social sia internazionali che italiani, per ben 4 profili differenti instagram e youtube, sviluppando una forte capacità nella creazione di contenuti efficaci e coerenti con le logiche delle piattaforme. Al centro della mia formazione, c\'è stato lo studio del RETENTION RATE, fondamentale per mantenere alta l\'attenzione dello spettatore e migliorare le performance dei contenuti.',
+    bio: <>Ho lavorato su contenuti che hanno raggiunto <strong>+800.000 visualizzazioni</strong>, relativi a canali social sia internazionali che italiani, per ben <strong>4 profili differenti</strong> instagram e youtube, sviluppando una forte capacità nella creazione di contenuti efficaci e coerenti con le logiche delle piattaforme. Al centro della mia formazione, c&apos;è stato lo studio del <strong>RETENTION RATE</strong>, fondamentale per mantenere alta l&apos;attenzione dello spettatore e migliorare le performance dei contenuti.</>,
     photo: '/profile_photos/AlessiaDebrova.PNG',
   },
   {
     id: 2,
     name: 'Vittorio Milandri',
     role: 'Videomaker: Operatore di camera, Montatore, Sound designer',
-    bio: 'Con più di tre anni di esperienza nel settore, ho lavorato con importanti realtà come "Sanremo Newtalent", "IcaroTV", strutture turistiche di alto livello nel panorama romagnolo e in set cinematografici per la compagnia "RAI". Inoltre ho collaborato con case di produzione come "301 Filmont" e "Riccione Video Produzioni" per Aquafan. Con AsseZero, il mio obiettivo è portare qualità visiva che valorizzi l\'identità del brand e renda ogni contenuto riconoscibile ed efficace.',
+    bio: <>Con più di <strong>tre anni di esperienza</strong> nel settore, ho lavorato con importanti realtà come <strong>Sanremo Newtalent</strong>, <strong>IcaroTV</strong>, strutture turistiche di alto livello nel panorama romagnolo e in set cinematografici per la compagnia <strong>RAI</strong>. Inoltre ho collaborato con case di produzione come <strong>301 Filmont</strong> e <strong>Riccione Video Produzioni</strong> per Aquafan. Con AsseZero, il mio obiettivo è portare <strong>qualità visiva</strong> che valorizzi l&apos;identità del brand e renda ogni contenuto riconoscibile ed efficace.</>,
     photo: '/profile_photos/VittorioMilandri.png',
   },
   {
     id: 3,
     name: 'Salvattore Muratori',
     role: 'Regista, Direttore della fotografia',
-    bio: "Da cinque anni a questa parte, ho gestito contenuti di canali youtube da 5 milioni di visualizzazioni totali e collaborato con streamers statunitensi. Ho inoltre lavorato per grandi realtà del territorio come Mediaset e Icaro tv. Il mio ruolo in Asse Zero è quello di curare la pre-produzione dei progetti, occupandomi della scrittura del prodotto e spalleggiando la post-produzione dei contenuti.",
+    bio: <>Da cinque anni a questa parte, ho gestito contenuti di canali youtube da <strong>5 milioni di visualizzazioni totali</strong> e collaborato con streamers statunitensi. Ho inoltre lavorato per grandi realtà del territorio come <strong>Mediaset</strong> e <strong>Icaro tv</strong>. Il mio ruolo in Asse Zero è quello di curare la <strong>pre-produzione</strong> dei progetti, occupandomi della scrittura del prodotto e spalleggiando la post-produzione dei contenuti.</>,
     photo: '/profile_photos/SalvattoreMuratori.png',
   },
   {
     id: 4,
     name: 'Gerardo Romani',
-    role: 'Montatore, Colorist',
-    bio: 'Per due anni, ho lavorato per eventi musicali, set cinematografici, videoclip e progetti per brand, sviluppando competenze operative in diversi contesti di produzione. Mi occupo principalmente di montaggio e post-produzione, curando ritmo, struttura e qualità del contenuto. Dispongo inoltre di attrezzatura professionale per riprese con drone, con cui amplio le possibilità visive di ogni progetto. Contribuisco alla realizzazione di contenuti efficaci e coerenti, adattati agli obiettivi e alle esigenze specifiche del cliente.',
+    role: 'Montatore, Colorist, Dronista',
+    bio: <>Per due anni, ho lavorato per eventi musicali, set cinematografici, videoclip e progetti per brand, sviluppando competenze operative in diversi contesti di produzione. Mi occupo principalmente di <strong>montaggio e post-produzione</strong>, curando <strong>ritmo, struttura e qualità</strong> del contenuto. Dispongo inoltre di <strong>attrezzatura professionale per riprese con drone</strong>, con cui amplio le possibilità visive di ogni progetto. Contribuisco alla realizzazione di contenuti efficaci e coerenti, adattati agli obiettivi e alle esigenze specifiche del cliente.</>,
     photo: '/profile_photos/GerardoRomani.png',
   },
 ];
@@ -164,7 +164,7 @@ export function Team({ isVisible = true }: TeamProps) {
           <div className="mb-8 md:mb-16">
             <h2
               className="tracking-tighter leading-none"
-              style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(2.5rem, 7vw, 5rem)', color: '#ebdb00' }}
+              style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(2.5rem, 7vw, 5rem)', color: '#ebdb00' }}
             >
               IL NOSTRO TEAM
             </h2>
@@ -196,7 +196,7 @@ export function Team({ isVisible = true }: TeamProps) {
                     <p className="text-primary text-sm tracking-[0.4em] uppercase font-black mb-3">RUOLO:</p>
                     <p
                       className="text-white font-black uppercase"
-                      style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.5rem, 3vw, 3rem)', letterSpacing: '0.05em', lineHeight: 1.1 }}
+                      style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.5rem, 3vw, 3rem)', letterSpacing: '0.05em', lineHeight: 1.1 }}
                     >
                       {m.role}
                     </p>
@@ -242,7 +242,7 @@ export function Team({ isVisible = true }: TeamProps) {
                     <div className="mb-6 md:mb-10">
                       <h3
                         className="font-black tracking-tighter"
-                        style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.8rem, 3.2vw, 2.8rem)', lineHeight: 0.85, color: '#ebdb00' }}
+                        style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.8rem, 3.2vw, 2.8rem)', lineHeight: 0.85, color: '#ebdb00' }}
                       >
                         {m.name.split(' ')[0]}<br />
                         <span>{m.name.split(' ').slice(1).join(' ')}</span>
@@ -257,7 +257,7 @@ export function Team({ isVisible = true }: TeamProps) {
                         <div className="w-full h-full flex items-center justify-center bg-white">
                           <span
                             className="text-black/10 font-black select-none"
-                            style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '12rem', lineHeight: 1 }}
+                            style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '12rem', lineHeight: 1 }}
                           >
                             {m.name.charAt(0)}
                           </span>

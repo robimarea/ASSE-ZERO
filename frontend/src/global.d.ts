@@ -2,10 +2,6 @@
 // Dichiarazioni ambient per moduli senza tipi incorporati
 // ============================================================
 
-// @fontsource/bebas-neue — import side-effect (solo CSS)
-declare module '@fontsource/bebas-neue' {}
-declare module '@fontsource/bebas-neue/*' {}
-
 // three/addons — @types/three non include i .d.ts individuali,
 // solo il barrel Addons.d.ts (che a sua volta re-esporta da
 // percorsi non esistenti). Dichiariamo qui i simboli usati.

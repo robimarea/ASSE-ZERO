@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fontsource/bebas-neue": "^5.2.7",
     "@tailwindcss/vite": "^4.2.2",
     "gsap": "^3.15.0",
     "ogl": "^1.0.11",

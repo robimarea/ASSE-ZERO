@@ -287,7 +287,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
               </span>
               <h2
                 className="text-white font-heading font-black text-4xl md:text-6xl tracking-tighter uppercase italic leading-none"
-                style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+                style={{ fontFamily: "'Nohemi', sans-serif" }}
               >
                 PRODUZIONE<br />
                 <span style={{ color: '#a90f21' }}>VIDEO</span>

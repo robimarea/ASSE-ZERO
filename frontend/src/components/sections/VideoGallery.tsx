@@ -287,7 +287,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               </p>
               <h3
                 className="text-white font-black tracking-tighter italic leading-none"
-                style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(2rem, 6vw, 4rem)' }}
+                style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(2rem, 6vw, 4rem)' }}
               >
                 {expandedItem.title}
               </h3>
@@ -323,7 +323,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               </span>
               <h3
                 className="text-white font-black tracking-tighter italic leading-none"
-                style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.1rem, 2vw, 1.7rem)' }}
+                style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.1rem, 2vw, 1.7rem)' }}
               >
                 {expandedItem.title}
               </h3>
@@ -388,13 +388,13 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
             </p>
             <h2
               className="font-black leading-[0.88] tracking-tighter"
-              style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '4.5rem', color: '#ebdb00' }}
+              style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '4.5rem', color: '#ebdb00' }}
             >
               Video.
             </h2>
           </div>
           <div className="pb-1 text-right">
-            <span ref={mobileCounterRef} className="font-black block leading-none" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '3rem', color: 'rgba(255,255,255,0.1)' }}>
+            <span ref={mobileCounterRef} className="font-black block leading-none" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '3rem', color: 'rgba(255,255,255,0.1)' }}>
               01
             </span>
             <span className="text-[11px] font-black tracking-widest" style={{ color: 'rgba(255,255,255,0.18)' }}>
@@ -428,7 +428,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
                 {/* Watermark numero */}
                 <span
                   className="absolute top-2 right-3 font-black select-none pointer-events-none"
-                  style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '7rem', lineHeight: 1, color: 'rgba(255,255,255,0.05)', letterSpacing: '-0.02em' }}
+                  style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '7rem', lineHeight: 1, color: 'rgba(255,255,255,0.05)', letterSpacing: '-0.02em' }}
                 >
                   {String(index + 1).padStart(2, '0')}
                 </span>
@@ -451,7 +451,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
                   </span>
                   <h3
                     className="text-white font-black leading-none tracking-tighter italic"
-                    style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.5rem, 5.5vw, 2rem)' }}
+                    style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.5rem, 5.5vw, 2rem)' }}
                   >
                     {item.title}
                   </h3>
@@ -555,7 +555,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
                     </span>
                     <h3
                       className="text-white font-black tracking-tighter italic leading-none"
-                      style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.2rem, 2vw, 1.8rem)' }}
+                      style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.2rem, 2vw, 1.8rem)' }}
                     >
                       {item.title}
                     </h3>
@@ -575,7 +575,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
 
             <h2
               className="font-heading font-black text-[5rem] md:text-[7rem] lg:text-[9rem] leading-none tracking-tighter mb-1 drop-shadow-2xl"
-              style={{ fontFamily: "'Bebas Neue', sans-serif", color: '#ebdb00' }}
+              style={{ fontFamily: "'Nohemi', sans-serif", color: '#ebdb00' }}
             >
               Video
             </h2>

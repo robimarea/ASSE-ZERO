@@ -3,20 +3,50 @@
 // Overlay parziale da destra, testo outline
 // ============================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { navLinks } from '@/data/navigation';
 import DarkVeil from '@/components/DarkVeil';
 import { useActiveSection } from '@/hooks/useActiveSection';
 
-
 const PANEL_WIDTH = '75%';
 const EASING = 'cubic-bezier(0.76, 0, 0.24, 1)';
 const DURATION = '0.6s';
+const HIDE_DELAY = 2500;
+const TOP_ZONE = 72; // px dal bordo superiore per riattivare
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
+  const [navHidden, setNavHidden] = useState(false);
   const activeSection = useActiveSection();
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showNav = useCallback((startTimer = true) => {
+    setNavHidden(false);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    if (startTimer) {
+      hideTimer.current = setTimeout(() => setNavHidden(true), HIDE_DELAY);
+    }
+  }, []);
+
+  // Auto-hide on mount, show on mouse near top
+  useEffect(() => {
+    hideTimer.current = setTimeout(() => setNavHidden(true), HIDE_DELAY);
+    const onMove = (e: MouseEvent) => {
+      if (e.clientY < TOP_ZONE) showNav();
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
+  }, [showNav]);
+
+  // Menu aperto → sempre visibile
+  useEffect(() => {
+    if (open) showNav(false);
+    else showNav();
+  }, [open, showNav]);
 
   // Blocca scroll e interazione col resto della pagina
   useEffect(() => {
@@ -62,6 +92,7 @@ export function Navbar() {
           zIndex: 197,
           padding: '18px 0px',
           pointerEvents: 'none',
+          transform: navHidden ? 'translateY(-120%)' : 'translateY(0)',
         }}
       >
         <img
@@ -87,11 +118,12 @@ export function Navbar() {
           cursor: 'none',
           padding: '18px 32px',
           opacity: open ? 0 : 1,
-          pointerEvents: open ? 'none' : 'auto',
+          pointerEvents: open || navHidden ? 'none' : 'auto',
+          transform: navHidden ? 'translateY(-120%)' : 'translateY(0)',
           transition: 'opacity 0.3s ease',
         }}
       >
-        <span style={{ fontFamily: "'Alte Haas Grotesk', sans-serif", fontWeight: 700, fontSize: '24px', color: '#edf2f4', letterSpacing: '2px', textTransform: 'uppercase' }}>Menù</span>
+        <span style={{ fontFamily: "'Satoshi', sans-serif", fontWeight: 700, fontSize: '24px', color: '#edf2f4', letterSpacing: '2px', textTransform: 'uppercase' }}>Menù</span>
       </button>
 
       {/* ── BACKDROP semitrasparente (lato sinistro) ── */}

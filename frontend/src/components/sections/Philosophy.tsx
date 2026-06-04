@@ -1,41 +1,37 @@
-// ============================================
-// ASSE ZERO — Philosophy Section
-// ============================================
-
 export function Philosophy() {
   return (
-    <section className="w-full min-h-screen bg-dark flex flex-col items-center justify-center py-32">
-      <div className="w-full max-w-5xl mx-auto px-6 lg:px-12 flex flex-col items-start text-white">
-        <h2 className="text-5xl sm:text-6xl md:text-7xl font-heading font-black tracking-tight mb-8" style={{lineHeight: 1.1}}>
-          "assestiamo la tua idea,<br />dalla{" "}
+    <section className="w-full h-screen bg-dark flex flex-col items-center justify-center px-6 md:px-16 lg:px-24 overflow-hidden">
+      <h2
+        style={{
+          fontFamily: "'Nohemi', sans-serif",
+          fontWeight: 900,
+          fontSize: 'clamp(4.5rem, 11vw, 10rem)',
+          lineHeight: 0.97,
+          letterSpacing: '-0.03em',
+          color: 'white',
+          textAlign: 'center',
+        }}
+      >
+        "assestiamo
+        <br />
+        la tua idea,
+        <br />
+        <span style={{ color: '#ebdb00' }}>
+          dalla{' '}
           <img
             src="/lettere/letter_a.png"
             alt="a"
-            className="inline-block"
-            style={{ height: "0.85em", width: "auto", verticalAlign: "middle" }}
-          />{" "}
-          alla{" "}
+            style={{ height: '0.85em', width: 'auto', verticalAlign: 'middle', display: 'inline' }}
+          />
+          {' '}alla{' '}
           <img
             src="/lettere/letter_z.png"
             alt="z"
-            className="inline-block"
-            style={{ height: "0.85em", width: "auto", verticalAlign: "middle" }}
+            style={{ height: '0.85em', width: 'auto', verticalAlign: 'middle', display: 'inline' }}
           />
-          "
-        </h2>
-        <div className="max-w-2xl text-lg sm:text-xl font-medium leading-snug">
-          <p className="mb-4">
-            Crediamo nel valore del contatto umano: niente formule standard, solo
-            soluzioni efficaci costruite su di te.
-          </p>
-          <p>
-            Uniamo professionalità e innovazione per offrirti un servizio fresco,
-            dinamico e sviluppato su misura per le tue esigenze.
-            Lavoriamo al tuo fianco, passo dopo passo, per garantirti il risultato
-            migliore.
-          </p>
-        </div>
-      </div>
+        </span>
+        "
+      </h2>
     </section>
   );
 }

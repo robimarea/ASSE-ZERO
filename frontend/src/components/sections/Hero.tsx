@@ -29,7 +29,7 @@ export function Hero() {
         <h1
           className="text-white uppercase font-black leading-none text-center"
           style={{
-            fontFamily: "'Alte Haas Grotesk', sans-serif",
+            fontFamily: "'Satoshi', sans-serif",
             fontSize: 'clamp(3rem, 10vw, 8rem)',
             textShadow: '0 0 20px rgba(0,0,0,0.2)',
           }}

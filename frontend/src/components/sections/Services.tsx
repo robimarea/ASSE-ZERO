@@ -57,7 +57,7 @@ export function Services({ isVisible = true }: ServicesProps) {
           <h2
             className="font-black uppercase tracking-tighter mb-6 text-primary text-center"
             style={{
-              fontFamily: "'Bebas Neue', sans-serif",
+              fontFamily: "'Nohemi', sans-serif",
               fontSize: 'clamp(2.5rem, 8vw, 9rem)',
               lineHeight: 0.9,
             }}
