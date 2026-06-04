@@ -21,6 +21,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 
 import { SECTION_IDS } from '@/lib/constants';
+import { useSmoothScroll } from '@/hooks/useSmoothScroll';
 
 const Showreel = lazy(() =>
   import('@/components/sections/Showreel').then((m) => ({ default: m.Showreel }))
@@ -28,6 +29,7 @@ const Showreel = lazy(() =>
 
 function App() {
   const isMobile = useIsMobile();
+  useSmoothScroll();
 
   return (
     <HelmetProvider>
@@ -56,7 +58,7 @@ function App() {
         </MaskChangeUI>
 
         {/* ── Layer 1: Perchè scegliere → VideoGallery ── */}
-        <MaskChangeUI curtain={<PercheScegliere />} zIndex={45} layerOrder={1} extraStickyDistanceH={2}>
+        <MaskChangeUI curtain={<PercheScegliere />} zIndex={45} layerOrder={1} extraStickyDistanceH={5} disableInteriorSnap>
           <Viewport id={SECTION_IDS.video}>
             {(isVisible) => <VideoGallery isVisible={isVisible} />}
           </Viewport>
@@ -75,7 +77,7 @@ function App() {
         </MaskChangeUI>
 
         {/* ── Layer 4: Il nostro Metodo → Team ── */}
-        <MaskChangeUI curtain={<IlNostroMetodo />} zIndex={30} layerOrder={4} extraStickyDistanceH={isMobile ? 3 : 7}>
+        <MaskChangeUI curtain={<IlNostroMetodo />} zIndex={30} layerOrder={4} extraStickyDistanceH={isMobile ? 3 : 7} disableInteriorSnap>
           <Viewport id={SECTION_IDS.team}>
             {(isVisible) => <Team isVisible={isVisible} />}
           </Viewport>

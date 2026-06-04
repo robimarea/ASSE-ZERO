@@ -37,7 +37,6 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   const isMobile = useIsMobile();
   const containerRef   = useRef<HTMLElement>(null);
   const mobileCounterRef   = useRef<HTMLSpanElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const cardRefs    = useRef<(HTMLElement | null)[]>([]);
   const overlayRefs = useRef<(HTMLElement | null)[]>([]);
   const textRefs    = useRef<(HTMLElement | null)[]>([]);
@@ -161,17 +160,31 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [expandedIndex, togglePlay, closeExpanded]);
 
-  // ── Scroll-driven cards (desktop) ───────────────────────────────────────
+  // ── Scroll-driven cards — window scroll, coerente con Team ────────────────
   useEffect(() => {
+    if (!isVisible) return;
+
     let frameId = 0;
-    const syncProgress = () => {
+    let sTop = 0;
+    let sHeight = 0;
+
+    const updateMetrics = () => {
+      if (!containerRef.current) return;
+      const wrapper = containerRef.current.closest('.relative.w-full.font-sans') as HTMLElement;
+      if (wrapper) {
+        sTop = Math.round(wrapper.getBoundingClientRect().top + window.scrollY);
+        sHeight = wrapper.offsetHeight;
+      }
+    };
+
+    const sync = () => {
       frameId = 0;
-      if (!scrollContainerRef.current) return;
-      const el = scrollContainerRef.current;
-      const scrolled = el.scrollTop;
-      const scrollableDistance = el.scrollHeight - el.clientHeight;
-      const progress = clamp(scrolled / (scrollableDistance || 1), 0, 1);
-      const travel = progress * (VIDEO_ITEMS.length - 1);
+      if (!containerRef.current) return;
+      const offset     = window.innerHeight;
+      const scrollable = Math.max(1, sHeight - window.innerHeight * 2);
+      const scrolled   = Math.max(0, window.scrollY - sTop - offset);
+      const progress   = clamp(scrolled / scrollable, 0, 1);
+      const travel     = progress * (VIDEO_ITEMS.length - 1);
       const newActiveIndex = clamp(Math.round(travel), 0, VIDEO_ITEMS.length - 1);
 
       cardRefs.current.forEach((card, index) => {
@@ -189,8 +202,8 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         const isActive = distance < 0.5;
 
         card.style.transform = `translate3d(${xOffset}vw, ${yOffset}vh, 0) scale(${scale}) rotateZ(${rotateZ}deg)`;
-        card.style.opacity = `${opacity}`;
-        card.style.zIndex  = isActive ? '20' : `${10 - Math.floor(distance)}`;
+        card.style.opacity   = `${opacity}`;
+        card.style.zIndex    = isActive ? '20' : `${10 - Math.floor(distance)}`;
 
         const overlay = overlayRefs.current[index];
         const text    = textRefs.current[index];
@@ -205,16 +218,20 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
     };
 
     const handleScroll = () => {
+      if (!containerRef.current) return;
+      const vb = window.scrollY + window.innerHeight;
+      const sb = sTop + sHeight;
+      if (vb < sTop || window.scrollY > sb) return;
       if (frameId !== 0) return;
-      frameId = window.requestAnimationFrame(syncProgress);
+      frameId = requestAnimationFrame(sync);
     };
 
-    if (!isVisible) return;
+    const handleResize = () => { updateMetrics(); handleScroll(); };
 
     const paraEl = paragraphRef.current;
     if (paraEl) {
-      paraEl.style.opacity   = '0';
-      paraEl.style.transform = 'translateY(48px)';
+      paraEl.style.opacity    = '0';
+      paraEl.style.transform  = 'translateY(48px)';
       paraEl.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
       const observer = new IntersectionObserver(
         ([entry]) => { if (entry.isIntersecting) { paraEl.style.opacity = '1'; paraEl.style.transform = 'translateY(0)'; observer.disconnect(); } },
@@ -223,15 +240,15 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
       observer.observe(paraEl);
     }
 
-    const scrollContainer = scrollContainerRef.current;
-    scrollContainer?.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll);
-    syncProgress();
+    updateMetrics();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
+    sync();
 
     return () => {
       if (frameId !== 0) cancelAnimationFrame(frameId);
-      scrollContainer?.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
     };
   }, [isVisible]);
 
@@ -494,79 +511,74 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
 
       <div className="w-full h-full overflow-hidden bg-dark flex flex-col md:flex-row items-center justify-center">
 
-        {/* Colonna sinistra: slider */}
-        <div ref={scrollContainerRef} className="relative w-full md:w-[50%] h-full overflow-y-auto shrink-0 scrollbar-hidden">
-          <div className="sticky top-0 left-0 w-full h-screen flex items-center justify-center pointer-events-none">
-            {VIDEO_ITEMS.map((item, index) => (
-              <article
-                key={item.id}
-                ref={(el) => { cardRefs.current[index] = el; }}
-                className="absolute w-[80vw] md:w-[32vw] aspect-video origin-center will-change-transform"
-                style={{ opacity: 0, transform: 'translate3d(0, 100vh, 0)' }}
+        {/* Colonna sinistra: window-scroll driven stacked cards */}
+        <div className="relative w-full md:w-[50%] h-full flex items-center justify-center pointer-events-none shrink-0">
+          {VIDEO_ITEMS.map((item, index) => (
+            <article
+              key={item.id}
+              ref={(el) => { cardRefs.current[index] = el; }}
+              className="absolute w-[80vw] md:w-[32vw] aspect-video origin-center will-change-transform"
+              style={{ opacity: 0, transform: 'translate3d(0, 100vh, 0)' }}
+            >
+              <div
+                className="w-full h-full rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] relative bg-black pointer-events-auto cursor-pointer group hover:border-[#a90f21]/25 transition-colors duration-500"
+                onClick={() => openExpanded(index)}
               >
+                {/* Gradiente background */}
+                <div className="w-full h-full opacity-80" style={{ background: item.gradient }} aria-hidden="true" />
+
+                {/* Gradiente scuro cinematic */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/35 pointer-events-none" />
+
+                {/* Hatch per card inattive */}
                 <div
-                  className="w-full h-full rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] relative bg-black pointer-events-auto cursor-pointer group hover:border-[#a90f21]/25 transition-colors duration-500"
-                  onClick={() => openExpanded(index)}
+                  ref={(el) => { overlayRefs.current[index] = el; }}
+                  className="absolute inset-0 transition-opacity duration-500 pointer-events-none"
+                  aria-hidden="true"
+                  style={{
+                    background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.85) 10px, rgba(0,0,0,0.85) 20px)',
+                    backgroundColor: 'rgba(0,0,0,0.55)',
+                  }}
+                />
+
+                {/* Play button */}
+                <div
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-[0_15px_40px_rgba(169,15,33,0.45)] group-hover:shadow-[0_20px_50px_rgba(169,15,33,0.65)] group-hover:scale-110 transition-all duration-500 z-10 pointer-events-none"
+                  style={{ backgroundColor: '#a90f21' }}
                 >
-                  {/* Gradiente background */}
-                  <div className="w-full h-full opacity-80" style={{ background: item.gradient }} aria-hidden="true" />
-
-                  {/* Gradiente scuro cinematic */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/35 pointer-events-none" />
-
-                  {/* Hatch per card inattive */}
-                  <div
-                    ref={(el) => { overlayRefs.current[index] = el; }}
-                    className="absolute inset-0 transition-opacity duration-500 pointer-events-none"
-                    aria-hidden="true"
-                    style={{
-                      background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.85) 10px, rgba(0,0,0,0.85) 20px)',
-                      backgroundColor: 'rgba(0,0,0,0.55)',
-                    }}
-                  />
-
-                  {/* Play button */}
-                  <div
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-[0_15px_40px_rgba(169,15,33,0.45)] group-hover:shadow-[0_20px_50px_rgba(169,15,33,0.65)] group-hover:scale-110 transition-all duration-500 z-10 pointer-events-none"
-                    style={{ backgroundColor: '#a90f21' }}
-                  >
-                    <svg className="w-6 h-6 md:w-8 md:h-8 text-white fill-current translate-x-0.5" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                    <div className="absolute inset-0 rounded-full border border-[#a90f21]/40 animate-ping" style={{ animationDuration: '2.5s' }} />
-                  </div>
-
-                  {/* Testo bottom (animato dallo scroll) */}
-                  <div
-                    ref={(el) => { textRefs.current[index] = el; }}
-                    className="absolute bottom-6 left-6 transition-all duration-500 ease-out pointer-events-none"
-                    style={{ opacity: 0, transform: 'translate3d(0,20px,0)' }}
-                  >
-                    <span className="text-xs font-black uppercase tracking-[0.35em] block mb-1" style={{ color: '#a90f21' }}>
-                      {item.subtitle}
-                    </span>
-                    <h3
-                      className="text-white font-black tracking-tighter italic leading-none"
-                      style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.2rem, 2vw, 1.8rem)' }}
-                    >
-                      {item.title}
-                    </h3>
-                  </div>
+                  <svg className="w-6 h-6 md:w-8 md:h-8 text-white fill-current translate-x-0.5" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                  <div className="absolute inset-0 rounded-full border border-[#a90f21]/40 animate-ping" style={{ animationDuration: '2.5s' }} />
                 </div>
-              </article>
-            ))}
-          </div>
 
-          {/* Spacer scroll */}
-          <div style={{ height: `${(VIDEO_ITEMS.length + 1) * 100}vh` }} />
+                {/* Testo bottom (animato dallo scroll) */}
+                <div
+                  ref={(el) => { textRefs.current[index] = el; }}
+                  className="absolute bottom-6 left-6 transition-all duration-500 ease-out pointer-events-none"
+                  style={{ opacity: 0, transform: 'translate3d(0,20px,0)' }}
+                >
+                  <span className="text-xs font-black uppercase tracking-[0.35em] block mb-1" style={{ color: '#a90f21' }}>
+                    {item.subtitle}
+                  </span>
+                  <h3
+                    className="text-white font-black tracking-tighter italic leading-none"
+                    style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.2rem, 2vw, 1.8rem)' }}
+                  >
+                    {item.title}
+                  </h3>
+                </div>
+              </div>
+            </article>
+          ))}
         </div>
 
         {/* Colonna destra: contenuto */}
-        <div className="relative w-full md:w-[50%] h-full flex flex-col justify-center px-6 md:px-10 lg:pr-20 z-20 py-8 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
-          <div className="rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-visible flex flex-col justify-center gap-6" style={{ backgroundColor: '#2b2d42' }}>
+        <div className="relative w-full md:w-[50%] h-full flex flex-col justify-center items-center px-6 md:px-10 lg:px-12 z-20 py-8 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
+          <div className="rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-visible flex flex-col items-center gap-6 w-full" style={{ backgroundColor: '#2b2d42' }}>
 
             <h2
-              className="font-heading font-black text-[5rem] md:text-[7rem] lg:text-[9rem] leading-none tracking-tighter mb-1 drop-shadow-2xl"
+              className="font-heading font-black text-[5rem] md:text-[7rem] lg:text-[9rem] leading-none tracking-tighter mb-1 drop-shadow-2xl text-center w-full"
               style={{ fontFamily: "'Nohemi', sans-serif", color: '#ebdb00' }}
             >
               Video
@@ -593,7 +605,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               ))}
             </div>
 
-            <div ref={paragraphRef} className="flex flex-col leading-snug" style={{ fontSize: 'clamp(0.9rem, 1.5vw, 1.4rem)', color: '#edf2f4' }}>
+            <div ref={paragraphRef} className="flex flex-col leading-snug text-center w-full" style={{ fontSize: 'clamp(0.9rem, 1.5vw, 1.4rem)', color: '#edf2f4' }}>
               {VIDEO_DESCRIPTION.map((text, idx) => (
                 <p key={idx} dangerouslySetInnerHTML={{ __html: text }} />
               ))}

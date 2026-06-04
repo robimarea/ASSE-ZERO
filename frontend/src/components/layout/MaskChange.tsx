@@ -11,7 +11,8 @@ interface MaskChangeProps {
   zIndex?: number;
   overlapPrev?: boolean;
   extraStickyDistanceH?: number;
-  layerOrder?: number; // 0 = primo (Hero), 1 = secondo (Philosophy), 2 = terzo (Contact), …
+  layerOrder?: number;
+  disableInteriorSnap?: boolean; // disabilita lo snap window all'interno della zona scroll delle card
 }
 
 export function MaskChangeUI({
@@ -21,6 +22,7 @@ export function MaskChangeUI({
   overlapPrev = false,
   extraStickyDistanceH = 0,
   layerOrder = 0,
+  disableInteriorSnap = false,
 }: MaskChangeProps) {
   const curtainRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -81,6 +83,7 @@ export function MaskChangeUI({
     <div
       ref={wrapperRef}
       data-mask-wrapper="true"
+      data-no-snap-interior={disableInteriorSnap ? 'true' : undefined}
       className="relative w-full font-sans"
       style={{
         minHeight: wrapperHeight,

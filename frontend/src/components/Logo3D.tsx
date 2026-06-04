@@ -51,7 +51,7 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     renderer.domElement.style.height   = '100%';
     container.appendChild(renderer.domElement);
 
-    // ── Illuminazione a 4 angoli + ambient morbida ────────
+    // ── Illuminazione a 4 angoli + frontale centrale ──────
     scene.add(new THREE.AmbientLight(0xffffff, 0.9));
     // Angolo alto-sinistra
     const l1 = new THREE.DirectionalLight(0xffffff, 1.8);
@@ -69,6 +69,10 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     const l4 = new THREE.DirectionalLight(0xffffff, 1.8);
     l4.position.set(7, -7, 9);
     scene.add(l4);
+    // Frontale centrata — leggermente meno potente
+    const lFront = new THREE.DirectionalLight(0xffffff, 1.4);
+    lFront.position.set(0, 0, 12);
+    scene.add(lFront);
 
     // ── Stato Fisico (desktop) ────────────────────────────
     const rot    = { x: 0, y: 0 }, velRot = { x: 0, y: 0 };
