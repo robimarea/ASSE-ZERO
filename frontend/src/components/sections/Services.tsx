@@ -24,15 +24,24 @@ export function Services({ isVisible = true }: ServicesProps) {
     if (!section || !isVisible) return;
 
     let lastScrollY = window.scrollY;
+    let rafId = 0;
+    let pendingUp = false;
 
     const handleScroll = () => {
-      const scrollingUp = window.scrollY < lastScrollY;
+      pendingUp = window.scrollY < lastScrollY;
       lastScrollY = window.scrollY;
-      section.style.zIndex = scrollingUp ? '50' : '0';
+      if (rafId !== 0) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        section.style.zIndex = pendingUp ? '50' : '0';
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      if (rafId !== 0) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [isVisible]);
 
   return (
@@ -58,8 +67,10 @@ export function Services({ isVisible = true }: ServicesProps) {
             {SMM_PILLS.map((pill) => (
               <span
                 key={pill}
-                className="px-3 py-1.5 md:px-4 md:py-2 text-xs sm:text-sm font-medium text-white/70 bg-white/5 border border-white/10 rounded-full whitespace-nowrap"
+                className="px-3 py-1.5 md:px-4 md:py-2 text-xs sm:text-sm font-medium rounded-full whitespace-nowrap flex items-center gap-1.5"
+                style={{ color: '#f87171', background: 'rgba(169,15,33,0.12)', border: '1px solid rgba(169,15,33,0.35)' }}
               >
+                <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: '#a90f21' }} />
                 {pill}
               </span>
             ))}
@@ -79,12 +90,15 @@ export function Services({ isVisible = true }: ServicesProps) {
                   <ul className="flex flex-col gap-3 flex-1">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3 text-sm text-white/80">
-                        <span className="text-primary font-bold">✓</span>
+                        <span className="font-bold" style={{ color: '#a90f21' }}>✓</span>
                         <span className="leading-tight">{feature}</span>
                       </li>
                     ))}
                   </ul>
-                  <button className="w-full py-4 px-6 rounded-2xl font-heading font-black text-sm tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer bg-primary text-dark uppercase">
+                  <button
+                    className="w-full py-4 px-6 rounded-2xl font-heading font-black text-sm tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer uppercase text-white"
+                    style={{ backgroundColor: '#a90f21' }}
+                  >
                     {plan.cta}
                   </button>
                 </div>

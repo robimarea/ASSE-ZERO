@@ -13,6 +13,8 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const hasLoadedRef = useRef(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -21,6 +23,14 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Lazy-load: assegna il src solo la prima volta che la sezione diventa visibile
+  useEffect(() => {
+    if (isVisible && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      setShouldLoad(true);
+    }
+  }, [isVisible]);
 
   // Play/pause based on section visibility
   useEffect(() => {
@@ -221,7 +231,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
       className="relative w-full h-[100dvh] bg-dark flex items-center justify-center overflow-hidden z-0"
     >
       {/* Background Gradients for depth and premium feel */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_44%,rgba(233,172,6,0.11),transparent_40%),radial-gradient(circle_at_18%_24%,rgba(191,51,32,0.06),transparent_25%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_44%,rgba(169,15,33,0.12),transparent_40%),radial-gradient(circle_at_18%_24%,rgba(169,15,33,0.06),transparent_25%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,8,0.2),rgba(5,5,8,0.8))] pointer-events-none" />
 
       {/* Main Video Box */}
@@ -232,21 +242,21 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
         className={`relative transition-all duration-700 bg-black overflow-hidden group ${
           isExpanded
             ? 'fixed inset-0 w-screen h-[100dvh] z-[999] rounded-none border-none'
-            : 'w-[90vw] md:w-[75vw] lg:w-[65vw] aspect-video rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] hover:border-primary/20 pointer-events-auto'
+            : 'w-[90vw] md:w-[75vw] lg:w-[65vw] aspect-video rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] hover:border-[#a90f21]/25 pointer-events-auto'
         }`}
       >
         {/* Loading Spinner */}
         {isLoading && (
           <div className="absolute inset-0 bg-black flex items-center justify-center z-30">
-            <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+            <div className="w-12 h-12 border-2 border-[#a90f21]/20 border-t-[#a90f21] rounded-full animate-spin" />
           </div>
         )}
 
         {/* Video Element */}
         <video
           ref={videoRef}
-          src="/show_reel.mp4"
-          preload="metadata"
+          src={shouldLoad ? '/show_reel.mp4' : undefined}
+          preload="auto"
           playsInline
           loop
           muted={isMuted}
@@ -271,7 +281,8 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
 
             {/* Title & Category text overlay */}
             <div className="absolute bottom-8 left-8 md:bottom-12 md:left-12 transition-all duration-500 pointer-events-none">
-              <span className="text-primary text-xs md:text-sm font-black uppercase tracking-[0.35em] block mb-2 md:mb-3">
+              <span className="text-xs md:text-sm font-black uppercase tracking-[0.35em] block mb-2 md:mb-3"
+                style={{ color: '#a90f21' }}>
                 ASSE ZERO — SHOWREEL
               </span>
               <h2
@@ -279,7 +290,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
                 style={{ fontFamily: "'Bebas Neue', sans-serif" }}
               >
                 PRODUZIONE<br />
-                <span className="text-primary">VIDEO</span>
+                <span style={{ color: '#a90f21' }}>VIDEO</span>
               </h2>
             </div>
 
@@ -287,17 +298,18 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
             <button
               onClick={expandVideo}
               aria-label="Avvia video in modalità cinema"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-26 md:h-26 rounded-full bg-primary flex items-center justify-center shadow-[0_15px_40px_rgba(233,172,6,0.35)] hover:shadow-[0_20px_50px_rgba(233,172,6,0.55)] transition-all duration-500 hover:scale-108 active:scale-95 group/btn cursor-target z-10"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-26 md:h-26 rounded-full flex items-center justify-center shadow-[0_15px_40px_rgba(169,15,33,0.45)] hover:shadow-[0_20px_50px_rgba(169,15,33,0.65)] transition-all duration-500 hover:scale-108 active:scale-95 group/btn cursor-target z-10"
+              style={{ backgroundColor: '#a90f21' }}
             >
               <svg
-                className="w-8 h-8 md:w-9 md:h-9 text-black fill-current translate-x-0.5 group-hover/btn:scale-105 transition-transform duration-300"
+                className="w-8 h-8 md:w-9 md:h-9 text-white fill-current translate-x-0.5 group-hover/btn:scale-105 transition-transform duration-300"
                 viewBox="0 0 24 24"
               >
                 <path d="M8 5v14l11-7z" />
               </svg>
               {/* Outer wave rings */}
               <div
-                className="absolute inset-0 rounded-full border border-primary/40 animate-ping"
+                className="absolute inset-0 rounded-full border border-[#a90f21]/40 animate-ping"
                 style={{ animationDuration: '2.5s' }}
               />
             </button>
@@ -332,12 +344,12 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
               <div className="relative h-1.5 w-full bg-white/20 rounded-full transition-all duration-300 group-hover/timeline:h-2">
                 {/* Active progress bar */}
                 <div
-                  className="absolute top-0 left-0 h-full bg-primary rounded-full"
-                  style={{ width: `${progress}%` }}
+                  className="absolute top-0 left-0 h-full rounded-full"
+                  style={{ backgroundColor: '#a90f21', width: `${progress}%` }}
                 />
                 {/* Drag handle */}
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border border-primary shadow-[0_0_8px_rgba(0,0,0,0.5)] scale-0 group-hover/timeline:scale-100 transition-transform duration-200"
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border border-[#a90f21] shadow-[0_0_8px_rgba(0,0,0,0.5)] scale-0 group-hover/timeline:scale-100 transition-transform duration-200"
                   style={{ left: `calc(${progress}% - 8px)` }}
                 />
               </div>
@@ -350,7 +362,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
                 <button
                   onClick={togglePlay}
                   aria-label={isPlaying ? 'Pausa' : 'Avvia'}
-                  className="text-white hover:text-primary transition-colors cursor-target"
+                  className="text-white hover:text-[#a90f21] transition-colors cursor-target"
                 >
                   {isPlaying ? (
                     /* Pause SVG */
@@ -377,7 +389,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
                 <button
                   onClick={toggleMute}
                   aria-label={isMuted ? 'Riattiva audio' : 'Disattiva audio'}
-                  className="text-white hover:text-primary transition-colors cursor-target"
+                  className="text-white hover:text-[#a90f21] transition-colors cursor-target"
                 >
                   {isMuted ? (
                     /* Volume Mute SVG */
@@ -396,7 +408,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
                 <button
                   onClick={minimizeVideo}
                   aria-label="Riduci video"
-                  className="text-white hover:text-primary transition-colors cursor-target"
+                  className="text-white hover:text-[#a90f21] transition-colors cursor-target"
                 >
                   <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
                     <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { SEO } from '@/lib/seo';
 import { Navbar } from '@/components/layout/Navbar';
 import TargetCursor from '@/components/TargetCursor';
@@ -22,12 +23,14 @@ const Showreel = lazy(() =>
   import('@/components/sections/Showreel').then((m) => ({ default: m.Showreel }))
 );
 
-// Tenda di transizione — sempre gialla (#E9AC06)
+// Tenda di transizione — sempre gialla (#ebdb00)
 function Cover() {
   return <div className="w-full h-screen bg-primary" />;
 }
 
 function App() {
+  const isMobile = useIsMobile();
+
   return (
     <HelmetProvider>
       <SEO />
@@ -76,7 +79,7 @@ function App() {
         </MaskChangeUI>
 
         {/* ── Layer 4: Cover gialla → Team (nero) ── */}
-        <MaskChangeUI curtain={<Cover />} zIndex={30} layerOrder={4} extraStickyDistanceH={7}>
+        <MaskChangeUI curtain={<Cover />} zIndex={30} layerOrder={4} extraStickyDistanceH={isMobile ? 3 : 7}>
           <Viewport id={SECTION_IDS.team}>
             {(isVisible) => <Team isVisible={isVisible} />}
           </Viewport>

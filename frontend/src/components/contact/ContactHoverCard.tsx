@@ -4,6 +4,7 @@
 // ============================================
 
 import { useRef, type ReactNode } from 'react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ContactHoverCardProps {
   children: ReactNode;
@@ -13,6 +14,7 @@ interface ContactHoverCardProps {
 export function ContactHoverCard({ children, className = '' }: ContactHoverCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
+  const isMobile = useIsMobile();
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -41,9 +43,9 @@ export function ContactHoverCard({ children, className = '' }: ContactHoverCardP
     <div
       ref={cardRef}
       className={className}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ willChange: 'transform', transformStyle: 'preserve-3d' }}
+      onMouseMove={isMobile ? undefined : handleMouseMove}
+      onMouseLeave={isMobile ? undefined : handleMouseLeave}
+      style={isMobile ? {} : { willChange: 'transform', transformStyle: 'preserve-3d' }}
     >
       {children}
     </div>

@@ -1,6 +1,6 @@
 /* ============================================
    ASSE ZERO — ContactBlock CSS Module
-   Tema: sfondo giallo (#E9AC06), testo nero
+   Tema: sfondo giallo (#ebdb00), testo nero
    (la sezione Contact ha bg-dark)
    ============================================ */
 
@@ -16,8 +16,8 @@
   width: 100%;
   border-radius: 1.5rem;
   overflow: hidden;
-  background: #E9AC06;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ebdb00;
+  border: 1px solid rgba(0,0,0,0.12);
   box-shadow:
     0 0 0 1px rgba(0,0,0,0.08),
     0 24px 64px rgba(0,0,0,0.35);
@@ -30,8 +30,8 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 3rem 2.5rem;
-  background: #D49B00;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  background: #c9bb00;
+  border-right: 1px solid rgba(0,0,0,0.1);
   position: relative;
   overflow: hidden;
 }
@@ -51,7 +51,7 @@
 .infoTitle {
   font-size: 1.6rem;
   font-weight: 900;
-  color: #000000;
+  color: #a90f21;
   line-height: 1.15;
   letter-spacing: -0.02em;
   margin-bottom: 1rem;
@@ -76,7 +76,7 @@
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  color: rgba(0,0,0,0.75);
+  color: rgba(169,15,33,0.85);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 600;
@@ -84,7 +84,7 @@
 }
 
 .contactLink:hover {
-  color: #000000;
+  color: #a90f21;
 }
 
 .contactLink svg {
@@ -95,7 +95,7 @@
 .accentBar {
   width: 2.5rem;
   height: 3px;
-  background: linear-gradient(90deg, #000000, #333333);
+  background: linear-gradient(90deg, #a90f21, rgba(169,15,33,0.2));
   border-radius: 2px;
 }
 
@@ -151,7 +151,7 @@
 
 .input:focus,
 .textarea:focus {
-  border-color: rgba(0,0,0,0.5);
+  border-color: rgba(169,15,33,0.5);
   background: rgba(0,0,0,0.09);
 }
 
@@ -167,8 +167,8 @@
   gap: 0.6rem;
   margin-top: 0.5rem;
   padding: 0.9rem 2rem;
-  background: #000000;
-  color: #E9AC06;
+  background: #a90f21;
+  color: #ffffff;
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 900;
@@ -208,9 +208,9 @@
 }
 
 .statusMsg.error {
-  background: rgba(191,51,32,0.15);
-  border: 1px solid rgba(191,51,32,0.35);
-  color: #7a1a0a;
+  background: rgba(169,15,33,0.15);
+  border: 1px solid rgba(169,15,33,0.35);
+  color: #a90f21;
 }
 
 @keyframes fadeIn {
@@ -228,15 +228,63 @@
     flex: none;
     border-right: none;
     border-bottom: 1px solid rgba(0,0,0,0.1);
-    padding: 2rem 1.5rem;
+    padding: 0.9rem 1.1rem 0.7rem;
+  }
+
+  .infoTitle {
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.2;
+  }
+
+  .infoDesc {
+    display: none;
+  }
+
+  .contactLinks {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .contactLink {
+    font-size: 0.78rem;
+  }
+
+  .accentBar {
+    display: none;
   }
 
   .formCol {
-    padding: 2rem 1.5rem;
+    padding: 1rem 1.1rem 1.1rem;
   }
 
   .row {
-    flex-direction: column;
-    gap: 0;
+    flex-direction: row;
+    gap: 0.65rem;
+  }
+
+  .fieldGroup {
+    margin-bottom: 0.6rem;
+  }
+
+  .input,
+  .textarea {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.82rem;
+    border-radius: 0.6rem;
+  }
+
+  .label {
+    font-size: 0.58rem;
+  }
+
+  .submitBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.7rem 1.25rem;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
   }
 }

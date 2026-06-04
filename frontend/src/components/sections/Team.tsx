@@ -1,6 +1,6 @@
 // ============================================
 // ASSE ZERO — Team Section
-// Scroll-driven: testo crossfade + card rotateY flip
+// Scroll-driven: testo crossfade + photo crossfade (no 3D flip)
 // Zero React re-renders pattern
 // ============================================
 
@@ -46,12 +46,12 @@ interface TeamProps {
 }
 
 export function Team({ isVisible = true }: TeamProps) {
-  const containerRef = useRef<HTMLElement>(null);
-  const textRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const photoRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const counterRef = useRef<HTMLSpanElement>(null);
+  const containerRef  = useRef<HTMLElement>(null);
+  const textRefs      = useRef<(HTMLDivElement | null)[]>([]);
+  const photoRefs     = useRef<(HTMLDivElement | null)[]>([]);
+  const counterRef    = useRef<HTMLSpanElement>(null);
   const prevActiveRef = useRef(0);
+  const prevPointerRef = useRef<(boolean | null)[]>(new Array(COUNT).fill(null));
 
   useEffect(() => {
     if (!isVisible) return;
@@ -62,18 +62,12 @@ export function Team({ isVisible = true }: TeamProps) {
 
     const updateMetrics = () => {
       if (!containerRef.current) return;
-      
-      // All'interno di MaskChangeUI, il containerRef (section) è sticky o dentro un parent sticky.
-      // Per ottenere lo sTop "reale" (statico), dobbiamo trovare il wrapper del MaskChangeUI.
-      // In App.tsx, Team è avvolto in Viewport -> MaskChangeUI.
       const wrapper = containerRef.current.closest('.relative.w-full.font-sans') as HTMLElement;
-      
       if (wrapper) {
         const rect = wrapper.getBoundingClientRect();
         sTop = rect.top + window.scrollY;
         sHeight = wrapper.offsetHeight;
       } else {
-        // Fallback classico se non siamo in MaskChangeUI
         const rect = containerRef.current.getBoundingClientRect();
         sTop = rect.top + window.scrollY;
         sHeight = containerRef.current.offsetHeight;
@@ -84,17 +78,14 @@ export function Team({ isVisible = true }: TeamProps) {
       frameId = 0;
       if (!containerRef.current) return;
 
-      // Il primo 100vh di scroll serve a rimuovere la tendina di MaskChangeUI.
-      // L'animazione interna vera e propria inizia dopo quell'offset.
-      const offset = window.innerHeight;
+      const offset   = window.innerHeight;
       const scrollable = Math.max(1, sHeight - window.innerHeight * 2);
-      const scrolled = Math.max(0, window.scrollY - sTop - offset);
-      const progress = clamp(scrolled / scrollable, 0, 1);
+      const scrolled   = Math.max(0, window.scrollY - sTop - offset);
+      const progress   = clamp(scrolled / scrollable, 0, 1);
+      const travel     = progress * (COUNT - 1);
+      const active     = clamp(Math.round(travel), 0, COUNT - 1);
 
-      const travel = progress * (COUNT - 1);
-      const active = clamp(Math.round(travel), 0, COUNT - 1);
-
-      // ── Text blocks: Role + Bio (Name moved to card) ──
+      // ── Text blocks: opacity + translateX ──
       textRefs.current.forEach((el, i) => {
         if (!el) return;
         const dist = Math.abs(i - travel);
@@ -103,68 +94,33 @@ export function Team({ isVisible = true }: TeamProps) {
         if (dist <= 0.2) {
           opacity = 1;
         } else if (dist < 0.5) {
-          const tOpacity = 1 - ((dist - 0.2) / 0.3);
-          // Easing fluido per la comparsa/scomparsa del testo
-          opacity = tOpacity * tOpacity * (3 - 2 * tOpacity);
+          const t = 1 - ((dist - 0.2) / 0.3);
+          opacity = t * t * (3 - 2 * t);
         } else {
           opacity = 0;
         }
 
-        const dir = i - travel;
-        // Movimento non lineare per accompagnare il flip (sull'asse orizzontale)
-        const moveEase = Math.sign(dir) * Math.pow(Math.abs(dir), 1.5);
-        // Moltiplichiamo per -1 così il testo va nella stessa direzione del flip visivo della card
-        const translateX = -moveEase * 100; 
+        const dir       = i - travel;
+        const moveEase  = Math.sign(dir) * Math.pow(Math.abs(dir), 1.5);
+        const translateX = -moveEase * 100;
 
-        el.style.opacity = `${opacity.toFixed(3)}`;
+        el.style.opacity   = opacity.toFixed(3);
         el.style.transform = `translateX(${translateX.toFixed(1)}px)`;
-        el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
+
+        const wantsAuto = opacity > 0.5;
+        if (prevPointerRef.current[i] !== wantsAuto) {
+          prevPointerRef.current[i] = wantsAuto;
+          el.style.pointerEvents = wantsAuto ? 'auto' : 'none';
+        }
       });
 
-      // ── Card: 3D rotateY flip con plateau frontali ──
-      if (cardRef.current) {
-        const floorTravel = Math.floor(travel);
-        const remainder = travel - floorTravel;
-        
-        // Zona di animazione espansa per rendere il movimento più lungo e fluido
-        const flipZone = 0.6; 
-        const startFlip = 0.5 - flipZone / 2; // 0.2
-        const endFlip = 0.5 + flipZone / 2;   // 0.8
-        
-        let rotationValue;
-        let zOffset = 0;
-
-        if (remainder <= startFlip) {
-          rotationValue = floorTravel * 180;
-        } else if (remainder >= endFlip) {
-          rotationValue = (floorTravel + 1) * 180;
-        } else {
-          // Interpolazione fluida nella zona di flip con easeInOutCubic
-          const t = (remainder - startFlip) / flipZone;
-          const ease = t < 0.5 
-            ? 4 * t * t * t 
-            : 1 - Math.pow(-2 * t + 2, 3) / 2;
-          rotationValue = (floorTravel + ease) * 180;
-
-          // Effetto di "push back" (allontanamento) durante la rotazione
-          // Una parabola che vale 0 agli estremi e 1 al centro (t=0.5)
-          const push = 1 - Math.pow(2 * t - 1, 2);
-          zOffset = -push * 100; // Si allontana di max 100px
-        }
-
-        cardRef.current.style.transform = `translateZ(${zOffset.toFixed(1)}px) rotateY(${rotationValue.toFixed(1)}deg)`;
-      }
-
-      // ── Swap profile at midpoint ──
+      // ── Photo crossfade: opacity + scale, CSS transition fa il resto ──
       if (active !== prevActiveRef.current) {
         prevActiveRef.current = active;
         photoRefs.current.forEach((el, i) => {
-          if (el) {
-             el.style.opacity = i === active ? '1' : '0';
-             // If card flipped 180deg (odd index relative to start), we might need to counter-rotate text 
-             // but here the whole card flips so text on card also flips. 
-             // To keep text readable, we swap content.
-          }
+          if (!el) return;
+          el.style.opacity   = i === active ? '1' : '0';
+          el.style.transform = i === active ? 'scale(1)' : 'scale(0.97)';
         });
         if (counterRef.current) {
           counterRef.current.textContent = `${active + 1}`;
@@ -202,70 +158,52 @@ export function Team({ isVisible = true }: TeamProps) {
       className="relative w-full bg-dark h-full"
     >
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
-        <div className="w-full max-w-7xl mx-auto px-8 md:px-16">
+        <div className="w-full max-w-7xl mx-auto px-6 md:px-16">
 
           {/* Title row */}
-          <div className="mb-16 md:mb-20">
+          <div className="mb-8 md:mb-16">
             <h2
               className="tracking-tighter leading-none text-white"
-              style={{
-                fontFamily: "'Bebas Neue', sans-serif",
-                fontSize: 'clamp(2.5rem, 7vw, 5rem)',
-              }}
+              style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(2.5rem, 7vw, 5rem)' }}
             >
               IL NOSTRO TEAM
             </h2>
             <div className="flex items-center gap-4 mt-4">
-               <div className="h-[2px] w-12 bg-primary/30" />
-               <p className="text-white/40 text-xs tracking-[0.4em] uppercase font-black">
-                 MEMBER <span ref={counterRef} className="text-primary ml-1">1</span> / {COUNT}
-               </p>
+              <div className="h-[2px] w-12 bg-primary/30" />
+              <p className="text-white/40 text-xs tracking-[0.4em] uppercase font-black">
+                MEMBER <span ref={counterRef} className="text-primary ml-1">1</span> / {COUNT}
+              </p>
             </div>
           </div>
 
           {/* Content: text left + card right */}
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-12 md:gap-32">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-32">
 
             {/* ── Left: Role + Bio ── */}
-            <div className="w-full md:w-5/12 relative" style={{ minHeight: '300px' }}>
+            <div className="w-full md:w-5/12 relative" style={{ minHeight: 'min(300px, 35vh)' }}>
               {TEAM_MEMBERS.map((m, i) => (
                 <div
                   key={m.id}
                   ref={(el) => { textRefs.current[i] = el; }}
                   className="absolute inset-x-0 top-0 will-change-[transform,opacity]"
                   style={{
-                    opacity: i === 0 ? 1 : 0,
-                    transform: i === 0 ? 'translateX(0)' : 'translateX(-100px)',
+                    opacity:       i === 0 ? 1 : 0,
+                    transform:     i === 0 ? 'translateX(0)' : 'translateX(-100px)',
                     pointerEvents: i === 0 ? 'auto' : 'none',
                   }}
                 >
-                  <div className="mb-10">
-                    <p className="text-primary text-sm tracking-[0.4em] uppercase font-black mb-3">
-                      RUOLO:
-                    </p>
+                  <div className="mb-6 md:mb-10">
+                    <p className="text-primary text-sm tracking-[0.4em] uppercase font-black mb-3">RUOLO:</p>
                     <p
                       className="text-white font-black uppercase"
-                      style={{
-                        fontFamily: "'Bebas Neue', sans-serif",
-                        fontSize: 'clamp(2rem, 3vw, 3rem)',
-                        letterSpacing: '0.05em',
-                        lineHeight: 1.1
-                      }}
+                      style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.5rem, 3vw, 3rem)', letterSpacing: '0.05em', lineHeight: 1.1 }}
                     >
                       {m.role}
                     </p>
                   </div>
-                  
                   <div>
-                    <p className="text-primary text-sm tracking-[0.4em] uppercase font-black mb-4">
-                      BIO:
-                    </p>
-                    <p 
-                      className="text-white/90 leading-relaxed font-medium" 
-                      style={{ 
-                        fontSize: 'clamp(1.1rem, 1.4vw, 1.4rem)' 
-                      }}
-                    >
+                    <p className="text-primary text-sm tracking-[0.4em] uppercase font-black mb-4">BIO:</p>
+                    <p className="text-white/90 leading-relaxed font-medium" style={{ fontSize: 'clamp(0.85rem, 1.4vw, 1.4rem)' }}>
                       {m.bio}
                     </p>
                   </div>
@@ -273,86 +211,62 @@ export function Team({ isVisible = true }: TeamProps) {
               ))}
             </div>
 
-            {/* ── Right: Rectangular Card (Name + Photo) ── */}
-            <div
-              className="w-full md:w-7/12 flex items-center justify-center md:justify-end"
-              style={{ perspective: '2000px' }}
-            >
+            {/* ── Right: Card con crossfade pulito ── */}
+            <div className="w-full md:w-7/12 flex items-center justify-center md:justify-end">
+              {/* Wrapper dimensionato — ombra qui, fuori dagli strati animati */}
               <div
-                ref={cardRef}
-                className="will-change-transform"
-                style={{ transformStyle: 'preserve-3d' }}
+                style={{
+                  width: 'min(520px, 85vw)',
+                  height: 'min(700px, 72vh)',
+                  position: 'relative',
+                  borderRadius: '2rem',
+                  boxShadow: '0 30px 70px rgba(0,0,0,0.7)',
+                }}
               >
-                <div
-                  style={{
-                    width: 'min(520px, 85vw)',
-                    height: 'min(700px, 90vh)',
-                    position: 'relative',
-                    transformStyle: 'preserve-3d',
-                  }}
-                >
-                  {TEAM_MEMBERS.map((m, i) => {
-                    return (
-                      <div
-                        key={m.id}
-                        ref={(el) => { photoRefs.current[i] = el; }}
-                        className="absolute inset-0 flex flex-col shadow-[0_50px_120px_rgba(0,0,0,0.6)]"
-                        style={{ 
-                          opacity: i === 0 ? 1 : 0,
-                          padding: '4rem',
-                          backgroundColor: '#111',
-                          borderRadius: '2rem',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          backfaceVisibility: 'hidden',
-                          transform: (i % 2 !== 0) ? 'rotateY(180deg)' : 'none',
-                          willChange: 'opacity'
-                        }}
+                {TEAM_MEMBERS.map((m, i) => (
+                  <div
+                    key={m.id}
+                    ref={(el) => { photoRefs.current[i] = el; }}
+                    className="absolute inset-0 flex flex-col will-change-[opacity,transform]"
+                    style={{
+                      opacity:    i === 0 ? 1 : 0,
+                      transform:  i === 0 ? 'scale(1)' : 'scale(0.97)',
+                      transition: 'opacity 0.45s ease, transform 0.45s ease',
+                      padding:    'clamp(1.5rem, 5vw, 4rem)',
+                      backgroundColor: '#363853',
+                      borderRadius: '2rem',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    {/* Nome */}
+                    <div className="mb-6 md:mb-10">
+                      <h3
+                        className="text-white font-black tracking-tighter"
+                        style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.8rem, 3.2vw, 2.8rem)', lineHeight: 0.85 }}
                       >
-                        {/* Name on top of card */}
-                        <div className="mb-10">
-                          <h3
-                            className="text-white font-black tracking-tighter"
-                            style={{
-                              fontFamily: "'Bebas Neue', sans-serif",
-                              fontSize: 'clamp(1.8rem, 3.2vw, 2.8rem)',
-                              lineHeight: 0.85,
-                            }}
-                          >
-                            {m.name.split(' ')[0]}<br/>
-                            <span>{m.name.split(' ').slice(1).join(' ')}</span>
-                          </h3>
-                        </div>
+                        {m.name.split(' ')[0]}<br />
+                        <span>{m.name.split(' ').slice(1).join(' ')}</span>
+                      </h3>
+                    </div>
 
-                        {/* Photo below name */}
-                        <div className="flex-1 w-full bg-white rounded-2xl overflow-hidden border border-white/5 relative">
-                          {m.photo ? (
-                            <img
-                              src={m.photo}
-                              alt={m.name}
-                              className="w-full h-full object-cover grayscale transition-all duration-700 hover:grayscale-0"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-white">
-                               <span
-                                className="text-black/10 font-black select-none"
-                                style={{
-                                  fontFamily: "'Bebas Neue', sans-serif",
-                                  fontSize: '12rem',
-                                  lineHeight: 1,
-                                }}
-                              >
-                                {m.name.charAt(0)}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {/* Decorative accent */}
-                          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-transparent opacity-50" />
+                    {/* Foto */}
+                    <div className="flex-1 w-full bg-white rounded-2xl overflow-hidden border border-white/5 relative">
+                      {m.photo ? (
+                        <img src={m.photo} alt={m.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-white">
+                          <span
+                            className="text-black/10 font-black select-none"
+                            style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '12rem', lineHeight: 1 }}
+                          >
+                            {m.name.charAt(0)}
+                          </span>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-transparent opacity-50" />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 

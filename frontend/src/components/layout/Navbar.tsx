@@ -91,7 +91,7 @@ export function Navbar() {
           transition: 'opacity 0.3s ease',
         }}
       >
-        <span style={{ fontFamily: "'Alte Haas Grotesk', sans-serif", fontWeight: 700, fontSize: '24px', color: '#ffffff', letterSpacing: '2px', textTransform: 'uppercase' }}>Menù</span>
+        <span style={{ fontFamily: "'Alte Haas Grotesk', sans-serif", fontWeight: 700, fontSize: '24px', color: '#edf2f4', letterSpacing: '2px', textTransform: 'uppercase' }}>Menù</span>
       </button>
 
       {/* ── BACKDROP semitrasparente (lato sinistro) ── */}
@@ -126,17 +126,26 @@ export function Navbar() {
         aria-label="Menu di navigazione"
         aria-hidden={!open}
       >
-        {/* DarkVeil sfondo — montato solo quando il pannello è aperto per non consumare GPU a pannello chiuso */}
+        {/* DarkVeil sfondo — tonalità rossa */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
           {open && (
-            <DarkVeil
-              speed={3}
-              hueShift={211}
-              noiseIntensity={0}
-              scanlineFrequency={5}
-              scanlineIntensity={0.18}
-              warpAmount={4.3}
-            />
+            <>
+              <DarkVeil
+                speed={3}
+                hueShift={211}
+                noiseIntensity={0}
+                scanlineFrequency={5}
+                scanlineIntensity={0.15}
+                warpAmount={4.3}
+              />
+              {/* Overlay blu navy */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(8,18,58,0.55)',
+                pointerEvents: 'none',
+              }} />
+            </>
           )}
         </div>
 
@@ -158,7 +167,7 @@ export function Navbar() {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#fff',
+                color: '#edf2f4',
                 cursor: 'none',
                 fontSize: '32px',
                 fontWeight: 200,

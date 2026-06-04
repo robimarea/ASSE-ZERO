@@ -54,18 +54,27 @@ export function MaskChangeUI({
   // Z-index dinamico: scroll verso l'alto → sezioni precedenti tornano sopra
   useEffect(() => {
     let lastScrollY = window.scrollY;
+    let rafId = 0;
+    let pendingUp = false;
 
     const handleScroll = () => {
-      const scrollingUp = window.scrollY < lastScrollY;
+      pendingUp = window.scrollY < lastScrollY;
       lastScrollY = window.scrollY;
-      if (!wrapperRef.current) return;
-      wrapperRef.current.style.zIndex = scrollingUp
-        ? String(MAX_LAYERS + layerOrder)   // es. layer 1 → z:61, layer 2 → z:62 (Contact sopra Philosophy)
-        : String(layerOrder);               // es. layer 1 → z:1,  layer 2 → z:2  (Contact sopra Philosophy)
+      if (rafId !== 0) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        if (!wrapperRef.current) return;
+        wrapperRef.current.style.zIndex = pendingUp
+          ? String(MAX_LAYERS + layerOrder)
+          : String(layerOrder);
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      if (rafId !== 0) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, [layerOrder]);
 
   return (

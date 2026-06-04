@@ -209,7 +209,7 @@ export function ContactBlock() {
                   id="cb-message"
                   name="message"
                   required
-                  rows={6}
+                  rows={3}
                   placeholder="Descrivici il tuo progetto, obiettivi e tempistiche..."
                   value={form.message}
                   onChange={handleChange}
