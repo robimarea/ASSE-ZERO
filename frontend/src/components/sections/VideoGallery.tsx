@@ -28,16 +28,6 @@ const VIDEO_ITEMS = [
     gradient: 'linear-gradient(135deg, #6b0f1a 0%, #1a060a 60%, #2b2d42 100%)',
     src: '/videos/DELIRIO-IN-PIENO%20INVERNO.mp4',
   },
-  {
-    id: 5, title: 'SENZA DI ME', subtitle: 'Cortometraggio',
-    gradient: 'linear-gradient(135deg, #ebdb00 0%, #3a2800 60%, #2b2d42 100%)',
-    src: '/videos/SENZA-DI-ME%20-%20cortometraggio-sulla%20paura.mp4',
-  },
-  {
-    id: 6, title: 'LAUDANO & MISTURE', subtitle: 'Spot Pubblicitario',
-    gradient: 'linear-gradient(135deg, #c4b800 0%, #2a2000 60%, #2b2d42 100%)',
-    src: '/videos/laudano-e-misture.mp4',
-  },
 ];
 
 function clamp(value: number, min: number, max: number) {
