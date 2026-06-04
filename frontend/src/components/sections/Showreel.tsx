@@ -255,7 +255,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
         {/* Video Element */}
         <video
           ref={videoRef}
-          src={shouldLoad ? '/show_reel.mp4' : undefined}
+          src={shouldLoad ? '/videos/show_reel.mp4' : undefined}
           preload="auto"
           playsInline
           loop

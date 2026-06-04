@@ -163,8 +163,8 @@ export function Team({ isVisible = true }: TeamProps) {
           {/* Title row */}
           <div className="mb-8 md:mb-16">
             <h2
-              className="tracking-tighter leading-none text-white"
-              style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(2.5rem, 7vw, 5rem)' }}
+              className="tracking-tighter leading-none"
+              style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(2.5rem, 7vw, 5rem)', color: '#ebdb00' }}
             >
               IL NOSTRO TEAM
             </h2>
@@ -241,8 +241,8 @@ export function Team({ isVisible = true }: TeamProps) {
                     {/* Nome */}
                     <div className="mb-6 md:mb-10">
                       <h3
-                        className="text-white font-black tracking-tighter"
-                        style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.8rem, 3.2vw, 2.8rem)', lineHeight: 0.85 }}
+                        className="font-black tracking-tighter"
+                        style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(1.8rem, 3.2vw, 2.8rem)', lineHeight: 0.85, color: '#ebdb00' }}
                       >
                         {m.name.split(' ')[0]}<br />
                         <span>{m.name.split(' ').slice(1).join(' ')}</span>
