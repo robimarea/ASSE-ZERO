@@ -58,7 +58,7 @@ function App() {
         </MaskChangeUI>
 
         {/* ── Layer 1: Perchè scegliere → VideoGallery ── */}
-        <MaskChangeUI curtain={<PercheScegliere />} zIndex={45} layerOrder={1} extraStickyDistanceH={5} disableInteriorSnap>
+        <MaskChangeUI curtain={<PercheScegliere />} zIndex={45} layerOrder={1} extraStickyDistanceH={5}>
           <Viewport id={SECTION_IDS.video}>
             {(isVisible) => <VideoGallery isVisible={isVisible} />}
           </Viewport>
@@ -77,7 +77,7 @@ function App() {
         </MaskChangeUI>
 
         {/* ── Layer 4: Il nostro Metodo → Team ── */}
-        <MaskChangeUI curtain={<IlNostroMetodo />} zIndex={30} layerOrder={4} extraStickyDistanceH={isMobile ? 3 : 7} disableInteriorSnap>
+        <MaskChangeUI curtain={<IlNostroMetodo />} zIndex={30} layerOrder={4} extraStickyDistanceH={isMobile ? 3 : 7}>
           <Viewport id={SECTION_IDS.team}>
             {(isVisible) => <Team isVisible={isVisible} />}
           </Viewport>

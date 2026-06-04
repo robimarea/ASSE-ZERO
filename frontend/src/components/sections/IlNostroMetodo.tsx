@@ -1,3 +1,7 @@
+import { useReveal } from '@/hooks/useReveal';
+
+const EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
 const steps = [
   {
     title: 'Raccolta e analisi del brand',
@@ -22,10 +26,12 @@ const steps = [
 ];
 
 export function IlNostroMetodo() {
-  return (
-    <section className="w-full h-screen bg-primary flex flex-col px-6 md:px-16 py-10 md:py-12 overflow-hidden">
+  const { ref, isRevealed } = useReveal({ threshold: 0.15 });
 
-      {/* Titolo */}
+  return (
+    <section ref={ref} className="w-full h-screen bg-primary flex flex-col px-6 md:px-16 py-10 md:py-12 overflow-hidden">
+
+      {/* Titolo — clip reveal riga per riga */}
       <div className="shrink-0 mb-6 md:mb-8">
         <h2
           style={{
@@ -37,18 +43,39 @@ export function IlNostroMetodo() {
             color: '#a90f21',
           }}
         >
-          Il nostro{' '}
-          <span style={{ fontStyle: 'italic' }}>METODO</span>
+          {[
+            { text: 'Il nostro', italic: false },
+            { text: 'METODO', italic: true },
+          ].map(({ text, italic }, i) => (
+            <span key={text} style={{ display: 'block', overflow: 'hidden' }}>
+              <span
+                style={{
+                  display: 'block',
+                  fontStyle: italic ? 'italic' : 'normal',
+                  transform: isRevealed ? 'translateY(0)' : 'translateY(105%)',
+                  transition: `transform 0.85s ${EXPO} ${i * 110}ms`,
+                }}
+              >
+                {text}
+              </span>
+            </span>
+          ))}
         </h2>
       </div>
 
-      {/* Steps — riempiono il resto */}
+      {/* Steps — slide da sinistra staggerati */}
       <div className="flex-1 flex flex-col min-h-0">
         {steps.map((step, i) => (
           <div
             key={i}
             className="flex-1 flex items-center gap-4 md:gap-6"
-            style={{ borderTop: '1px solid rgba(169,15,33,0.25)', borderBottom: i === 4 ? '1px solid rgba(169,15,33,0.25)' : 'none' }}
+            style={{
+              borderTop: '1px solid rgba(169,15,33,0.25)',
+              borderBottom: i === 4 ? '1px solid rgba(169,15,33,0.25)' : 'none',
+              opacity: isRevealed ? 1 : 0,
+              transform: isRevealed ? 'translateX(0)' : 'translateX(-28px)',
+              transition: `opacity 0.65s ease ${220 + i * 90}ms, transform 0.65s ${EXPO} ${220 + i * 90}ms`,
+            }}
           >
             {/* Numero */}
             <div

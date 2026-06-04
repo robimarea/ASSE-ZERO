@@ -40,10 +40,10 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
       alpha: true,
     });
     renderer.setSize(w, h);
-    renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.4;
+    renderer.toneMappingExposure = 1.2;
 
     renderer.domElement.style.display  = 'block';
     renderer.domElement.style.maxWidth = 'none';
@@ -51,28 +51,32 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     renderer.domElement.style.height   = '100%';
     container.appendChild(renderer.domElement);
 
-    // ── Illuminazione a 4 angoli + frontale centrale ──────
-    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-    // Angolo alto-sinistra
-    const l1 = new THREE.DirectionalLight(0xffffff, 1.8);
-    l1.position.set(-7, 7, 9);
-    scene.add(l1);
-    // Angolo alto-destra
-    const l2 = new THREE.DirectionalLight(0xffffff, 1.8);
-    l2.position.set(7, 7, 9);
-    scene.add(l2);
-    // Angolo basso-sinistra
-    const l3 = new THREE.DirectionalLight(0xffffff, 1.8);
-    l3.position.set(-7, -7, 9);
-    scene.add(l3);
-    // Angolo basso-destra
-    const l4 = new THREE.DirectionalLight(0xffffff, 1.8);
-    l4.position.set(7, -7, 9);
-    scene.add(l4);
-    // Frontale centrata — leggermente meno potente
-    const lFront = new THREE.DirectionalLight(0xffffff, 1.4);
-    lFront.position.set(0, 0, 12);
-    scene.add(lFront);
+    // ── Rig cinematografico a 4 sorgenti ─────────────────
+    scene.add(new THREE.AmbientLight(0x080818, 0.1));
+
+    // Key light — SpotLight alto-sinistra, bianco caldo (orbita lentamente)
+    const keyLight = new THREE.SpotLight(0xfff8ee, 5.0);
+    keyLight.position.set(-12, 14, 18);
+    keyLight.angle = Math.PI / 5.5;
+    keyLight.penumbra = 0.45;
+    keyLight.decay = 0;
+    scene.add(keyLight);
+    scene.add(keyLight.target);
+
+    // Fill light — DirectionalLight destra-bassa, blu freddo
+    const fillLight = new THREE.DirectionalLight(0xd0e0ff, 1.0);
+    fillLight.position.set(10, -4, 10);
+    scene.add(fillLight);
+
+    // Rim light — DirectionalLight dietro-alto, rosso brand
+    const rimLight = new THREE.DirectionalLight(0xa90f21, 2.8);
+    rimLight.position.set(2, 8, -14);
+    scene.add(rimLight);
+
+    // Bounce light — DirectionalLight da sotto, arancio caldo
+    const bounceLight = new THREE.DirectionalLight(0xff9040, 0.5);
+    bounceLight.position.set(0, -12, 6);
+    scene.add(bounceLight);
 
     // ── Stato Fisico (desktop) ────────────────────────────
     const rot    = { x: 0, y: 0 }, velRot = { x: 0, y: 0 };
@@ -238,6 +242,10 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
           model.scale.set(baseScale * scl.x, baseScale * scl.y, baseScale * scl.z);
         }
       }
+
+      // Key light — orbita lenta attorno al modello
+      keyLight.position.x = -12 * Math.cos(t * 0.06);
+      keyLight.position.z = 18 * Math.sin(t * 0.06 + Math.PI / 2);
 
       renderer.render(scene, camera);
     };

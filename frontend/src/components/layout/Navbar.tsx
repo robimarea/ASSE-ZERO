@@ -82,26 +82,6 @@ export function Navbar() {
 
   return (
     <>
-      {/* ── LOGO 2D (Top Left) ── */}
-      <div
-        className="navbar-logo"
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          zIndex: 197,
-          padding: '18px 0px',
-          pointerEvents: 'none',
-          transform: navHidden ? 'translateY(-120%)' : 'translateY(0)',
-        }}
-      >
-        <img
-          src="/logo.png"
-          alt="ASSE ZERO"
-          style={{ height: '64px', width: 'auto', display: 'block' }}
-        />
-      </div>
-
       {/* ── TRIGGER ── */}
       <button
         onClick={() => setOpen(true)}

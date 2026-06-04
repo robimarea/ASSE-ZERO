@@ -1,8 +1,5 @@
 import { useRef, useEffect, useState, type ReactNode } from 'react';
 
-// MAX_LAYERS definisce il numero massimo di livelli MaskChangeUI nella pagina.
-// Quando si scrolla verso l'alto i layer vengono invertiti: il layer più basso (numericamente)
-// riceve lo z-index più alto, così le sezioni precedenti tornano visibili sopra quelle successive.
 const MAX_LAYERS = 60;
 
 interface MaskChangeProps {
@@ -12,7 +9,6 @@ interface MaskChangeProps {
   overlapPrev?: boolean;
   extraStickyDistanceH?: number;
   layerOrder?: number;
-  disableInteriorSnap?: boolean; // disabilita lo snap window all'interno della zona scroll delle card
 }
 
 export function MaskChangeUI({
@@ -22,7 +18,6 @@ export function MaskChangeUI({
   overlapPrev = false,
   extraStickyDistanceH = 0,
   layerOrder = 0,
-  disableInteriorSnap = false,
 }: MaskChangeProps) {
   const curtainRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -33,23 +28,17 @@ export function MaskChangeUI({
   useEffect(() => {
     const updateHeight = () => {
       if (curtainRef.current && contentRef.current) {
-        const curtainH = curtainRef.current.offsetHeight;
-        const contentH = contentRef.current.offsetHeight;
-        const extraH = extraStickyDistanceH * window.innerHeight;
-        const nextHeight = `${curtainH + contentH + extraH}px`;
+        const nextHeight = `${curtainRef.current.offsetHeight + contentRef.current.offsetHeight + extraStickyDistanceH * window.innerHeight}px`;
         if (nextHeight !== lastHeightRef.current) {
           lastHeightRef.current = nextHeight;
           setWrapperHeight(nextHeight);
         }
       }
     };
-
     updateHeight();
-
     const observer = new ResizeObserver(updateHeight);
     if (curtainRef.current) observer.observe(curtainRef.current);
     if (contentRef.current) observer.observe(contentRef.current);
-
     return () => { observer.disconnect(); };
   }, [extraStickyDistanceH]);
 
@@ -83,7 +72,6 @@ export function MaskChangeUI({
     <div
       ref={wrapperRef}
       data-mask-wrapper="true"
-      data-no-snap-interior={disableInteriorSnap ? 'true' : undefined}
       className="relative w-full font-sans"
       style={{
         minHeight: wrapperHeight,
@@ -91,18 +79,11 @@ export function MaskChangeUI({
         zIndex: layerOrder,
       }}
     >
-      {/* The background content that will be revealed */}
-      <div 
-        className="sticky top-0 w-full z-0" 
-        ref={contentRef}
-      >
+      <div className="sticky top-0 w-full z-0" ref={contentRef}>
         {children}
       </div>
-
-      {/* The curtain that covers it initially and scrolls up */}
       <div
         ref={curtainRef}
-        data-mask-curtain="true"
         className="absolute top-0 left-0 w-full shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
         style={{ zIndex, transform: 'translateZ(0)', willChange: 'transform' }}
       >

@@ -1,12 +1,18 @@
+import { useReveal } from '@/hooks/useReveal';
+
+const EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
 const R = ({ children }: { children: React.ReactNode }) => (
   <strong style={{ color: '#a90f21', fontStyle: 'italic' }}>{children}</strong>
 );
 
 export function ChiSiamo() {
-  return (
-    <section className="w-full h-screen bg-primary flex flex-col px-6 md:px-16 py-10 md:py-14 overflow-hidden">
+  const { ref, isRevealed } = useReveal({ threshold: 0.2 });
 
-      {/* Titolo display — grande, occupa il suo spazio */}
+  return (
+    <section ref={ref} className="w-full h-screen bg-primary flex flex-col px-6 md:px-16 py-10 md:py-14 overflow-hidden">
+
+      {/* Titolo — clip reveal riga per riga */}
       <div className="shrink-0 mb-4 md:mb-8">
         <h2
           style={{
@@ -18,18 +24,47 @@ export function ChiSiamo() {
             color: '#a90f21',
           }}
         >
-          Chi<br />siamo?
+          {['Chi', 'siamo?'].map((line, i) => (
+            <span key={line} style={{ display: 'block', overflow: 'hidden' }}>
+              <span
+                style={{
+                  display: 'block',
+                  transform: isRevealed ? 'translateY(0)' : 'translateY(105%)',
+                  transition: `transform 0.85s ${EXPO} ${i * 120}ms`,
+                }}
+              >
+                {line}
+              </span>
+            </span>
+          ))}
         </h2>
       </div>
 
-      {/* Separatore */}
-      <div className="shrink-0 mb-6 md:mb-8" style={{ height: '1.5px', backgroundColor: 'rgba(169,15,33,0.35)', width: '100%' }} />
+      {/* Separatore — line draw da sinistra */}
+      <div
+        className="shrink-0 mb-6 md:mb-8"
+        style={{
+          height: '1.5px',
+          backgroundColor: 'rgba(169,15,33,0.35)',
+          width: '100%',
+          transformOrigin: 'left',
+          transform: isRevealed ? 'scaleX(1)' : 'scaleX(0)',
+          transition: `transform 0.85s ${EXPO} 200ms`,
+        }}
+      />
 
       {/* Corpo — su due colonne su desktop */}
       <div className="flex-1 flex flex-col md:flex-row gap-8 md:gap-16 min-h-0">
 
         {/* Colonna sinistra */}
-        <div className="flex-1 flex flex-col justify-between">
+        <div
+          className="flex-1 flex flex-col justify-between"
+          style={{
+            opacity: isRevealed ? 1 : 0,
+            transform: isRevealed ? 'translateY(0)' : 'translateY(28px)',
+            transition: `opacity 0.7s ease 380ms, transform 0.7s ${EXPO} 380ms`,
+          }}
+        >
           <p
             style={{
               fontFamily: "'Satoshi', sans-serif",
@@ -68,7 +103,14 @@ export function ChiSiamo() {
         />
 
         {/* Colonna destra — Target */}
-        <div className="flex-1 flex flex-col justify-center">
+        <div
+          className="flex-1 flex flex-col justify-center"
+          style={{
+            opacity: isRevealed ? 1 : 0,
+            transform: isRevealed ? 'translateY(0)' : 'translateY(28px)',
+            transition: `opacity 0.7s ease 500ms, transform 0.7s ${EXPO} 500ms`,
+          }}
+        >
           <div className="flex items-start gap-4 md:gap-6">
             <span
               className="shrink-0 font-black uppercase rounded-full px-5 py-2"

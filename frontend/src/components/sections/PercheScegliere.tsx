@@ -1,3 +1,7 @@
+import { useReveal } from '@/hooks/useReveal';
+
+const EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
 const R = ({ children }: { children: React.ReactNode }) => (
   <strong style={{ color: '#a90f21', fontStyle: 'italic' }}>{children}</strong>
 );
@@ -35,42 +39,65 @@ const reasons = [
 ];
 
 export function PercheScegliere() {
-  return (
-    <section className="w-full h-screen bg-primary flex flex-col px-6 md:px-16 py-10 md:py-14 overflow-hidden">
+  const { ref, isRevealed } = useReveal({ threshold: 0.2 });
 
-      {/* Titolo display */}
+  return (
+    <section ref={ref} className="w-full h-screen bg-primary flex flex-col px-6 md:px-16 py-10 md:py-14 overflow-hidden">
+
+      {/* Titolo display — clip reveal per elemento */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-8 md:mb-10 shrink-0">
-        <h2
-          style={{
-            fontFamily: "'Nohemi', sans-serif",
-            fontWeight: 900,
-            fontSize: 'clamp(2.8rem, 7vw, 6rem)',
-            color: '#a90f21',
-            lineHeight: 1,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          PERCHÈ SCEGLIERE
-        </h2>
-        <img
-          src="/logo.png"
-          alt="AsseZero"
-          style={{ height: 'clamp(2.5rem, 6vw, 5.5rem)', width: 'auto', objectFit: 'contain' }}
-        />
-        <span
-          style={{
-            fontFamily: "'Nohemi', sans-serif",
-            fontWeight: 900,
-            fontSize: 'clamp(2.8rem, 7vw, 6rem)',
-            color: '#a90f21',
-            lineHeight: 1,
-          }}
-        >
-          ?
+        {['PERCHÈ', 'SCEGLIERE'].map((word, i) => (
+          <span key={word} style={{ overflow: 'hidden', display: 'inline-block' }}>
+            <span
+              style={{
+                fontFamily: "'Nohemi', sans-serif",
+                fontWeight: 900,
+                fontSize: 'clamp(2.8rem, 7vw, 6rem)',
+                color: '#a90f21',
+                lineHeight: 1,
+                letterSpacing: '-0.02em',
+                display: 'block',
+                transform: isRevealed ? 'translateY(0)' : 'translateY(110%)',
+                transition: `transform 0.85s ${EXPO} ${i * 110}ms`,
+              }}
+            >
+              {word}
+            </span>
+          </span>
+        ))}
+        <span style={{ overflow: 'hidden', display: 'inline-block' }}>
+          <img
+            src="/logo.png"
+            alt="AsseZero"
+            style={{
+              height: 'clamp(2.5rem, 6vw, 5.5rem)',
+              width: 'auto',
+              objectFit: 'contain',
+              display: 'block',
+              transform: isRevealed ? 'translateY(0)' : 'translateY(110%)',
+              transition: `transform 0.85s ${EXPO} 220ms`,
+            }}
+          />
+        </span>
+        <span style={{ overflow: 'hidden', display: 'inline-block' }}>
+          <span
+            style={{
+              fontFamily: "'Nohemi', sans-serif",
+              fontWeight: 900,
+              fontSize: 'clamp(2.8rem, 7vw, 6rem)',
+              color: '#a90f21',
+              lineHeight: 1,
+              display: 'block',
+              transform: isRevealed ? 'translateY(0)' : 'translateY(110%)',
+              transition: `transform 0.85s ${EXPO} 320ms`,
+            }}
+          >
+            ?
+          </span>
         </span>
       </div>
 
-      {/* Tre motivi — riempiono il resto dell'altezza */}
+      {/* Tre motivi — fade + lift staggerati */}
       <div className="flex-1 flex flex-col min-h-0">
         {reasons.map((r, i) => (
           <div
@@ -79,9 +106,11 @@ export function PercheScegliere() {
             style={{
               borderTop: '1.5px solid rgba(169,15,33,0.35)',
               borderBottom: i === 2 ? '1.5px solid rgba(169,15,33,0.35)' : 'none',
+              opacity: isRevealed ? 1 : 0,
+              transform: isRevealed ? 'translateY(0)' : 'translateY(28px)',
+              transition: `opacity 0.7s ease ${420 + i * 120}ms, transform 0.7s ${EXPO} ${420 + i * 120}ms`,
             }}
           >
-            {/* Numero */}
             <span
               className="shrink-0 select-none"
               style={{
@@ -95,7 +124,6 @@ export function PercheScegliere() {
             >
               {r.num}
             </span>
-            {/* Testo */}
             <p
               style={{
                 fontFamily: "'Satoshi', sans-serif",

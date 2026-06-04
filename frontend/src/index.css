@@ -461,3 +461,16 @@ body.video-expanded .wa-float-btn {
   pointer-events: none !important;
   transform: scale(0.8) !important;
 }
+
+/* ============================================
+   Counter Flash — Team section
+   ============================================ */
+
+@keyframes counter-flash {
+  0%   { transform: scale(1.35); opacity: 0.4; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+.counter-flash {
+  animation: counter-flash 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
