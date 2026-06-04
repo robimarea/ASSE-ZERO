@@ -78,19 +78,20 @@ export function IlNostroMetodo() {
                 style={{
                   fontFamily: "'Nohemi', sans-serif",
                   fontWeight: 700,
-                  fontSize: 'clamp(0.9rem, 1.6vw, 1.2rem)',
+                  fontSize: 'clamp(0.85rem, 1.6vw, 1.2rem)',
                   color: '#2b2d42',
                   lineHeight: 1.2,
-                  marginBottom: '0.2em',
+                  marginBottom: '0.15em',
                 }}
               >
                 {step.title}
               </p>
               <p
+                className="hidden sm:block"
                 style={{
                   fontFamily: "'Satoshi', sans-serif",
                   fontWeight: 400,
-                  fontSize: 'clamp(0.75rem, 1.1vw, 0.9rem)',
+                  fontSize: 'clamp(0.72rem, 1.1vw, 0.9rem)',
                   color: 'rgba(43,45,66,0.65)',
                   lineHeight: 1.5,
                 }}

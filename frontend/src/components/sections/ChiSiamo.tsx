@@ -7,12 +7,12 @@ export function ChiSiamo() {
     <section className="w-full h-screen bg-primary flex flex-col px-6 md:px-16 py-10 md:py-14 overflow-hidden">
 
       {/* Titolo display — grande, occupa il suo spazio */}
-      <div className="shrink-0 mb-6 md:mb-8">
+      <div className="shrink-0 mb-4 md:mb-8">
         <h2
           style={{
             fontFamily: "'Nohemi', sans-serif",
             fontWeight: 900,
-            fontSize: 'clamp(4rem, 11vw, 9rem)',
+            fontSize: 'clamp(2.8rem, 11vw, 9rem)',
             lineHeight: 0.92,
             letterSpacing: '-0.03em',
             color: '#a90f21',

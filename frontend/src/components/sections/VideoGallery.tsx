@@ -377,24 +377,24 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
     };
 
     return (
-      <section className="relative w-full bg-dark min-h-screen flex flex-col justify-center">
+      <section className="relative w-full bg-dark h-screen flex flex-col overflow-hidden">
         {lightbox}
 
         {/* Header */}
-        <div className="px-5 pt-12 mb-5 flex items-end justify-between">
+        <div className="px-5 pt-10 pb-4 flex items-end justify-between shrink-0">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.35em] mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>
               Portfolio Video
             </p>
             <h2
               className="font-black leading-[0.88] tracking-tighter"
-              style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '4.5rem', color: '#ebdb00' }}
+              style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '3.5rem', color: '#ebdb00' }}
             >
               Video.
             </h2>
           </div>
           <div className="pb-1 text-right">
-            <span ref={mobileCounterRef} className="font-black block leading-none" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '3rem', color: 'rgba(255,255,255,0.1)' }}>
+            <span ref={mobileCounterRef} className="font-black block leading-none" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '2.5rem', color: 'rgba(255,255,255,0.1)' }}>
               01
             </span>
             <span className="text-[11px] font-black tracking-widest" style={{ color: 'rgba(255,255,255,0.18)' }}>
@@ -405,53 +405,45 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
 
         {/* Carosello */}
         <div
-          className="overflow-x-auto scrollbar-hidden snap-x snap-mandatory flex gap-[10px] pb-5"
-          style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain', paddingLeft: '1.25rem', paddingRight: '1.25rem' }}
+          className="overflow-x-auto scrollbar-hidden snap-x snap-mandatory flex gap-[10px] shrink-0"
+          style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain', paddingLeft: '1.25rem', paddingRight: '1.25rem', paddingBottom: '0' }}
           onScroll={handleCarouselScroll}
         >
           {VIDEO_ITEMS.map((item, index) => (
-            <div key={item.id} className="snap-center shrink-0 w-[90vw]">
+            <div key={item.id} className="snap-center shrink-0 w-[86vw]">
               <div
                 className="overflow-hidden relative cursor-pointer group"
                 style={{
                   aspectRatio: '16/9',
                   background: item.gradient,
-                  borderRadius: '2rem',
+                  borderRadius: '1.25rem',
                   border: '1px solid rgba(255,255,255,0.1)',
-                  boxShadow: '0 30px 90px rgba(0,0,0,0.85)',
+                  boxShadow: '0 16px 48px rgba(0,0,0,0.7)',
                 }}
                 onClick={() => openExpanded(index)}
               >
-                {/* Gradiente cinematic identico allo Showreel */}
                 <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/85 via-black/20 to-black/35" />
-
-                {/* Watermark numero */}
                 <span
                   className="absolute top-2 right-3 font-black select-none pointer-events-none"
-                  style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '7rem', lineHeight: 1, color: 'rgba(255,255,255,0.05)', letterSpacing: '-0.02em' }}
+                  style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '5rem', lineHeight: 1, color: 'rgba(255,255,255,0.05)', letterSpacing: '-0.02em' }}
                 >
                   {String(index + 1).padStart(2, '0')}
                 </span>
-
-                {/* Play button */}
                 <div
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full flex items-center justify-center shadow-[0_15px_40px_rgba(169,15,33,0.45)] group-hover:scale-110 transition-all duration-500 z-10 pointer-events-none"
-                  style={{ backgroundColor: '#a90f21' }}
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full flex items-center justify-center z-10 pointer-events-none"
+                  style={{ backgroundColor: '#a90f21', boxShadow: '0 8px 24px rgba(169,15,33,0.5)' }}
                 >
-                  <svg className="w-8 h-8 text-white fill-current translate-x-0.5" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-white fill-current translate-x-0.5" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
-                  <div className="absolute inset-0 rounded-full border border-[#a90f21]/40 animate-ping" style={{ animationDuration: '2.5s' }} />
                 </div>
-
-                {/* Bottom */}
-                <div className="absolute bottom-8 left-5 pointer-events-none">
-                  <span className="text-xs font-black uppercase tracking-[0.35em] block mb-2" style={{ color: '#a90f21' }}>
+                <div className="absolute bottom-5 left-4 pointer-events-none">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] block mb-1" style={{ color: '#a90f21' }}>
                     {item.subtitle}
                   </span>
                   <h3
                     className="text-white font-black leading-none tracking-tighter italic"
-                    style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.5rem, 5.5vw, 2rem)' }}
+                    style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '1.3rem' }}
                   >
                     {item.title}
                   </h3>
@@ -462,15 +454,15 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         </div>
 
         {/* Separatore */}
-        <div className="mx-5 mb-5" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+        <div className="mx-5 mt-5 mb-4 shrink-0" style={{ height: '1px', background: 'rgba(255,255,255,0.08)' }} />
 
         {/* Pills */}
-        <div className="overflow-x-auto scrollbar-hidden flex gap-2 px-5 pb-1" style={{ touchAction: 'pan-x' }}>
+        <div className="overflow-x-auto scrollbar-hidden flex gap-2 px-5 shrink-0" style={{ touchAction: 'pan-x' }}>
           {VIDEO_PILLS.map((pill, i) => (
             <span
               key={pill}
-              className="shrink-0 flex items-center gap-2 border border-white/[0.07] border-l-2 border-l-[#a90f21] active:scale-95 transition-transform duration-150"
-              style={{ padding: '8px 14px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', whiteSpace: 'nowrap' }}
+              className="shrink-0 flex items-center gap-2 border border-white/[0.07] border-l-2 border-l-[#a90f21]"
+              style={{ padding: '7px 12px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)', whiteSpace: 'nowrap' }}
             >
               <span className="text-[8px] font-black tabular-nums" style={{ color: '#a90f21' }}>
                 {String(i + 1).padStart(2, '0')}
@@ -484,8 +476,8 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         </div>
 
         {/* Descrizione */}
-        <div className="px-5 mt-5 pb-12">
-          <div className="text-sm leading-relaxed space-y-2" style={{ color: 'rgba(237,242,244,0.65)' }}>
+        <div className="px-5 mt-4 pb-8 flex-1 overflow-hidden">
+          <div className="text-sm leading-relaxed space-y-2" style={{ color: 'rgba(237,242,244,0.6)', fontFamily: "'Satoshi', sans-serif" }}>
             {VIDEO_DESCRIPTION.map((text, idx) => (
               <p key={idx} dangerouslySetInnerHTML={{ __html: text }} />
             ))}

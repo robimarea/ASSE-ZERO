@@ -51,20 +51,24 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     renderer.domElement.style.height   = '100%';
     container.appendChild(renderer.domElement);
 
-    // ── Luci ──────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xfff5d6, 0.5));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 5.0);
-    keyLight.position.set(3, 10, 8);
-    scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0xc8d8ff, 1.8);
-    fillLight.position.set(-8, 2, 4);
-    scene.add(fillLight);
-    const rimLight = new THREE.DirectionalLight(0xe9ac06, 3.5);
-    rimLight.position.set(0, -6, -8);
-    scene.add(rimLight);
-    const backLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    backLight.position.set(0, 12, -10);
-    scene.add(backLight);
+    // ── Illuminazione a 4 angoli + ambient morbida ────────
+    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+    // Angolo alto-sinistra
+    const l1 = new THREE.DirectionalLight(0xffffff, 1.8);
+    l1.position.set(-7, 7, 9);
+    scene.add(l1);
+    // Angolo alto-destra
+    const l2 = new THREE.DirectionalLight(0xffffff, 1.8);
+    l2.position.set(7, 7, 9);
+    scene.add(l2);
+    // Angolo basso-sinistra
+    const l3 = new THREE.DirectionalLight(0xffffff, 1.8);
+    l3.position.set(-7, -7, 9);
+    scene.add(l3);
+    // Angolo basso-destra
+    const l4 = new THREE.DirectionalLight(0xffffff, 1.8);
+    l4.position.set(7, -7, 9);
+    scene.add(l4);
 
     // ── Stato Fisico (desktop) ────────────────────────────
     const rot    = { x: 0, y: 0 }, velRot = { x: 0, y: 0 };
@@ -90,13 +94,16 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
       '/logo-3d.glb',
       (gltf: GLTF) => {
         const gltfScene = gltf.scene;
+        // Usa i materiali originali del GLB aggiornato
         gltfScene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: new THREE.Color('#FFFFFF'),
-              metalness: 0.85,
-              roughness: 0.12,
-              envMapIntensity: 1.0,
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach((m) => {
+              if (m instanceof THREE.MeshStandardMaterial) {
+                m.metalness = Math.max(m.metalness, 0.1);
+                m.roughness = Math.min(m.roughness, 0.45);
+                m.needsUpdate = true;
+              }
             });
           }
         });

@@ -49,16 +49,16 @@ export function Services({ isVisible = true }: ServicesProps) {
   return (
     <section
       ref={containerRef}
-      className="relative w-full z-0 bg-dark py-24 min-h-screen flex items-center justify-center"
+      className="relative w-full z-0 bg-dark h-screen flex items-center justify-center overflow-hidden"
     >
-      <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center">
+      <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center py-6 md:py-10">
 
-        <div className="w-full mx-auto flex flex-col items-center mb-12 shrink-0">
+        <div className="w-full mx-auto flex flex-col items-center mb-6 md:mb-12 shrink-0">
           <h2
-            className="font-black uppercase tracking-tighter mb-6 text-primary text-center"
+            className="font-black uppercase tracking-tighter mb-4 md:mb-6 text-primary text-center"
             style={{
               fontFamily: "'Nohemi', sans-serif",
-              fontSize: 'clamp(2.5rem, 8vw, 9rem)',
+              fontSize: 'clamp(1.6rem, 6vw, 9rem)',
               lineHeight: 0.9,
             }}
           >
