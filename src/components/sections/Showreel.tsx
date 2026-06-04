@@ -97,6 +97,19 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isExpanded, isPlaying]);
 
+  // Toggle body class 'video-expanded' to hide global navbar when in Cinema Mode
+  useEffect(() => {
+    if (isExpanded) {
+      document.body.classList.add('video-expanded');
+    } else {
+      document.body.classList.remove('video-expanded');
+    }
+
+    return () => {
+      document.body.classList.remove('video-expanded');
+    };
+  }, [isExpanded]);
+
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -121,10 +134,18 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     setIsMuted(nextMuted);
   };
 
+  const releaseCursor = () => {
+    const activeTargets = document.querySelectorAll('.cursor-target');
+    activeTargets.forEach((el) => {
+      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    });
+  };
+
   const expandVideo = () => {
     const video = videoRef.current;
     if (!video) return;
 
+    releaseCursor();
     setIsExpanded(true);
     // Unmute when expanded so user gets full sound experience
     video.muted = false;
@@ -146,6 +167,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     const video = videoRef.current;
     if (!video) return;
 
+    releaseCursor();
     setIsExpanded(false);
     // Re-mute when returning to windowed mode
     video.muted = true;
@@ -231,8 +253,14 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onClick={isExpanded ? togglePlay : expandVideo}
-          className={`w-full h-full object-cover select-none transition-transform duration-1000 ${
-            isExpanded ? 'cursor-pointer' : 'cursor-target scale-100 group-hover:scale-[1.02]'
+          style={{
+            backfaceVisibility: 'hidden',
+            transform: 'translate3d(0,0,0)',
+          }}
+          className={`w-full h-full select-none transition-all duration-700 ${
+            isExpanded
+              ? 'object-contain cursor-pointer'
+              : 'object-cover cursor-target scale-100 group-hover:scale-[1.02] filter contrast-[1.02] saturate-[1.05]'
           }`}
         />
 

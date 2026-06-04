@@ -45,7 +45,7 @@ export function ScrollProgress() {
   return (
     <div
       ref={containerRef}
-      className="fixed top-0 left-0 w-full h-[2px] z-[9999] bg-transparent"
+      className="fixed top-0 left-0 w-full h-[2px] z-[9999] bg-transparent scroll-progress-bar"
       role="progressbar"
       aria-label="Avanzamento pagina"
       aria-valuemin={0}

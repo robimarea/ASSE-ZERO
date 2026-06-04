@@ -245,3 +245,44 @@ h1, h2, h3, h4, h5, h6 {
 .ease-out-expo {
   transition-timing-function: var(--ease-out-expo);
 }
+
+/* ============================================
+   Cinema Mode (Showreel Expanded) Styling
+   ============================================ */
+
+/* Add smooth transition to navbar trigger, logo, and progress bar */
+.navbar-logo,
+.navbar-trigger-btn,
+.scroll-progress-bar {
+  transition: opacity 0.5s var(--ease-out-expo), transform 0.5s var(--ease-out-expo) !important;
+}
+
+/* Hide global logo, menu button, and progress bar when video is in Cinema Mode (expanded) */
+body.video-expanded .navbar-logo {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(-20px) !important;
+}
+
+body.video-expanded .navbar-trigger-btn {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(-20px) !important;
+}
+
+body.video-expanded .scroll-progress-bar {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Restore default browser cursor & hide custom cursor in Cinema Mode (avoids buggy snapping over controls) */
+body.video-expanded,
+body.video-expanded * {
+  cursor: auto !important;
+}
+
+body.video-expanded .target-cursor-wrapper {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  display: none !important;
+}

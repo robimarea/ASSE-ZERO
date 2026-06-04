@@ -54,6 +54,7 @@ export function Navbar() {
     <>
       {/* ── LOGO 2D (Top Left) ── */}
       <div
+        className="navbar-logo"
         style={{
           position: 'fixed',
           top: 0,
@@ -75,7 +76,7 @@ export function Navbar() {
         onClick={() => setOpen(true)}
         aria-label="Apri menu"
         aria-expanded={open}
-        className="cursor-target"
+        className="navbar-trigger-btn cursor-target"
         style={{
           position: 'fixed',
           top: 0,
