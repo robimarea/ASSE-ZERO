@@ -43,7 +43,7 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.0;
 
     renderer.domElement.style.display  = 'block';
     renderer.domElement.style.maxWidth = 'none';
@@ -51,31 +51,47 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     renderer.domElement.style.height   = '100%';
     container.appendChild(renderer.domElement);
 
-    // ── Rig cinematografico a 4 sorgenti ─────────────────
-    scene.add(new THREE.AmbientLight(0x080818, 0.1));
+    // ── Rig da set — scatter ambientale + 7 sorgenti ────────
+    // Ambient: simula la luce diffusa dell'ambiente del set, non buio totale
+    scene.add(new THREE.AmbientLight(0x101828, 0.45));
 
-    // Key light — SpotLight alto-sinistra, bianco caldo (orbita lentamente)
-    const keyLight = new THREE.SpotLight(0xfff8ee, 5.0);
-    keyLight.position.set(-12, 14, 18);
-    keyLight.angle = Math.PI / 5.5;
-    keyLight.penumbra = 0.45;
+    // Key — softbox grande, alto-sinistra, bianco caldo (orbita lentamente)
+    const keyLight = new THREE.SpotLight(0xfff4e0, 5.5);
+    keyLight.position.set(-10, 12, 16);
+    keyLight.angle = Math.PI / 4;      // cono largo = softbox
+    keyLight.penumbra = 0.75;          // bordi morbidissimi
     keyLight.decay = 0;
     scene.add(keyLight);
     scene.add(keyLight.target);
 
-    // Fill light — DirectionalLight destra-bassa, blu freddo
-    const fillLight = new THREE.DirectionalLight(0xd0e0ff, 1.0);
-    fillLight.position.set(10, -4, 10);
-    scene.add(fillLight);
+    // Fill principale — softbox destra, freddo, riduce le ombre laterali pesanti
+    const fillMain = new THREE.DirectionalLight(0xe0eeff, 2.2);
+    fillMain.position.set(14, 4, 12);
+    scene.add(fillMain);
 
-    // Rim light — DirectionalLight dietro-alto, rosso brand
-    const rimLight = new THREE.DirectionalLight(0xa90f21, 2.8);
-    rimLight.position.set(2, 8, -14);
+    // Fill basso-frontale — elimina le ombre dure sotto e sui lati bassi
+    const fillFront = new THREE.DirectionalLight(0xeef0ff, 1.1);
+    fillFront.position.set(0, -5, 18);
+    scene.add(fillFront);
+
+    // Top overhead — LED panel dal soffitto, bianco leggermente caldo
+    const topLight = new THREE.DirectionalLight(0xffeedd, 1.8);
+    topLight.position.set(0, 20, 4);
+    scene.add(topLight);
+
+    // Kicker — pannello laterale destra-dietro, blu accento
+    const kickerLight = new THREE.DirectionalLight(0x7090ff, 1.0);
+    kickerLight.position.set(12, 5, -10);
+    scene.add(kickerLight);
+
+    // Rim — rosso brand da dietro, separa dal fondo
+    const rimLight = new THREE.DirectionalLight(0xa90f21, 2.5);
+    rimLight.position.set(-2, 7, -16);
     scene.add(rimLight);
 
-    // Bounce light — DirectionalLight da sotto, arancio caldo
-    const bounceLight = new THREE.DirectionalLight(0xff9040, 0.5);
-    bounceLight.position.set(0, -12, 6);
+    // Bounce — riflesso caldo dal "pavimento del set"
+    const bounceLight = new THREE.DirectionalLight(0xff8030, 0.5);
+    bounceLight.position.set(0, -16, 6);
     scene.add(bounceLight);
 
     // ── Stato Fisico (desktop) ────────────────────────────
