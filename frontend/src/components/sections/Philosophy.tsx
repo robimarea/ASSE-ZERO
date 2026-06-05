@@ -1,10 +1,10 @@
-import { useReveal } from '@/hooks/useReveal';
+import { useMaskCurtainReveal } from '@/hooks/useReveal';
 
 const EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
 export function Philosophy() {
-  const { ref, isRevealed } = useReveal({ threshold: 0.2 });
+  const { ref, isRevealed } = useMaskCurtainReveal();
 
   const lines: { text: string; delay: number }[] = [
     { text: '"assestiamo', delay: 0 },

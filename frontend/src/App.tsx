@@ -58,7 +58,7 @@ function App() {
         </MaskChangeUI>
 
         {/* ── Layer 1: Perchè scegliere → VideoGallery ── */}
-        <MaskChangeUI curtain={<PercheScegliere />} zIndex={45} layerOrder={1} extraStickyDistanceH={5}>
+        <MaskChangeUI curtain={<PercheScegliere />} zIndex={45} layerOrder={1} extraStickyDistanceH={1}>
           <Viewport id={SECTION_IDS.video}>
             {(isVisible) => <VideoGallery isVisible={isVisible} />}
           </Viewport>
