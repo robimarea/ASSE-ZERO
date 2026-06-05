@@ -28,3 +28,39 @@ export function useReveal(options: UseRevealOptions = {}) {
 
   return { ref, isRevealed };
 }
+
+/** Reveal when the mask curtain above this section has mostly scrolled away */
+export function useMaskCurtainReveal(curtainClearRatio = 0.38) {
+  const ref = useRef<HTMLElement>(null);
+  const [isRevealed, setIsRevealed] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || isRevealed) return;
+
+    let rafId = 0;
+    const check = () => {
+      rafId = 0;
+      const wrapper = el.closest('[data-mask-wrapper]');
+      const curtain = wrapper?.querySelector('[data-mask-curtain]') as HTMLElement | null;
+      if (!curtain) return;
+      if (curtain.getBoundingClientRect().bottom <= window.innerHeight * curtainClearRatio) {
+        setIsRevealed(true);
+      }
+    };
+
+    const onScroll = () => {
+      if (rafId !== 0) return;
+      rafId = requestAnimationFrame(check);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    check();
+    return () => {
+      if (rafId !== 0) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [isRevealed, curtainClearRatio]);
+
+  return { ref, isRevealed };
+}

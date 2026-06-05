@@ -105,10 +105,8 @@ export function ContactBlock() {
                 Hai un progetto<br />in mente?
               </h3>
               <p className={styles.infoDesc}>
-                Raccontaci la tua idea: che si tratti di un video,
-                una campagna social o un brand da costruire da zero,
+                Che si tratti di un video, una campagna social o un brand da costruire da zero,
                 siamo qui per trasformarla in realtà.
-                Ti rispondiamo entro 24 ore.
               </p>
             </div>
 
@@ -243,7 +241,7 @@ export function ContactBlock() {
               {/* Feedback status */}
               {status === 'success' && (
                 <p className={`${styles.statusMsg} ${styles.success}`} role="status">
-                  ✓ Messaggio inviato! Ti risponderemo entro 24 ore.
+                  ✓ Messaggio inviato!
                 </p>
               )}
               {status === 'error' && (

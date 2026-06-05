@@ -84,6 +84,7 @@ export function MaskChangeUI({
       </div>
       <div
         ref={curtainRef}
+        data-mask-curtain="true"
         className="absolute top-0 left-0 w-full shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
         style={{ zIndex, transform: 'translateZ(0)', willChange: 'transform' }}
       >
