@@ -10,7 +10,10 @@ interface Options {
   decoupleFromPageScroll?: boolean;
 }
 
-const WHEEL_SENSITIVITY = 0.0018;
+/** ~1 video ogni 900–1100px di rotella (fluido, non a scatti) */
+const WHEEL_SENSITIVITY = 0.00072;
+/** Evita salti enormi con trackpad / Lenis in un solo evento */
+const MAX_TRAVEL_PER_WHEEL = 0.1;
 
 export function useScrollCards({
   containerRef,
@@ -122,20 +125,28 @@ export function useScrollCards({
       return rect.top <= 4 && rect.bottom >= window.innerHeight * 0.55;
     };
 
+    const wheelDelta = (e: WheelEvent) => {
+      let delta = e.deltaY;
+      if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) delta *= 16;
+      else if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) delta *= window.innerHeight * 0.85;
+      return delta;
+    };
+
     const handleWheel = (e: WheelEvent) => {
       if (!decoupleFromPageScroll || !isSectionActive()) return;
 
-      const delta = e.deltaY;
+      const rawDelta = wheelDelta(e);
       const travel = travelRef.current;
       const atStart = travel <= 0.01;
       const atEnd = travel >= count - 1 - 0.01;
 
-      if ((delta > 0 && atEnd) || (delta < 0 && atStart)) return;
+      if ((rawDelta > 0 && atEnd) || (rawDelta < 0 && atStart)) return;
 
       e.preventDefault();
       e.stopPropagation();
 
-      const next = clamp(travel + delta * WHEEL_SENSITIVITY, 0, count - 1);
+      const step = clamp(rawDelta * WHEEL_SENSITIVITY, -MAX_TRAVEL_PER_WHEEL, MAX_TRAVEL_PER_WHEEL);
+      const next = clamp(travel + step, 0, count - 1);
       travelRef.current = next;
       applyTravel(next);
     };

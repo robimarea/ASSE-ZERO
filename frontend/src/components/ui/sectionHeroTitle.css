@@ -1,0 +1,47 @@
+.sht {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  font-family: 'Nohemi', sans-serif;
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  color: #ebdb00;
+  background: transparent;
+}
+
+.sht__words {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.14em 0.22em;
+}
+
+.sht__word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.sht__word-inner {
+  display: inline-block;
+}
+
+.sht-size-video {
+  font-size: clamp(3.25rem, 14vw, 9rem);
+}
+
+.sht-size-smm {
+  font-size: clamp(1.5rem, 5.8vw, 9rem);
+  line-height: 0.9;
+}
+
+.sht--align-start {
+  text-align: left;
+}
+
+.sht--align-start .sht__words {
+  justify-content: flex-start;
+}

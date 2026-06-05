@@ -7,6 +7,7 @@ import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import SpotlightCard from '@/components/SpotlightCard';
 import { Button } from '@/components/ui/Button';
+import { SectionHeroTitle } from '@/components/ui/SectionHeroTitle';
 import '@/components/social-pricing.css';
 import { SMM_PILLS, SMM_PRICE_PLANS } from '@/data/services';
 import { SECTION_IDS } from '@/lib/constants';
@@ -18,7 +19,6 @@ interface ServicesProps {
 export function Services({ isVisible = true }: ServicesProps) {
   const containerRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
   const pillsWrapRef = useRef<HTMLDivElement>(null);
   const entranceDoneRef = useRef(false);
 
@@ -50,31 +50,22 @@ export function Services({ isVisible = true }: ServicesProps) {
   useEffect(() => {
     if (!isVisible || entranceDoneRef.current) return;
     const header = headerRef.current;
-    const title = titleRef.current;
     const pills = pillsWrapRef.current;
-    if (!header || !title || !pills) return;
+    if (!header || !pills) return;
 
     entranceDoneRef.current = true;
     const pillEls = pills.querySelectorAll('[data-smm-pill]');
 
     const ctx = gsap.context(() => {
-      gsap.set([title, ...pillEls], { opacity: 0 });
-      gsap.set(title, { clipPath: 'inset(100% 0 0 0)', skewY: 2 });
-      gsap.set(pillEls, { y: 14 });
-
-      gsap.timeline({ delay: 0.15 })
-        .to(title, {
-          opacity: 1,
-          clipPath: 'inset(0% 0 0 0)',
-          skewY: 0,
-          duration: 0.9,
-          ease: 'power3.out',
-        })
-        .to(
-          pillEls,
-          { opacity: 1, y: 0, duration: 0.5, stagger: 0.07, ease: 'power2.out' },
-          '-=0.55',
-        );
+      gsap.set(pillEls, { opacity: 0, y: 14 });
+      gsap.to(pillEls, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        stagger: 0.06,
+        ease: 'power2.out',
+        delay: 0.4,
+      });
     }, header);
 
     return () => ctx.revert();
@@ -88,17 +79,12 @@ export function Services({ isVisible = true }: ServicesProps) {
       <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center py-6 md:py-10">
 
         <div ref={headerRef} className="w-full mx-auto flex flex-col items-center mb-6 md:mb-12 shrink-0">
-          <h2
-            ref={titleRef}
-            className="font-black uppercase tracking-tighter mb-4 md:mb-6 text-primary text-center"
-            style={{
-              fontFamily: "'Nohemi', sans-serif",
-              fontSize: 'clamp(1.6rem, 6vw, 9rem)',
-              lineHeight: 0.9,
-            }}
-          >
-            SOCIAL MEDIA MANAGEMENT
-          </h2>
+          <SectionHeroTitle
+            text="SOCIAL MEDIA MANAGEMENT"
+            variant="smm"
+            isVisible={isVisible}
+            className="sht-size-smm mb-4 md:mb-6"
+          />
 
           <div ref={pillsWrapRef} className="flex flex-wrap justify-center gap-2 sm:gap-2.5 max-w-4xl">
             {SMM_PILLS.map((pill, i) => (

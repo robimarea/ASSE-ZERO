@@ -499,16 +499,25 @@ body.video-expanded .wa-float-btn {
   transition: opacity 0.2s linear, transform 0.2s linear;
 }
 
-.vg-pill-active > .vg-pill-fill {
-  transform: translateY(0);
+/* Team — mobile: volti non tagliati */
+.team-photo-img {
+  object-position: center 12%;
 }
 
-.vg-pill-active > .vg-pill-content .vg-pill-num {
-  color: rgba(255, 255, 255, 0.5);
+@media (max-width: 767px) {
+  .team-photo-img {
+    object-position: center 8%;
+  }
+
+  .team-photo-frame {
+    min-height: 0;
+  }
 }
 
-.vg-pill-active > .vg-pill-content .vg-pill-label {
-  color: #fff;
+@media (min-width: 768px) {
+  .team-photo-img {
+    object-position: center 18%;
+  }
 }
 
 .video-lightbox-vignette {

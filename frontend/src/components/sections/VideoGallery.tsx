@@ -5,6 +5,7 @@ import { VIDEO_ITEMS } from '@/data/videos';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useScrollCards } from '@/hooks/useScrollCards';
 import { VideoLightbox } from '@/components/ui/VideoLightbox';
+import { SectionHeroTitle } from '@/components/ui/SectionHeroTitle';
 
 interface VideoGalleryProps {
   isVisible?: boolean;
@@ -25,7 +26,6 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   const mobileProgressRef = useRef<HTMLDivElement>(null);
   const paragraphRef     = useRef<HTMLDivElement>(null);
   const panelRef         = useRef<HTMLDivElement>(null);
-  const titleRef         = useRef<HTMLHeadingElement>(null);
   const pillsWrapRef     = useRef<HTMLDivElement>(null);
   const playBtnRefs      = useRef<(HTMLDivElement | null)[]>([]);
   const prevActiveRef    = useRef(-1);
@@ -33,7 +33,6 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
 
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [lightboxOrigin, setLightboxOrigin] = useState<DOMRect | null>(null);
-  const [mobileActive, setMobileActive] = useState(0);
   const [counterFlash, setCounterFlash] = useState(false);
 
   const openExpanded = useCallback((index: number, originEl?: HTMLElement | null) => {
@@ -71,31 +70,22 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   useEffect(() => {
     if (!isVisible || isMobile || entranceDoneRef.current) return;
     const panel = panelRef.current;
-    const title = titleRef.current;
     const pills = pillsWrapRef.current;
-    if (!panel || !title || !pills) return;
+    if (!panel || !pills) return;
 
     entranceDoneRef.current = true;
     const pillEls = pills.querySelectorAll('[data-vg-pill]');
 
     const ctx = gsap.context(() => {
-      gsap.set([title, ...pillEls], { opacity: 0 });
-      gsap.set(title, { clipPath: 'inset(100% 0 0 0)', skewY: 2 });
-      gsap.set(pillEls, { y: 14 });
-
-      gsap.timeline({ delay: 0.15 })
-        .to(title, {
-          opacity: 1,
-          clipPath: 'inset(0% 0 0 0)',
-          skewY: 0,
-          duration: 0.9,
-          ease: 'power3.out',
-        })
-        .to(
-          pillEls,
-          { opacity: 1, y: 0, duration: 0.5, stagger: 0.07, ease: 'power2.out' },
-          '-=0.55'
-        );
+      gsap.set(pillEls, { opacity: 0, y: 14 });
+      gsap.to(pillEls, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        stagger: 0.06,
+        ease: 'power2.out',
+        delay: 0.35,
+      });
     }, panel);
 
     return () => ctx.revert();
@@ -119,8 +109,6 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         const max = scrollWidth - clientWidth;
         mobileProgressRef.current.style.transform = `scaleX(${max > 0 ? scrollLeft / max : 0})`;
       }
-
-      setMobileActive(idx);
 
       el.querySelectorAll<HTMLElement>('[data-mobile-card]').forEach((card, i) => {
         const dist = Math.abs(i - idx);
@@ -147,9 +135,12 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
             <p className="text-[9px] font-black uppercase tracking-[0.35em] mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>
               Portfolio Video
             </p>
-            <h2 className="font-black leading-[0.88] tracking-tighter" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '3.5rem', color: '#ebdb00' }}>
-              Video.
-            </h2>
+            <SectionHeroTitle
+              text="Video"
+              variant="video"
+              isVisible={isVisible}
+              className="sht-size-video sht--align-start"
+            />
           </div>
           <div className="pb-1 text-right">
             <span
@@ -210,21 +201,21 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
           />
         </div>
 
-        <div className="overflow-x-auto scrollbar-hidden flex gap-2 px-5 shrink-0" style={{ touchAction: 'pan-x' }}>
+        <div className="flex flex-wrap gap-2 px-5 shrink-0 justify-center">
           {VIDEO_PILLS.map((pill, i) => (
             <span
               key={pill}
-              className={`shrink-0 flex items-center gap-2 border border-white/[0.07] border-l-2 transition-all duration-300 ${i === mobileActive ? 'border-l-[#ebdb00] -translate-y-0.5' : 'border-l-[#a90f21]'}`}
+              className="shrink-0 flex items-center gap-2 border border-white/[0.07] border-l-2 border-l-[#a90f21]"
               style={{
                 padding: '7px 12px',
                 borderRadius: '4px',
-                background: i === mobileActive ? 'rgba(169,15,33,0.18)' : 'rgba(255,255,255,0.04)',
+                background: 'rgba(255,255,255,0.04)',
                 whiteSpace: 'nowrap',
               }}
             >
-              <span className="text-[8px] font-black tabular-nums" style={{ color: i === mobileActive ? '#ebdb00' : '#a90f21' }}>{formatIndex(i)}</span>
+              <span className="text-[8px] font-black tabular-nums text-[#a90f21]">{formatIndex(i)}</span>
               <span className="w-px h-2.5 shrink-0 bg-white/10" />
-              <span className="text-[10px] font-black tracking-[0.16em] uppercase" style={{ color: i === mobileActive ? '#fff' : 'rgba(255,255,255,0.55)' }}>{pill}</span>
+              <span className="text-[10px] font-black tracking-[0.16em] uppercase text-white/55">{pill}</span>
             </span>
           ))}
         </div>
@@ -325,13 +316,12 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
 
         <div className="relative w-full md:w-[50%] h-full flex flex-col justify-center items-center px-6 md:px-10 lg:px-12 z-20 py-8 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
           <div ref={panelRef} className="rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col items-center gap-6 w-full" style={{ backgroundColor: '#2b2d42' }}>
-            <h2
-              ref={titleRef}
-              className="font-heading font-black text-[5rem] md:text-[7rem] lg:text-[9rem] leading-none tracking-tighter drop-shadow-2xl text-center w-full"
-              style={{ fontFamily: "'Nohemi', sans-serif", color: '#ebdb00' }}
-            >
-              Video
-            </h2>
+            <SectionHeroTitle
+              text="Video"
+              variant="video"
+              isVisible={isVisible}
+              className="sht-size-video"
+            />
 
             <div className="flex items-baseline gap-2 -mt-2">
               <span
@@ -345,19 +335,19 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               </span>
             </div>
 
-            <div ref={pillsWrapRef} className="flex flex-wrap justify-center gap-2 md:gap-2.5">
+            <div ref={pillsWrapRef} className="flex flex-wrap justify-center gap-2 md:gap-2.5 vg-pills-static">
               {VIDEO_PILLS.map((pill, i) => (
                 <div
                   key={pill}
                   data-vg-pill
-                  className={`group relative overflow-hidden cursor-default border border-white/[0.07] border-l-2 transition-all duration-300 ${i === activeIndex ? 'vg-pill-active -translate-y-1 shadow-[0_8px_20px_rgba(169,15,33,0.35)] border-l-[#ebdb00]' : 'border-l-[#a90f21] hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(169,15,33,0.3)]'}`}
+                  className="group relative overflow-hidden cursor-default border border-white/[0.07] border-l-2 border-l-[#a90f21] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(169,15,33,0.3)]"
                   style={{ padding: '9px 16px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)' }}
                 >
-                  <span className={`absolute inset-0 bg-[#a90f21] vg-pill-fill transition-transform duration-300 ease-out ${i === activeIndex ? '' : 'translate-y-full group-hover:translate-y-0'}`} />
-                  <span className="relative flex items-center gap-2.5 vg-pill-content">
-                    <span className={`text-[9px] font-black tabular-nums vg-pill-num transition-colors duration-200 ${i === activeIndex ? '' : 'text-[#a90f21] group-hover:text-white/50'}`}>{formatIndex(i)}</span>
+                  <span className="absolute inset-0 bg-[#a90f21] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                  <span className="relative flex items-center gap-2.5">
+                    <span className="text-[9px] font-black tabular-nums text-[#a90f21] group-hover:text-white/50 transition-colors duration-200">{formatIndex(i)}</span>
                     <span className="w-px h-3 shrink-0 bg-white/10 group-hover:bg-white/20 transition-colors duration-200" />
-                    <span className={`text-[11px] font-black tracking-[0.16em] uppercase vg-pill-label transition-colors duration-200 ${i === activeIndex ? '' : 'text-white/55 group-hover:text-white'}`}>{pill}</span>
+                    <span className="text-[11px] font-black tracking-[0.16em] uppercase text-white/55 group-hover:text-white transition-colors duration-200">{pill}</span>
                   </span>
                 </div>
               ))}
