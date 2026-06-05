@@ -1,41 +1,85 @@
-// ============================================
-// ASSE ZERO — Philosophy Section
-// ============================================
+import { useReveal } from '@/hooks/useReveal';
+
+const EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
 export function Philosophy() {
+  const { ref, isRevealed } = useReveal({ threshold: 0.2 });
+
+  const lines: { text: string; delay: number }[] = [
+    { text: '"assestiamo', delay: 0 },
+    { text: 'la tua idea,', delay: 160 },
+  ];
+
   return (
-    <section className="w-full min-h-screen bg-dark flex flex-col items-center justify-center py-32">
-      <div className="w-full max-w-5xl mx-auto px-6 lg:px-12 flex flex-col items-start text-white">
-        <h2 className="text-5xl sm:text-6xl md:text-7xl font-heading font-black tracking-tight mb-8" style={{lineHeight: 1.1}}>
-          "assestiamo la tua idea,<br />dalla{" "}
-          <img
-            src="/lettere/letter_a.png"
-            alt="a"
-            className="inline-block"
-            style={{ height: "0.85em", width: "auto", verticalAlign: "middle" }}
-          />{" "}
-          alla{" "}
-          <img
-            src="/lettere/letter_z.png"
-            alt="z"
-            className="inline-block"
-            style={{ height: "0.85em", width: "auto", verticalAlign: "middle" }}
-          />
-          "
-        </h2>
-        <div className="max-w-2xl text-lg sm:text-xl font-medium leading-snug">
-          <p className="mb-4">
-            Crediamo nel valore del contatto umano: niente formule standard, solo
-            soluzioni efficaci costruite su di te.
-          </p>
-          <p>
-            Uniamo professionalità e innovazione per offrirti un servizio fresco,
-            dinamico e sviluppato su misura per le tue esigenze.
-            Lavoriamo al tuo fianco, passo dopo passo, per garantirti il risultato
-            migliore.
-          </p>
-        </div>
-      </div>
+    <section ref={ref} className="w-full h-screen bg-dark flex flex-col items-center justify-center px-6 md:px-16 lg:px-24 overflow-hidden">
+      <h2
+        style={{
+          fontFamily: "'Nohemi', sans-serif",
+          fontWeight: 900,
+          fontSize: 'clamp(4.5rem, 11vw, 10rem)',
+          lineHeight: 0.97,
+          letterSpacing: '-0.03em',
+          color: 'white',
+          textAlign: 'center',
+        }}
+      >
+        {lines.map(({ text, delay }) => (
+          <span key={text} style={{ display: 'block', overflow: 'hidden' }}>
+            <span
+              style={{
+                display: 'block',
+                transform: isRevealed ? 'translateY(0)' : 'translateY(105%)',
+                transition: `transform 0.85s ${EXPO} ${delay}ms`,
+              }}
+            >
+              {text}
+            </span>
+          </span>
+        ))}
+
+        {/* Riga gialla con immagini inline */}
+        <span style={{ display: 'block', overflow: 'hidden' }}>
+          <span
+            style={{
+              display: 'block',
+              color: '#ebdb00',
+              transform: isRevealed ? 'translateY(0)' : 'translateY(105%)',
+              transition: `transform 0.85s ${EXPO} 320ms`,
+            }}
+          >
+            dalla{' '}
+            <img
+              src="/lettere/letter_a.png"
+              alt="a"
+              style={{
+                height: '0.85em',
+                width: 'auto',
+                verticalAlign: 'middle',
+                display: 'inline',
+                opacity: isRevealed ? 1 : 0,
+                transform: isRevealed ? 'scale(1)' : 'scale(0.65)',
+                transition: `opacity 0.5s ease 520ms, transform 0.55s ${SPRING} 520ms`,
+              }}
+            />
+            {' '}alla{' '}
+            <img
+              src="/lettere/letter_z.png"
+              alt="z"
+              style={{
+                height: '0.85em',
+                width: 'auto',
+                verticalAlign: 'middle',
+                display: 'inline',
+                opacity: isRevealed ? 1 : 0,
+                transform: isRevealed ? 'scale(1)' : 'scale(0.65)',
+                transition: `opacity 0.5s ease 640ms, transform 0.55s ${SPRING} 640ms`,
+              }}
+            />
+            "
+          </span>
+        </span>
+      </h2>
     </section>
   );
 }

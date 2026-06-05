@@ -24,7 +24,7 @@ export function Footer() {
         <div>
           <h3
             className="text-primary font-black tracking-tighter mb-4"
-            style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(3rem, 7vw, 6rem)', lineHeight: 1 }}
+            style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(3rem, 7vw, 6rem)', lineHeight: 1 }}
           >
             {SITE_NAME}
           </h3>

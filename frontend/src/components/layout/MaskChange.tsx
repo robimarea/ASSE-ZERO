@@ -1,8 +1,5 @@
 import { useRef, useEffect, useState, type ReactNode } from 'react';
 
-// MAX_LAYERS definisce il numero massimo di livelli MaskChangeUI nella pagina.
-// Quando si scrolla verso l'alto i layer vengono invertiti: il layer più basso (numericamente)
-// riceve lo z-index più alto, così le sezioni precedenti tornano visibili sopra quelle successive.
 const MAX_LAYERS = 60;
 
 interface MaskChangeProps {
@@ -11,7 +8,7 @@ interface MaskChangeProps {
   zIndex?: number;
   overlapPrev?: boolean;
   extraStickyDistanceH?: number;
-  layerOrder?: number; // 0 = primo (Hero), 1 = secondo (Philosophy), 2 = terzo (Contact), …
+  layerOrder?: number;
 }
 
 export function MaskChangeUI({
@@ -31,23 +28,17 @@ export function MaskChangeUI({
   useEffect(() => {
     const updateHeight = () => {
       if (curtainRef.current && contentRef.current) {
-        const curtainH = curtainRef.current.offsetHeight;
-        const contentH = contentRef.current.offsetHeight;
-        const extraH = extraStickyDistanceH * window.innerHeight;
-        const nextHeight = `${curtainH + contentH + extraH}px`;
+        const nextHeight = `${curtainRef.current.offsetHeight + contentRef.current.offsetHeight + extraStickyDistanceH * window.innerHeight}px`;
         if (nextHeight !== lastHeightRef.current) {
           lastHeightRef.current = nextHeight;
           setWrapperHeight(nextHeight);
         }
       }
     };
-
     updateHeight();
-
     const observer = new ResizeObserver(updateHeight);
     if (curtainRef.current) observer.observe(curtainRef.current);
     if (contentRef.current) observer.observe(contentRef.current);
-
     return () => { observer.disconnect(); };
   }, [extraStickyDistanceH]);
 
@@ -88,19 +79,13 @@ export function MaskChangeUI({
         zIndex: layerOrder,
       }}
     >
-      {/* The background content that will be revealed */}
-      <div 
-        className="sticky top-0 w-full z-0" 
-        ref={contentRef}
-      >
+      <div className="sticky top-0 w-full z-0" ref={contentRef}>
         {children}
       </div>
-
-      {/* The curtain that covers it initially and scrolls up */}
-      <div 
+      <div
         ref={curtainRef}
-        className="absolute top-0 left-0 w-full shadow-[0_30px_60px_rgba(0,0,0,0.4)]" 
-        style={{ zIndex }}
+        className="absolute top-0 left-0 w-full shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
+        style={{ zIndex, transform: 'translateZ(0)', willChange: 'transform' }}
       >
         {curtain}
       </div>

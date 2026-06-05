@@ -40,10 +40,10 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
       alpha: true,
     });
     renderer.setSize(w, h);
-    renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.4;
+    renderer.toneMappingExposure = 1.0;
 
     renderer.domElement.style.display  = 'block';
     renderer.domElement.style.maxWidth = 'none';
@@ -51,20 +51,48 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     renderer.domElement.style.height   = '100%';
     container.appendChild(renderer.domElement);
 
-    // ── Luci ──────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xfff5d6, 0.5));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 5.0);
-    keyLight.position.set(3, 10, 8);
+    // ── Rig da set — scatter ambientale + 7 sorgenti ────────
+    // Ambient: simula la luce diffusa dell'ambiente del set, non buio totale
+    scene.add(new THREE.AmbientLight(0x101828, 0.45));
+
+    // Key — softbox grande, alto-sinistra, bianco caldo (orbita lentamente)
+    const keyLight = new THREE.SpotLight(0xfff4e0, 5.5);
+    keyLight.position.set(-10, 12, 16);
+    keyLight.angle = Math.PI / 4;      // cono largo = softbox
+    keyLight.penumbra = 0.75;          // bordi morbidissimi
+    keyLight.decay = 0;
     scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0xc8d8ff, 1.8);
-    fillLight.position.set(-8, 2, 4);
-    scene.add(fillLight);
-    const rimLight = new THREE.DirectionalLight(0xe9ac06, 3.5);
-    rimLight.position.set(0, -6, -8);
+    scene.add(keyLight.target);
+
+    // Fill principale — softbox destra, freddo, riduce le ombre laterali pesanti
+    const fillMain = new THREE.DirectionalLight(0xe0eeff, 2.2);
+    fillMain.position.set(14, 4, 12);
+    scene.add(fillMain);
+
+    // Fill basso-frontale — elimina le ombre dure sotto e sui lati bassi
+    const fillFront = new THREE.DirectionalLight(0xeef0ff, 1.1);
+    fillFront.position.set(0, -5, 18);
+    scene.add(fillFront);
+
+    // Top overhead — LED panel dal soffitto, bianco leggermente caldo
+    const topLight = new THREE.DirectionalLight(0xffeedd, 1.8);
+    topLight.position.set(0, 20, 4);
+    scene.add(topLight);
+
+    // Kicker — pannello laterale destra-dietro, blu accento
+    const kickerLight = new THREE.DirectionalLight(0x7090ff, 1.0);
+    kickerLight.position.set(12, 5, -10);
+    scene.add(kickerLight);
+
+    // Rim — rosso brand da dietro, separa dal fondo
+    const rimLight = new THREE.DirectionalLight(0xa90f21, 2.5);
+    rimLight.position.set(-2, 7, -16);
     scene.add(rimLight);
-    const backLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    backLight.position.set(0, 12, -10);
-    scene.add(backLight);
+
+    // Bounce — riflesso caldo dal "pavimento del set"
+    const bounceLight = new THREE.DirectionalLight(0xff8030, 0.5);
+    bounceLight.position.set(0, -16, 6);
+    scene.add(bounceLight);
 
     // ── Stato Fisico (desktop) ────────────────────────────
     const rot    = { x: 0, y: 0 }, velRot = { x: 0, y: 0 };
@@ -90,13 +118,16 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
       '/logo-3d.glb',
       (gltf: GLTF) => {
         const gltfScene = gltf.scene;
+        // Usa i materiali originali del GLB aggiornato
         gltfScene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: new THREE.Color('#FFFFFF'),
-              metalness: 0.85,
-              roughness: 0.12,
-              envMapIntensity: 1.0,
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach((m) => {
+              if (m instanceof THREE.MeshStandardMaterial) {
+                m.metalness = Math.max(m.metalness, 0.1);
+                m.roughness = Math.min(m.roughness, 0.45);
+                m.needsUpdate = true;
+              }
             });
           }
         });
@@ -227,6 +258,10 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
           model.scale.set(baseScale * scl.x, baseScale * scl.y, baseScale * scl.z);
         }
       }
+
+      // Key light — orbita lenta attorno al modello
+      keyLight.position.x = -12 * Math.cos(t * 0.06);
+      keyLight.position.z = 18 * Math.sin(t * 0.06 + Math.PI / 2);
 
       renderer.render(scene, camera);
     };
