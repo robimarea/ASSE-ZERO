@@ -499,6 +499,29 @@ body.video-expanded .wa-float-btn {
   transition: opacity 0.2s linear, transform 0.2s linear;
 }
 
+.vg-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ebdb00;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.vg-nav-btn:hover:not(:disabled) {
+  background: rgba(169, 15, 33, 0.35);
+  border-color: rgba(169, 15, 33, 0.5);
+}
+
+.vg-nav-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
 /* Team — mobile: volti non tagliati */
 .team-photo-img {
   object-position: center 12%;

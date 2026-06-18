@@ -18,9 +18,9 @@ const TARGET_ITEMS = [
   },
 ] as const;
 
-const reveal = (isRevealed: boolean, delayMs: number) => ({
+const reveal = (isRevealed: boolean, delayMs: number, exitUp = false) => ({
   opacity: isRevealed ? 1 : 0,
-  transform: isRevealed ? 'translateY(0)' : 'translateY(24px)',
+  transform: isRevealed ? 'translateY(0)' : exitUp ? 'translateY(-28px)' : 'translateY(28px)',
   transition: `opacity 0.7s ease ${delayMs}ms, transform 0.7s ${MASK_EXPO} ${delayMs}ms`,
 });
 
@@ -35,7 +35,7 @@ export function ChiSiamo() {
             Chi siamo
           </MaskRevealLine>
         </h2>
-        <p className="mask-curtain__kicker" style={reveal(isRevealed, 180)}>
+        <p className="mask-curtain__kicker" style={reveal(isRevealed, 180, true)}>
           Collettivo creativo · Rimini
         </p>
       </header>
@@ -67,7 +67,7 @@ export function ChiSiamo() {
           </p>
         </div>
 
-        <aside className="mask-chi__aside" style={reveal(isRevealed, 460)}>
+        <aside className="mask-chi__aside" style={reveal(isRevealed, 460, true)}>
           <div className="mask-chi__panel">
             <span className="mask-label">Target</span>
             <ul className="mask-target-list">

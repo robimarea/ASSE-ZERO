@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
+import { gsap } from 'gsap';
 import { clamp } from '@/lib/math';
 
 interface Options {
@@ -6,21 +7,20 @@ interface Options {
   count: number;
   isVisible: boolean;
   paragraphRef?: React.RefObject<HTMLDivElement | null>;
-  /** Card stack driven by wheel inside the section, not page scroll */
-  decoupleFromPageScroll?: boolean;
+  /** Se true, il carosello segue lo scroll della pagina (es. team). Se false, controlli + rotella sulla zona card */
+  scrollDriven?: boolean;
 }
 
-/** ~1 video ogni 900–1100px di rotella (fluido, non a scatti) */
-const WHEEL_SENSITIVITY = 0.00072;
-/** Evita salti enormi con trackpad / Lenis in un solo evento */
-const MAX_TRAVEL_PER_WHEEL = 0.1;
+const TRAVEL_TWEEN_DURATION = 0.92;
+const WHEEL_SENSITIVITY = 0.00048;
+const MAX_WHEEL_STEP = 0.055;
 
 export function useScrollCards({
   containerRef,
   count,
   isVisible,
   paragraphRef,
-  decoupleFromPageScroll = false,
+  scrollDriven = true,
 }: Options) {
   const cardRefs       = useRef<(HTMLElement | null)[]>([]);
   const overlayRefs    = useRef<(HTMLElement | null)[]>([]);
@@ -29,6 +29,8 @@ export function useScrollCards({
   const numberRefs     = useRef<(HTMLElement | null)[]>([]);
   const activeIndexRef = useRef(0);
   const travelRef      = useRef(0);
+  const travelProxy    = useRef({ value: 0 });
+  const travelTweenRef = useRef<gsap.core.Tween | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const applyTravel = useCallback(
@@ -82,6 +84,51 @@ export function useScrollCards({
     [count],
   );
 
+  const animateToTravel = useCallback(
+    (target: number) => {
+      const goal = clamp(target, 0, count - 1);
+      travelTweenRef.current?.kill();
+
+      if (Math.abs(goal - travelRef.current) < 0.001) {
+        travelRef.current = goal;
+        travelProxy.current.value = goal;
+        applyTravel(goal);
+        return;
+      }
+
+      travelProxy.current.value = travelRef.current;
+      travelTweenRef.current = gsap.to(travelProxy.current, {
+        value: goal,
+        duration: TRAVEL_TWEEN_DURATION,
+        ease: 'power2.inOut',
+        overwrite: 'auto',
+        onUpdate: () => {
+          travelRef.current = travelProxy.current.value;
+          applyTravel(travelRef.current);
+        },
+        onComplete: () => {
+          travelRef.current = goal;
+          travelProxy.current.value = goal;
+          applyTravel(goal);
+        },
+      });
+    },
+    [applyTravel, count],
+  );
+
+  const goToIndex = useCallback(
+    (index: number) => animateToTravel(index),
+    [animateToTravel],
+  );
+
+  const goNext = useCallback(() => {
+    goToIndex(activeIndexRef.current + 1);
+  }, [goToIndex]);
+
+  const goPrev = useCallback(() => {
+    goToIndex(activeIndexRef.current - 1);
+  }, [goToIndex]);
+
   useEffect(() => {
     if (!isVisible) return;
 
@@ -106,23 +153,16 @@ export function useScrollCards({
       const scrollProg  = clamp(scrolled / scrollable, 0, 1);
       const travel      = scrollProg * (count - 1);
       travelRef.current = travel;
+      travelProxy.current.value = travel;
       applyTravel(travel);
     };
 
     const handleScroll = () => {
-      if (decoupleFromPageScroll) return;
-      if (!containerRef.current) return;
+      if (!scrollDriven || !containerRef.current) return;
       const vb = window.scrollY + window.innerHeight;
       if (vb < sTop || window.scrollY > sTop + sHeight) return;
       if (frameId !== 0) return;
       frameId = requestAnimationFrame(syncFromPageScroll);
-    };
-
-    const isSectionActive = () => {
-      const section = containerRef.current;
-      if (!section) return false;
-      const rect = section.getBoundingClientRect();
-      return rect.top <= 4 && rect.bottom >= window.innerHeight * 0.55;
     };
 
     const wheelDelta = (e: WheelEvent) => {
@@ -132,9 +172,8 @@ export function useScrollCards({
       return delta;
     };
 
-    const handleWheel = (e: WheelEvent) => {
-      if (!decoupleFromPageScroll || !isSectionActive()) return;
-
+    const handleCardWheel = (e: Event) => {
+      if (!(e instanceof WheelEvent)) return;
       const rawDelta = wheelDelta(e);
       const travel = travelRef.current;
       const atStart = travel <= 0.01;
@@ -145,53 +184,71 @@ export function useScrollCards({
       e.preventDefault();
       e.stopPropagation();
 
-      const step = clamp(rawDelta * WHEEL_SENSITIVITY, -MAX_TRAVEL_PER_WHEEL, MAX_TRAVEL_PER_WHEEL);
+      travelTweenRef.current?.kill();
+      const step = clamp(rawDelta * WHEEL_SENSITIVITY, -MAX_WHEEL_STEP, MAX_WHEEL_STEP);
       const next = clamp(travel + step, 0, count - 1);
       travelRef.current = next;
+      travelProxy.current.value = next;
       applyTravel(next);
     };
 
     const paraEl = paragraphRef?.current;
+    let paraObserver: IntersectionObserver | undefined;
     if (paraEl) {
-      paraEl.style.opacity    = '0';
-      paraEl.style.transform  = 'translateY(48px)';
-      paraEl.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-      const observer = new IntersectionObserver(
+      paraObserver = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) {
             paraEl.style.opacity = '1';
             paraEl.style.transform = 'translateY(0)';
-            observer.disconnect();
+          } else {
+            paraEl.style.opacity = '0';
+            paraEl.style.transform = 'translateY(32px)';
           }
         },
-        { threshold: 0.2 },
+        { threshold: 0.15 },
       );
-      observer.observe(paraEl);
+      paraEl.style.transition = 'opacity 0.65s ease, transform 0.65s ease';
+      paraObserver.observe(paraEl);
     }
 
     updateMetrics();
+    travelProxy.current.value = travelRef.current;
     applyTravel(travelRef.current);
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', () => {
       updateMetrics();
-      if (!decoupleFromPageScroll) handleScroll();
+      if (scrollDriven) handleScroll();
     }, { passive: true });
 
-    if (decoupleFromPageScroll) {
-      window.addEventListener('wheel', handleWheel, { passive: false, capture: true });
-    } else {
-      syncFromPageScroll();
-    }
+    if (scrollDriven) syncFromPageScroll();
+
+    const cardZone = !scrollDriven
+      ? containerRef.current?.querySelector('[data-vg-cards]')
+      : null;
+    cardZone?.addEventListener('wheel', handleCardWheel, { passive: false });
 
     return () => {
       if (frameId !== 0) cancelAnimationFrame(frameId);
+      travelTweenRef.current?.kill();
       window.removeEventListener('scroll', handleScroll);
-      if (decoupleFromPageScroll) {
-        window.removeEventListener('wheel', handleWheel, true);
-      }
+      cardZone?.removeEventListener('wheel', handleCardWheel);
+      paraObserver?.disconnect();
     };
-  }, [isVisible, containerRef, count, paragraphRef, decoupleFromPageScroll, applyTravel]);
+  }, [isVisible, containerRef, count, paragraphRef, scrollDriven, applyTravel]);
 
-  return { cardRefs, overlayRefs, textRefs, gradientRefs, numberRefs, activeIndex, activeIndexRef };
+  return {
+    cardRefs,
+    overlayRefs,
+    textRefs,
+    gradientRefs,
+    numberRefs,
+    activeIndex,
+    activeIndexRef,
+    goToIndex,
+    goNext,
+    goPrev,
+    canGoPrev: activeIndex > 0,
+    canGoNext: activeIndex < count - 1,
+  };
 }
