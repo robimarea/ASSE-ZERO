@@ -20,7 +20,6 @@ export function Services({ isVisible = true }: ServicesProps) {
   const containerRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const pillsWrapRef = useRef<HTMLDivElement>(null);
-  const entranceDoneRef = useRef(false);
 
   useEffect(() => {
     const section = containerRef.current;
@@ -48,24 +47,23 @@ export function Services({ isVisible = true }: ServicesProps) {
   }, [isVisible]);
 
   useEffect(() => {
-    if (!isVisible || entranceDoneRef.current) return;
     const header = headerRef.current;
     const pills = pillsWrapRef.current;
     if (!header || !pills) return;
 
-    entranceDoneRef.current = true;
     const pillEls = pills.querySelectorAll('[data-smm-pill]');
 
     const ctx = gsap.context(() => {
-      gsap.set(pillEls, { opacity: 0, y: 14 });
-      gsap.to(pillEls, {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        stagger: 0.06,
-        ease: 'power2.out',
-        delay: 0.4,
-      });
+      gsap.killTweensOf(pillEls);
+      if (isVisible) {
+        gsap.fromTo(
+          pillEls,
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.05, ease: 'power2.out', delay: 0.25 },
+        );
+      } else {
+        gsap.to(pillEls, { opacity: 0, y: -12, duration: 0.35, stagger: 0.03, ease: 'power2.in' });
+      }
     }, header);
 
     return () => ctx.revert();

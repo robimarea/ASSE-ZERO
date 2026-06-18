@@ -5,6 +5,7 @@ interface UseRevealOptions {
   rootMargin?: string;
 }
 
+/** Reveal ripetibile: entra ed esce con lo scroll (su e giù) */
 export function useReveal(options: UseRevealOptions = {}) {
   const { threshold = 0.25, rootMargin = '0px' } = options;
   const ref = useRef<HTMLElement>(null);
@@ -13,15 +14,12 @@ export function useReveal(options: UseRevealOptions = {}) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsRevealed(true);
-          observer.disconnect();
-        }
-      },
+      ([entry]) => setIsRevealed(entry.isIntersecting),
       { threshold, rootMargin },
     );
+
     observer.observe(el);
     return () => observer.disconnect();
   }, [threshold, rootMargin]);
@@ -29,24 +27,32 @@ export function useReveal(options: UseRevealOptions = {}) {
   return { ref, isRevealed };
 }
 
-/** Reveal when the mask curtain above this section has mostly scrolled away */
-export function useMaskCurtainReveal(curtainClearRatio = 0.38) {
+/** Philosophy: reveal quando il curtain è uscito, hide quando torna a coprire (scroll su) */
+export function useMaskCurtainReveal(revealRatio = 0.38, hideRatio = 0.52) {
   const ref = useRef<HTMLElement>(null);
   const [isRevealed, setIsRevealed] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || isRevealed) return;
+    if (!el) return;
 
     let rafId = 0;
+
     const check = () => {
       rafId = 0;
       const wrapper = el.closest('[data-mask-wrapper]');
       const curtain = wrapper?.querySelector('[data-mask-curtain]') as HTMLElement | null;
       if (!curtain) return;
-      if (curtain.getBoundingClientRect().bottom <= window.innerHeight * curtainClearRatio) {
-        setIsRevealed(true);
-      }
+
+      const bottom = curtain.getBoundingClientRect().bottom;
+      const revealY = window.innerHeight * revealRatio;
+      const hideY = window.innerHeight * hideRatio;
+
+      setIsRevealed((prev) => {
+        if (!prev && bottom <= revealY) return true;
+        if (prev && bottom > hideY) return false;
+        return prev;
+      });
     };
 
     const onScroll = () => {
@@ -60,7 +66,7 @@ export function useMaskCurtainReveal(curtainClearRatio = 0.38) {
       if (rafId !== 0) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', onScroll);
     };
-  }, [isRevealed, curtainClearRatio]);
+  }, [revealRatio, hideRatio]);
 
   return { ref, isRevealed };
 }

@@ -11,7 +11,7 @@ interface SectionHeroTitleProps {
   className?: string;
 }
 
-/** Titolo sezione: colore pieno + reveal verticale leggero */
+/** Titolo: reveal dal basso in entrata, esce verso l'alto in uscita (ripetibile) */
 export function SectionHeroTitle({
   text,
   variant,
@@ -19,30 +19,40 @@ export function SectionHeroTitle({
   className = '',
 }: SectionHeroTitleProps) {
   const rootRef = useRef<HTMLHeadingElement>(null);
-  const doneRef = useRef(false);
-
   const words = text.trim().split(/\s+/);
 
   useEffect(() => {
-    if (!isVisible || doneRef.current || !rootRef.current) return;
-    doneRef.current = true;
+    const root = rootRef.current;
+    if (!root) return;
 
-    const inners = rootRef.current.querySelectorAll('.sht__word-inner');
+    const inners = root.querySelectorAll('.sht__word-inner');
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        inners,
-        { yPercent: 100, opacity: 0 },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.65,
-          stagger: 0.05,
-          ease: 'power2.out',
-          delay: 0.08,
-        },
-      );
-    }, rootRef);
+      gsap.killTweensOf(inners);
+      if (isVisible) {
+        gsap.fromTo(
+          inners,
+          { yPercent: 100, opacity: 0 },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 0.65,
+            stagger: 0.05,
+            ease: 'power2.out',
+            overwrite: 'auto',
+          },
+        );
+      } else {
+        gsap.to(inners, {
+          yPercent: -100,
+          opacity: 0,
+          duration: 0.45,
+          stagger: 0.03,
+          ease: 'power2.in',
+          overwrite: 'auto',
+        });
+      }
+    }, root);
 
     return () => ctx.revert();
   }, [isVisible]);

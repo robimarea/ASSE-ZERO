@@ -29,7 +29,6 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   const pillsWrapRef     = useRef<HTMLDivElement>(null);
   const playBtnRefs      = useRef<(HTMLDivElement | null)[]>([]);
   const prevActiveRef    = useRef(-1);
-  const entranceDoneRef  = useRef(false);
 
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [lightboxOrigin, setLightboxOrigin] = useState<DOMRect | null>(null);
@@ -44,13 +43,34 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
     setLightboxOrigin(null);
   }, []);
 
-  const { cardRefs, overlayRefs, textRefs, gradientRefs, numberRefs, activeIndex } = useScrollCards({
+  const {
+    cardRefs,
+    overlayRefs,
+    textRefs,
+    gradientRefs,
+    numberRefs,
+    activeIndex,
+    goNext,
+    goPrev,
+    canGoPrev,
+    canGoNext,
+  } = useScrollCards({
     containerRef,
     count: VIDEO_ITEMS.length,
     isVisible: isVisible && !isMobile,
     paragraphRef,
-    decoupleFromPageScroll: true,
+    scrollDriven: false,
   });
+
+  useEffect(() => {
+    if (!isVisible || isMobile) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' && canGoNext) goNext();
+      if (e.key === 'ArrowLeft' && canGoPrev) goPrev();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isVisible, isMobile, goNext, goPrev, canGoNext, canGoPrev]);
 
   useEffect(() => {
     if (prevActiveRef.current === activeIndex) return;
@@ -68,24 +88,24 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   }, [activeIndex]);
 
   useEffect(() => {
-    if (!isVisible || isMobile || entranceDoneRef.current) return;
+    if (isMobile) return;
     const panel = panelRef.current;
     const pills = pillsWrapRef.current;
     if (!panel || !pills) return;
 
-    entranceDoneRef.current = true;
     const pillEls = pills.querySelectorAll('[data-vg-pill]');
 
     const ctx = gsap.context(() => {
-      gsap.set(pillEls, { opacity: 0, y: 14 });
-      gsap.to(pillEls, {
-        opacity: 1,
-        y: 0,
-        duration: 0.5,
-        stagger: 0.06,
-        ease: 'power2.out',
-        delay: 0.35,
-      });
+      gsap.killTweensOf(pillEls);
+      if (isVisible) {
+        gsap.fromTo(
+          pillEls,
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.05, ease: 'power2.out', delay: 0.2 },
+        );
+      } else {
+        gsap.to(pillEls, { opacity: 0, y: -12, duration: 0.35, stagger: 0.03, ease: 'power2.in' });
+      }
     }, panel);
 
     return () => ctx.revert();
@@ -257,7 +277,11 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
 
       <div className="w-full h-full overflow-hidden bg-dark flex flex-col md:flex-row items-center justify-center relative z-[1]">
 
-        <div className="relative w-full md:w-[50%] h-full flex items-center justify-center pointer-events-none shrink-0">
+        <div
+          data-vg-cards
+          className="relative w-full md:w-[50%] h-full flex items-center justify-center shrink-0 pointer-events-auto"
+          title="Scorri per cambiare video"
+        >
           {VIDEO_ITEMS.map((item, index) => (
             <article
               key={item.id}
@@ -323,16 +347,40 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               className="sht-size-video"
             />
 
-            <div className="flex items-baseline gap-2 -mt-2">
-              <span
-                className={`font-black leading-none tabular-nums transition-colors duration-300 ${counterFlash ? 'counter-flash' : ''}`}
-                style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: '#ebdb00' }}
+            <div className="flex items-center justify-center gap-3 -mt-2 w-full">
+              <button
+                type="button"
+                onClick={goPrev}
+                disabled={!canGoPrev}
+                aria-label="Video precedente"
+                className="vg-nav-btn"
               >
-                {formatIndex(activeIndex)}
-              </span>
-              <span className="text-sm font-black tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                / {formatIndex(VIDEO_ITEMS.length - 1)}
-              </span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <div className="flex items-baseline gap-2 min-w-[5.5rem] justify-center">
+                <span
+                  className={`font-black leading-none tabular-nums transition-colors duration-300 ${counterFlash ? 'counter-flash' : ''}`}
+                  style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: '#ebdb00' }}
+                >
+                  {formatIndex(activeIndex)}
+                </span>
+                <span className="text-sm font-black tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                  / {formatIndex(VIDEO_ITEMS.length - 1)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={goNext}
+                disabled={!canGoNext}
+                aria-label="Video successivo"
+                className="vg-nav-btn"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
 
             <div ref={pillsWrapRef} className="flex flex-wrap justify-center gap-2 md:gap-2.5 vg-pills-static">
