@@ -43,9 +43,8 @@
     <meta name="theme-color" content="#E9AC06" />
     <meta name="msapplication-TileColor" content="#E9AC06" />
 
-    <!-- Font Preloading: carica i font prima del primo render per evitare FOUT -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/AlteHaasGroteskBold.woff2" crossorigin="anonymous" />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/AlteHaasGroteskRegular.woff2" crossorigin="anonymous" />
+    <!-- Font: Nohemi e Satoshi sono bundlati da Vite come asset (preload automatico) -->
+    <!-- I vecchi preload di AlteHaasGrotesk erano obsoleti e causavano richieste 404 -->
 
     <!-- Structured Data: LocalBusiness + ProfessionalService -->
     <script type="application/ld+json">

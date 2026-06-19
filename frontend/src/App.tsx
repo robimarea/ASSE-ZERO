@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { HelmetProvider } from 'react-helmet-async';
-import { useIsMobile } from '@/hooks/useIsMobile';
 import { SEO } from '@/lib/seo';
 import { Navbar } from '@/components/layout/Navbar';
 import TargetCursor from '@/components/TargetCursor';
@@ -28,7 +27,6 @@ const Showreel = lazy(() =>
 );
 
 function App() {
-  const isMobile = useIsMobile();
   useSmoothScroll();
 
   return (
@@ -47,7 +45,7 @@ function App() {
       <main className="bg-dark">
 
         {/* ── Layer 0: Hero → Showreel ── */}
-        <MaskChangeUI curtain={<Hero />} zIndex={50} layerOrder={0} extraStickyDistanceH={2}>
+        <MaskChangeUI curtain={<Hero />} zIndex={50} layerOrder={0} extraStickyDistanceH={2.2}>
           <ErrorBoundary fallback={<section className="min-h-screen bg-dark" />}>
             <Suspense fallback={<section className="min-h-screen bg-dark" />}>
               <Viewport id={SECTION_IDS.showreel}>
@@ -58,40 +56,40 @@ function App() {
         </MaskChangeUI>
 
         {/* ── Layer 1: Perchè scegliere → VideoGallery ── */}
-        <MaskChangeUI curtain={<PercheScegliere />} zIndex={45} layerOrder={1} extraStickyDistanceH={1}>
+        <MaskChangeUI curtain={<PercheScegliere />} zIndex={45} layerOrder={1} extraStickyDistanceH={1.8} overlapPrev={true}>
           <Viewport id={SECTION_IDS.video}>
             {(isVisible) => <VideoGallery isVisible={isVisible} />}
           </Viewport>
         </MaskChangeUI>
 
         {/* ── Layer 2: Cover → Services ── */}
-        <MaskChangeUI curtain={<div className="w-full h-screen bg-primary" />} zIndex={40} layerOrder={2} extraStickyDistanceH={2}>
+        <MaskChangeUI curtain={<div className="w-full h-screen bg-primary" />} zIndex={40} layerOrder={2} extraStickyDistanceH={2.2} overlapPrev={true}>
           <Viewport id={SECTION_IDS.smm}>
             {(isVisible) => <Services isVisible={isVisible} />}
           </Viewport>
         </MaskChangeUI>
 
         {/* ── Layer 3: Chi siamo → Philosophy ── */}
-        <MaskChangeUI curtain={<ChiSiamo />} zIndex={35} layerOrder={3} extraStickyDistanceH={1}>
+        <MaskChangeUI curtain={<ChiSiamo />} zIndex={35} layerOrder={3} extraStickyDistanceH={1.8} overlapPrev={true}>
           <Philosophy />
         </MaskChangeUI>
 
         {/* ── Layer 4: Il nostro Metodo → Team ── */}
-        <MaskChangeUI curtain={<IlNostroMetodo />} zIndex={30} layerOrder={4} extraStickyDistanceH={isMobile ? 3 : 7}>
+        <MaskChangeUI curtain={<IlNostroMetodo />} zIndex={30} layerOrder={4} extraStickyDistanceH={1.8} overlapPrev={true}>
           <Viewport id={SECTION_IDS.team}>
             {(isVisible) => <Team isVisible={isVisible} />}
           </Viewport>
         </MaskChangeUI>
 
         {/* ── Layer 5: Cover → Contact ── */}
-        <MaskChangeUI curtain={<div className="w-full h-screen bg-primary" />} zIndex={25} layerOrder={5} extraStickyDistanceH={1}>
+        <MaskChangeUI curtain={<div className="w-full h-screen bg-primary" />} zIndex={25} layerOrder={5} extraStickyDistanceH={1.4} overlapPrev={true}>
           <Viewport id={SECTION_IDS.contact}>
             <Contact />
           </Viewport>
         </MaskChangeUI>
 
         {/* ── Layer 6: Cover → Footer ── */}
-        <MaskChangeUI curtain={<div className="w-full h-screen bg-primary" />} zIndex={20} layerOrder={6} extraStickyDistanceH={1}>
+        <MaskChangeUI curtain={<div className="w-full h-screen bg-primary" />} zIndex={20} layerOrder={6} extraStickyDistanceH={1.2} overlapPrev={true}>
           <div className="bg-dark w-full flex flex-col justify-end min-h-screen">
             <Footer />
           </div>

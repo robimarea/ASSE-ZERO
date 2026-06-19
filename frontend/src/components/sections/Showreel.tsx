@@ -86,10 +86,11 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
 
       <div
         style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+        onClick={!isExpanded ? expand : undefined}
         className={`relative transition-all duration-700 bg-black overflow-hidden group ${
           isExpanded
             ? 'fixed inset-0 w-screen h-[100dvh] z-[999] rounded-none border-none'
-            : 'w-[90vw] md:w-[75vw] lg:w-[65vw] aspect-video rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] hover:border-[#a90f21]/25 pointer-events-auto'
+            : 'w-[90vw] md:w-[75vw] lg:w-[65vw] aspect-video rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] hover:border-[#a90f21]/25 pointer-events-auto cursor-pointer'
         }`}
       >
         {isLoading && <VideoSpinner />}
@@ -103,7 +104,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
           muted={isMuted}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
-          onClick={isExpanded ? togglePlay : expand}
+          onClick={isExpanded ? togglePlay : undefined}
           style={{ backfaceVisibility: 'hidden', transform: 'translate3d(0,0,0)' }}
           className={`w-full h-full select-none transition-all duration-700 ${
             isExpanded
@@ -153,17 +154,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
                 ))}
               </h2>
             </div>
-            <button
-              onClick={expand}
-              aria-label="Avvia video in modalità cinema"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-26 md:h-26 rounded-full flex items-center justify-center shadow-[0_15px_40px_rgba(169,15,33,0.45)] hover:shadow-[0_20px_50px_rgba(169,15,33,0.65)] transition-all duration-500 hover:scale-108 active:scale-95 group/btn cursor-target z-10"
-              style={{ backgroundColor: '#a90f21' }}
-            >
-              <svg className="w-8 h-8 md:w-9 md:h-9 text-white fill-current translate-x-0.5 group-hover/btn:scale-105 transition-transform duration-300" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              <div className="absolute inset-0 rounded-full border border-[#a90f21]/40 animate-ping" style={{ animationDuration: '2.5s' }} />
-            </button>
           </>
         )}
 

@@ -22,31 +22,6 @@ export function Services({ isVisible = true }: ServicesProps) {
   const pillsWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const section = containerRef.current;
-    if (!section || !isVisible) return;
-
-    let lastScrollY = window.scrollY;
-    let rafId = 0;
-    let pendingUp = false;
-
-    const handleScroll = () => {
-      pendingUp = window.scrollY < lastScrollY;
-      lastScrollY = window.scrollY;
-      if (rafId !== 0) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = 0;
-        section.style.zIndex = pendingUp ? '50' : '0';
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      if (rafId !== 0) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [isVisible]);
-
-  useEffect(() => {
     const header = headerRef.current;
     const pills = pillsWrapRef.current;
     if (!header || !pills) return;

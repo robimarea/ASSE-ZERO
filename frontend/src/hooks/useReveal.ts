@@ -27,8 +27,8 @@ export function useReveal(options: UseRevealOptions = {}) {
   return { ref, isRevealed };
 }
 
-/** Philosophy: reveal quando il curtain è uscito, hide quando torna a coprire (scroll su) */
-export function useMaskCurtainReveal(revealRatio = 0.38, hideRatio = 0.52) {
+/** Philosophy: reveal quando il curtain è uscito (pct >= revealPct), hide quando torna a coprire (pct < hidePct) */
+export function useMaskCurtainReveal(revealPct = 0.80, hidePct = 0.76) {
   const ref = useRef<HTMLElement>(null);
   const [isRevealed, setIsRevealed] = useState(false);
 
@@ -41,16 +41,21 @@ export function useMaskCurtainReveal(revealRatio = 0.38, hideRatio = 0.52) {
     const check = () => {
       rafId = 0;
       const wrapper = el.closest('[data-mask-wrapper]');
-      const curtain = wrapper?.querySelector('[data-mask-curtain]') as HTMLElement | null;
-      if (!curtain) return;
+      if (!wrapper) return;
 
-      const bottom = curtain.getBoundingClientRect().bottom;
-      const revealY = window.innerHeight * revealRatio;
-      const hideY = window.innerHeight * hideRatio;
+      const rect = wrapper.getBoundingClientRect();
+      const wrapperH = rect.height;
+      const vh = window.innerHeight;
+      const scrollProgress = -rect.top;
+      const totalRange = wrapperH - vh;
+
+      const pct = totalRange > 0
+        ? Math.max(0, Math.min(1, scrollProgress / totalRange))
+        : 0;
 
       setIsRevealed((prev) => {
-        if (!prev && bottom <= revealY) return true;
-        if (prev && bottom > hideY) return false;
+        if (!prev && pct >= revealPct) return true;
+        if (prev && pct < hidePct) return false;
         return prev;
       });
     };
@@ -61,12 +66,15 @@ export function useMaskCurtainReveal(revealRatio = 0.38, hideRatio = 0.52) {
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', check, { passive: true });
     check();
+
     return () => {
       if (rafId !== 0) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', check);
     };
-  }, [revealRatio, hideRatio]);
+  }, [revealPct, hidePct]);
 
   return { ref, isRevealed };
 }

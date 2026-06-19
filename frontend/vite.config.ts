@@ -11,7 +11,10 @@ export default defineConfig({
     },
   },
   server: {
-    host: true,
+    host: 'localhost',
+  },
+  preview: {
+    host: 'localhost',
   },
   build: {
     chunkSizeWarningLimit: 600,
