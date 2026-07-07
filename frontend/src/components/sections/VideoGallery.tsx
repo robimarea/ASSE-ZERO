@@ -62,15 +62,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
     scrollDriven: false,
   });
 
-  useEffect(() => {
-    if (!isVisible || isMobile) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' && canGoNext) goNext();
-      if (e.key === 'ArrowLeft' && canGoPrev) goPrev();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isVisible, isMobile, goNext, goPrev, canGoNext, canGoPrev]);
+
 
   useEffect(() => {
     if (prevActiveRef.current === activeIndex) return;
@@ -275,7 +267,11 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         aria-hidden="true"
       />
 
-      <div className="w-full h-full overflow-hidden bg-dark flex flex-col md:flex-row items-center justify-center relative z-[1]">
+      <div
+        data-carousel-scroll
+        className="w-full h-full overflow-hidden bg-dark flex flex-col md:flex-row items-center justify-center relative z-[1] pointer-events-auto"
+        title="Scorri per cambiare video"
+      >
 
         <div
           data-vg-cards
@@ -347,13 +343,13 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               className="sht-size-video"
             />
 
-            <div className="flex items-center justify-center gap-3 -mt-2 w-full">
+            <div className="flex items-center justify-center gap-3 -mt-2 w-full relative z-30">
               <button
                 type="button"
-                onClick={goPrev}
+                onClick={(e) => { if (!canGoPrev) return; e.stopPropagation(); goPrev(); }}
                 disabled={!canGoPrev}
                 aria-label="Video precedente"
-                className="vg-nav-btn"
+                className="vg-nav-btn cursor-target"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -372,10 +368,10 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               </div>
               <button
                 type="button"
-                onClick={goNext}
+                onClick={(e) => { if (!canGoNext) return; e.stopPropagation(); goNext(); }}
                 disabled={!canGoNext}
                 aria-label="Video successivo"
-                className="vg-nav-btn"
+                className="vg-nav-btn cursor-target"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />

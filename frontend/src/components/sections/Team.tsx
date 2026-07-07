@@ -14,6 +14,7 @@ export function Team({ isVisible = true }: TeamProps) {
   const containerRef = useRef<HTMLElement>(null);
   const isMobile = useIsMobile();
   const { textRefs, photoRefs, counterRef, goNext, goPrev, canGoNext, canGoPrev } = useScrollTeam({
+    containerRef,
     count: COUNT,
     isVisible,
   });
@@ -42,7 +43,11 @@ export function Team({ isVisible = true }: TeamProps) {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row items-stretch gap-4 md:gap-32 min-h-0 flex-1 md:flex-none">
+          <div
+            data-carousel-scroll
+            className="flex flex-col md:flex-row items-stretch gap-4 md:gap-32 min-h-0 flex-1 md:flex-none pointer-events-auto"
+            title="Scorri per cambiare profilo"
+          >
 
             {/* Testo (Bio e Ruolo) */}
             <div className="w-full md:w-5/12 relative order-2 md:order-1 min-h-0" style={{ minHeight: isMobile ? 'auto' : 'min(300px, 35vh)' }}>
@@ -67,15 +72,14 @@ export function Team({ isVisible = true }: TeamProps) {
               ))}
             </div>
 
-            {/* Foto Stack con pulsanti manuali ai lati */}
+            {/* Foto Stack con pulsanti ai lati (dentro il box, cliccabili) */}
             <div className="w-full md:w-7/12 flex items-center justify-center md:justify-end order-1 md:order-2 shrink-0 md:shrink">
-              <div className="relative w-full flex items-center justify-center md:justify-end" style={{ maxWidth: 'min(620px, 92vw)' }}>
-                
-                {/* Bottone Sinistro (Prev) fluttuante a lato */}
+              <div className="flex items-center gap-2 sm:gap-3 w-full max-w-[min(620px,92vw)]">
                 <button
-                  onClick={goPrev}
+                  type="button"
+                  onClick={(e) => { if (!canGoPrev) return; e.stopPropagation(); goPrev(); }}
                   disabled={!canGoPrev}
-                  className="absolute left-[-20px] md:left-[-32px] top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/10 flex items-center justify-center text-white bg-dark/80 backdrop-blur-sm transition-all duration-300 hover:border-[#ebdb00] hover:text-[#ebdb00] hover:shadow-[0_0_15px_rgba(235,219,0,0.25)] disabled:opacity-0 disabled:pointer-events-none active:scale-95 z-50 shadow-2xl"
+                  className="team-nav-btn cursor-target shrink-0 z-50"
                   aria-label="Profilo precedente"
                 >
                   <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -83,9 +87,8 @@ export function Team({ isVisible = true }: TeamProps) {
                   </svg>
                 </button>
 
-                {/* Stack delle Foto */}
                 <div
-                  className="team-photo-stack w-full"
+                  className="team-photo-stack flex-1 min-w-0 w-full"
                   style={{
                     maxWidth: 'min(520px, 92vw)',
                     height: isMobile ? 'min(52dvh, 420px)' : 'min(700px, 72vh)',
@@ -102,7 +105,6 @@ export function Team({ isVisible = true }: TeamProps) {
                       style={{
                         opacity: i === 0 ? 1 : 0,
                         transform: i === 0 ? 'scale(1)' : 'scale(0.97)',
-                        transition: 'opacity 0.45s ease, transform 0.45s ease',
                         padding: isMobile ? '0.75rem' : 'clamp(1.5rem, 5vw, 4rem)',
                         backgroundColor: '#363853',
                         borderRadius: '2rem',
@@ -135,11 +137,11 @@ export function Team({ isVisible = true }: TeamProps) {
                   ))}
                 </div>
 
-                {/* Bottone Destro (Next) fluttuante a lato */}
                 <button
-                  onClick={goNext}
+                  type="button"
+                  onClick={(e) => { if (!canGoNext) return; e.stopPropagation(); goNext(); }}
                   disabled={!canGoNext}
-                  className="absolute right-[-20px] md:right-[-32px] top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full border border-white/10 flex items-center justify-center text-white bg-dark/80 backdrop-blur-sm transition-all duration-300 hover:border-[#ebdb00] hover:text-[#ebdb00] hover:shadow-[0_0_15px_rgba(235,219,0,0.25)] disabled:opacity-0 disabled:pointer-events-none active:scale-95 z-50 shadow-2xl"
+                  className="team-nav-btn cursor-target shrink-0 z-50"
                   aria-label="Profilo successivo"
                 >
                   <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

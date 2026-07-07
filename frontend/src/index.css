@@ -588,6 +588,47 @@ body.video-expanded .wa-float-btn {
   cursor: not-allowed;
 }
 
+/* ── Team nav buttons ── */
+.team-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ebdb00;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    opacity 0.25s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease,
+    color 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.team-nav-btn:hover:not(:disabled) {
+  background: rgba(169, 15, 33, 0.45);
+  border-color: rgba(235, 219, 0, 0.4);
+  color: #ebdb00;
+  transform: scale(1.15);
+  box-shadow: 0 0 20px rgba(169, 15, 33, 0.5), 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.team-nav-btn:active:not(:disabled) {
+  transform: scale(0.92);
+  transition-duration: 0.1s;
+}
+
+.team-nav-btn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+  color: rgba(235, 219, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
 /* ── Mobile responsive overrides ── */
 
 /* VideoGallery nav: touch target minimo 44px (WCAG) su mobile */
@@ -595,6 +636,22 @@ body.video-expanded .wa-float-btn {
   .vg-nav-btn {
     width: 2.75rem;
     height: 2.75rem;
+  }
+
+  .team-nav-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .team-nav-btn {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .team-nav-btn:hover:not(:disabled) {
+    transform: scale(1.18);
   }
 }
 

@@ -34,15 +34,29 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     }
   }, [isVisible]);
 
-  // Drive play/pause from section visibility
-  useEffect(() => {
+  const syncPlayback = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !shouldLoad) return;
+
     if (isVisible) {
       if (!isExpanded) setMuted(true);
-      play();
+      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        void play();
+      }
     } else {
       pause();
     }
-  }, [isVisible, isExpanded, play, pause, setMuted]);
+  }, [shouldLoad, isVisible, isExpanded, play, pause, setMuted]);
+
+  // Drive play/pause from section visibility (after src is assigned)
+  useEffect(() => {
+    syncPlayback();
+  }, [syncPlayback]);
+
+  const onVideoLoadedMetadata = useCallback(() => {
+    handleLoadedMetadata();
+    syncPlayback();
+  }, [handleLoadedMetadata, syncPlayback]);
 
   const releaseCursor = useCallback(() => {
     document.querySelectorAll('.cursor-target').forEach((el) => {
@@ -103,7 +117,7 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
           loop
           muted={isMuted}
           onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
+          onLoadedMetadata={onVideoLoadedMetadata}
           onClick={isExpanded ? togglePlay : undefined}
           style={{ backfaceVisibility: 'hidden', transform: 'translate3d(0,0,0)' }}
           className={`w-full h-full select-none transition-all duration-700 ${

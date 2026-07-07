@@ -1,13 +1,15 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { clamp } from '@/lib/math';
+import { attachCarouselWheelWhenReady } from '@/lib/carouselWheel';
 
 interface Options {
+  containerRef: React.RefObject<HTMLElement | null>;
   count: number;
   isVisible: boolean;
 }
 
-export function useScrollTeam({ count, isVisible }: Options) {
+export function useScrollTeam({ containerRef, count, isVisible }: Options) {
   const textRefs       = useRef<(HTMLDivElement | null)[]>([]);
   const photoRefs      = useRef<(HTMLDivElement | null)[]>([]);
   const counterRef     = useRef<HTMLSpanElement | null>(null);
@@ -116,6 +118,19 @@ export function useScrollTeam({ count, isVisible }: Options) {
       travelTweenRef.current?.kill();
     };
   }, [applyTravel, isVisible]);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    return attachCarouselWheelWhenReady(containerRef.current, {
+      count,
+      getTravel: () => travelRef.current,
+      getActiveIndex: () => activeIndexRef.current,
+      goToIndex,
+    });
+  }, [isVisible, containerRef, count, goToIndex]);
+
+
 
   return {
     textRefs,

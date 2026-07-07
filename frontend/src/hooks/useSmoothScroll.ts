@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import Lenis from 'lenis';
+import { notifyScroll } from '@/lib/scrollBridge';
 
 export function useSmoothScroll() {
   useEffect(() => {
@@ -9,7 +10,10 @@ export function useSmoothScroll() {
       smoothWheel: true,
       wheelMultiplier: 0.55,
       touchMultiplier: 1.2,
+      prevent: (node) => node instanceof Element && Boolean(node.closest('[data-carousel-scroll]')),
     });
+
+    lenis.on('scroll', notifyScroll);
 
     let rafId = 0;
     const raf = (time: number) => {
