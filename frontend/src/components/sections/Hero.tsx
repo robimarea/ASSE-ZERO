@@ -6,7 +6,7 @@
 // ============================================
 
 import { useEffect, useState, Suspense, lazy } from 'react';
-import { SECTION_IDS } from '@/lib/constants';
+import { SECTION_IDS, EASE_EXPO as EXPO } from '@/lib/constants';
 import { Viewport } from '@/components/layout/Viewport';
 
 // Three.js + Logo3D finiscono in un chunk JS separato (vendor-three + Logo3D)
@@ -14,8 +14,6 @@ import { Viewport } from '@/components/layout/Viewport';
 const Logo3D = lazy(() =>
   import('@/components/Logo3D').then((m) => ({ default: m.Logo3D }))
 );
-
-const EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
 // Placeholder: stesse dimensioni del canvas 3D — zero layout shift durante il caricamento
 function LogoPlaceholder() {
@@ -88,7 +86,6 @@ export function Hero() {
         <div style={{ overflow: 'hidden', marginTop: '1.1rem' }}>
           <p
             style={{
-              fontFamily: "'Satoshi', sans-serif",
               fontWeight: 300,
               fontSize: 'clamp(0.7rem, 1.4vw, 0.95rem)',
               letterSpacing: '0.38em',

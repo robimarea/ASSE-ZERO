@@ -189,13 +189,12 @@ export function useScrollCards({
     travelProxy.current.value = travelRef.current;
     applyTravel(travelRef.current);
 
+    const handleResize = () => { updateMetrics(); handleScroll(); };
+
     let offLenisScroll = () => {};
     if (scrollDriven) {
       window.addEventListener('scroll', handleScroll, { passive: true });
-      window.addEventListener('resize', () => {
-        updateMetrics();
-        handleScroll();
-      }, { passive: true });
+      window.addEventListener('resize', handleResize, { passive: true });
       offLenisScroll = onScrollSync(handleScroll);
       syncFromPageScroll();
     }
@@ -215,7 +214,10 @@ export function useScrollCards({
       travelTweenRef.current?.kill();
       offLenisScroll();
       detachWheel();
-      if (scrollDriven) window.removeEventListener('scroll', handleScroll);
+      if (scrollDriven) {
+        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', handleResize);
+      }
       paraObserver?.disconnect();
     };
   }, [isVisible, containerRef, count, paragraphRef, scrollDriven, applyTravel, goToIndex]);

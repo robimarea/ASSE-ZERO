@@ -18,11 +18,9 @@ export function useActiveSection(): string {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        }
+        const intersecting = entries.filter(e => e.isIntersecting);
+        const last = intersecting[intersecting.length - 1];
+        if (last) setActiveSection(last.target.id);
       },
       {
         rootMargin: '-40% 0px -40% 0px',

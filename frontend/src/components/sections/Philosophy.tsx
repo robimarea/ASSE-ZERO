@@ -1,7 +1,5 @@
 import { useMaskCurtainReveal } from '@/hooks/useReveal';
-
-const EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
-const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+import { EASE_EXPO as EXPO, EASE_SPRING as SPRING } from '@/lib/constants';
 
 export function Philosophy() {
   const { ref, isRevealed } = useMaskCurtainReveal();
@@ -15,7 +13,6 @@ export function Philosophy() {
     <section ref={ref} className="w-full h-screen bg-dark flex flex-col items-center justify-center px-6 md:px-16 lg:px-24 overflow-hidden">
       <h2
         style={{
-          fontFamily: "'Nohemi', sans-serif",
           fontWeight: 900,
           fontSize: 'clamp(4.5rem, 11vw, 10rem)',
           lineHeight: 0.97,

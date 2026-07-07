@@ -177,7 +177,7 @@ export function VideoLightbox({ item, itemIndex, onClose, originRect }: Props) {
               </p>
               <h3
                 className="text-white font-black tracking-tighter italic leading-none"
-                style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(2rem, 6vw, 4rem)' }}
+                style={{ fontSize: 'clamp(2rem, 6vw, 4rem)' }}
               >
                 {item.title}
               </h3>

@@ -28,9 +28,8 @@ export function Team({ isVisible = true }: TeamProps) {
             <h2
               className="tracking-tighter leading-none"
               style={{
-                fontFamily: "'Nohemi', sans-serif",
                 fontSize: isMobile ? 'clamp(1.85rem, 8vw, 2.35rem)' : 'clamp(2.5rem, 7vw, 5rem)',
-                color: '#ebdb00',
+                color: 'var(--color-primary)',
               }}
             >
               IL NOSTRO TEAM
@@ -60,7 +59,7 @@ export function Team({ isVisible = true }: TeamProps) {
                 >
                   <div className="mb-4 md:mb-10">
                     <p className="text-primary text-xs md:text-sm tracking-[0.35em] md:tracking-[0.4em] uppercase font-black mb-2 md:mb-3">RUOLO:</p>
-                    <p className="text-white font-black uppercase" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.25rem, 3vw, 3rem)', letterSpacing: '0.05em', lineHeight: 1.1 }}>
+                    <p className="text-white font-heading font-black uppercase" style={{ fontSize: 'clamp(1.25rem, 3vw, 3rem)', letterSpacing: '0.05em', lineHeight: 1.1 }}>
                       {m.role}
                     </p>
                   </div>
@@ -112,7 +111,7 @@ export function Team({ isVisible = true }: TeamProps) {
                       }}
                     >
                       <div className="mb-3 md:mb-10 shrink-0">
-                        <h3 className="font-black tracking-tighter" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.5rem, 3.2vw, 2.8rem)', lineHeight: 0.9, color: '#ebdb00' }}>
+                        <h3 className="font-black tracking-tighter" style={{ fontSize: 'clamp(1.5rem, 3.2vw, 2.8rem)', lineHeight: 0.9, color: 'var(--color-primary)' }}>
                           {m.name.split(' ')[0]}<br />
                           <span>{m.name.split(' ').slice(1).join(' ')}</span>
                         </h3>
@@ -128,7 +127,7 @@ export function Team({ isVisible = true }: TeamProps) {
                           )
                           : (
                             <div className="w-full h-full flex items-center justify-center bg-white">
-                              <span className="text-black/10 font-black select-none" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '12rem', lineHeight: 1 }}>{m.name.charAt(0)}</span>
+                              <span className="text-black/10 font-heading font-black select-none" style={{ fontSize: '12rem', lineHeight: 1 }}>{m.name.charAt(0)}</span>
                             </div>
                           )}
                         <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-transparent opacity-50" />

@@ -24,16 +24,6 @@ export function useVideoPlayer({
   const [showControls, setShowControls] = useState(true);
   const durationRef = useRef(0);
 
-  const reset = useCallback(() => {
-    setIsPlaying(false);
-    setProgress(0);
-    setCurrentTime(0);
-    setDuration(0);
-    durationRef.current = 0;
-    setIsLoading(true);
-    setShowControls(true);
-  }, []);
-
   const play = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
@@ -127,6 +117,5 @@ export function useVideoPlayer({
     isPlaying, isMuted, progress, currentTime, duration, isLoading, showControls,
     play, pause, togglePlay, toggleMute, setMuted,
     handleTimeUpdate, handleLoadedMetadata, handleTimelineClick,
-    reset,
   };
 }

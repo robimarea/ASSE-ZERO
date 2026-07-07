@@ -52,6 +52,10 @@ export function MaskChangeUI({
   useEffect(() => {
     let lastScrollY = window.scrollY;
     let rafId = 0;
+    let vh = window.innerHeight;
+
+    /* Cache della linea neon — elemento statico, non viene mai ricreato */
+    const lineEl = wrapperRef.current?.querySelector<HTMLDivElement>('[data-wipe-line="true"]') ?? null;
 
     const handleScroll = () => {
       const wrapper  = wrapperRef.current;
@@ -61,7 +65,6 @@ export function MaskChangeUI({
 
       const rect            = wrapper.getBoundingClientRect();
       const wrapperH        = rect.height;
-      const vh              = window.innerHeight;
       const pendingUp       = window.scrollY < lastScrollY;
       lastScrollY           = window.scrollY;
 
@@ -76,9 +79,6 @@ export function MaskChangeUI({
       wrapper.style.zIndex = pendingUp
         ? String(MAX_LAYERS + layerOrder)
         : String(layerOrder);
-
-      /* Linea neon decorativa (dentro il singolo sticky) */
-      const lineEl = wrapper.querySelector<HTMLDivElement>('[data-wipe-line="true"]');
 
       /* ── PRIMO LAYER: Hero → Showreel ──
        * Nessun wipe-in: la curtain è visibile dall'inizio.
@@ -199,14 +199,16 @@ export function MaskChangeUI({
       rafId = requestAnimationFrame(() => { rafId = 0; handleScroll(); });
     };
 
+    const onResize = () => { vh = window.innerHeight; handleScroll(); };
+
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
     handleScroll(); // Calcolo sincrono iniziale
 
     return () => {
       if (rafId !== 0) cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', handleScroll);
+      window.removeEventListener('resize', onResize);
     };
   }, [layerOrder, isFirstLayer]);
 
@@ -239,10 +241,9 @@ export function MaskChangeUI({
           className="absolute inset-0 w-full h-full"
           style={{
             zIndex: zIndex - 1,
-            /* Stato iniziale: primo layer mostra children solo durante wipe-out;
-               gli altri partono nascosti finché il curtain non si apre. */
-            opacity:    isFirstLayer ? '0' : '0',
-            visibility: isFirstLayer ? 'hidden' : 'hidden',
+            /* Stato iniziale: nascosti finché il curtain non si apre. */
+            opacity:    '0',
+            visibility: 'hidden',
           }}
         >
           {children}

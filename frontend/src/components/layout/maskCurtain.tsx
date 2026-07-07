@@ -1,6 +1,7 @@
 import { forwardRef, type ComponentPropsWithoutRef, type ReactNode, type CSSProperties } from 'react';
+import { EASE_EXPO } from '@/lib/constants';
 
-export const MASK_EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)';
+export const MASK_EXPO = EASE_EXPO;
 
 type RevealProps = {
   isRevealed: boolean;

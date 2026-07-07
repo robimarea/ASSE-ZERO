@@ -17,7 +17,6 @@ interface ServicesProps {
 }
 
 export function Services({ isVisible = true }: ServicesProps) {
-  const containerRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const pillsWrapRef = useRef<HTMLDivElement>(null);
 
@@ -46,7 +45,6 @@ export function Services({ isVisible = true }: ServicesProps) {
 
   return (
     <section
-      ref={containerRef}
       className="relative w-full z-0 bg-dark h-screen flex items-center justify-center overflow-hidden"
     >
       <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center py-6 md:py-10">

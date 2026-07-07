@@ -157,8 +157,8 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
           <div className="pb-1 text-right">
             <span
               ref={mobileCounterRef}
-              className="font-black block leading-none counter-flash"
-              style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '2.5rem', color: 'rgba(255,255,255,0.1)' }}
+              className="font-heading font-black block leading-none counter-flash"
+              style={{ fontSize: '2.5rem', color: 'rgba(255,255,255,0.1)' }}
             >
               01
             </span>
@@ -190,7 +190,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
                 onClick={(e) => openExpanded(index, e.currentTarget)}
               >
                 <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/85 via-black/20 to-black/35" />
-                <span className="absolute top-2 right-3 font-black select-none pointer-events-none" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '5rem', lineHeight: 1, color: 'rgba(255,255,255,0.05)' }}>
+                <span className="absolute top-2 right-3 font-heading font-black select-none pointer-events-none" style={{ fontSize: '5rem', lineHeight: 1, color: 'rgba(255,255,255,0.05)' }}>
                   {formatIndex(index)}
                 </span>
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full flex items-center justify-center z-10 pointer-events-none" style={{ backgroundColor: '#a90f21', boxShadow: '0 8px 24px rgba(169,15,33,0.5)' }}>
@@ -198,7 +198,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
                 </div>
                 <div className="absolute bottom-5 left-4 pointer-events-none">
                   <span className="text-[10px] font-black uppercase tracking-[0.3em] block mb-1" style={{ color: '#a90f21' }}>{item.subtitle}</span>
-                  <h3 className="text-white font-black leading-none tracking-tighter italic" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: '1.3rem' }}>{item.title}</h3>
+                  <h3 className="text-white font-black leading-none tracking-tighter italic" style={{ fontSize: '1.3rem' }}>{item.title}</h3>
                 </div>
               </div>
             </div>
@@ -233,7 +233,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         </div>
 
         <div className="px-5 mt-4 pb-8 flex-1 overflow-hidden">
-          <div className="text-sm leading-relaxed space-y-2" style={{ color: 'rgba(237,242,244,0.6)', fontFamily: "'Satoshi', sans-serif" }}>
+          <div className="text-sm leading-relaxed space-y-2" style={{ color: 'rgba(237,242,244,0.6)' }}>
             {VIDEO_DESCRIPTION.map((text, idx) => <p key={idx} dangerouslySetInnerHTML={{ __html: text }} />)}
           </div>
         </div>
@@ -291,8 +291,8 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               >
                 <span
                   ref={(el) => { numberRefs.current[index] = el; }}
-                  className="absolute top-3 right-5 font-black select-none pointer-events-none z-[2] transition-[opacity,transform] duration-150"
-                  style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(4rem, 10vw, 7rem)', lineHeight: 1, color: 'rgba(255,255,255,0.08)' }}
+                  className="absolute top-3 right-5 font-heading font-black select-none pointer-events-none z-[2] transition-[opacity,transform] duration-150"
+                  style={{ fontSize: 'clamp(4rem, 10vw, 7rem)', lineHeight: 1, color: 'rgba(255,255,255,0.08)' }}
                   aria-hidden="true"
                 >
                   {formatIndex(index)}
@@ -325,7 +325,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
                   style={{ opacity: 0, transform: 'translate3d(0,20px,0)' }}
                 >
                   <span className="text-xs font-black uppercase tracking-[0.35em] block mb-1" style={{ color: '#a90f21' }}>{item.subtitle}</span>
-                  <h3 className="text-white font-black tracking-tighter italic leading-none" style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.2rem, 2vw, 1.8rem)' }}>
+                  <h3 className="text-white font-black tracking-tighter italic leading-none" style={{ fontSize: 'clamp(1.2rem, 2vw, 1.8rem)' }}>
                     {item.title}
                   </h3>
                 </div>
@@ -335,7 +335,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         </div>
 
         <div className="relative w-full md:w-[50%] h-full flex flex-col justify-center items-center px-6 md:px-10 lg:px-12 z-20 py-8 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
-          <div ref={panelRef} className="rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col items-center gap-6 w-full" style={{ backgroundColor: '#2b2d42' }}>
+          <div ref={panelRef} className="rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col items-center gap-6 w-full bg-dark">
             <SectionHeroTitle
               text="Video"
               variant="video"
@@ -357,8 +357,8 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               </button>
               <div className="flex items-baseline gap-2 min-w-[5.5rem] justify-center">
                 <span
-                  className={`font-black leading-none tabular-nums transition-colors duration-300 ${counterFlash ? 'counter-flash' : ''}`}
-                  style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: '#ebdb00' }}
+                  className={`font-heading font-black leading-none tabular-nums transition-colors duration-300 ${counterFlash ? 'counter-flash' : ''}`}
+                  style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: 'var(--color-primary)' }}
                 >
                   {formatIndex(activeIndex)}
                 </span>

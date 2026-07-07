@@ -8,7 +8,7 @@ interface ShowreelProps {
 
 export function Showreel({ isVisible = true }: ShowreelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
   const hasLoadedRef = useRef(false);
 
   const [shouldLoad, setShouldLoad] = useState(false);
@@ -147,7 +147,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
               </div>
               <h2
                 className="font-heading font-black text-4xl md:text-6xl tracking-tighter uppercase italic leading-none"
-                style={{ fontFamily: "'Nohemi', sans-serif" }}
               >
                 {[
                   { text: 'PRODUZIONE', color: 'white' },
