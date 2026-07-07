@@ -4,18 +4,14 @@
 
 import { useState, useEffect } from 'react';
 import { SECTION_IDS } from '@/lib/constants';
+import { navLinks } from '@/data/navigation';
 
-/**
- * Uses IntersectionObserver to determine which section
- * is currently most visible in the viewport.
- * Returns the active section ID for navbar highlighting.
- */
+const NAV_IDS = new Set(navLinks.map((l) => l.href.replace('#', '')));
+
 export function useActiveSection(): string {
   const [activeSection, setActiveSection] = useState<string>(SECTION_IDS.home);
 
   useEffect(() => {
-    const sectionIds = Object.values(SECTION_IDS);
-
     const observer = new IntersectionObserver(
       (entries) => {
         const intersecting = entries.filter(e => e.isIntersecting);
@@ -28,7 +24,7 @@ export function useActiveSection(): string {
       }
     );
 
-    sectionIds.forEach((id) => {
+    NAV_IDS.forEach((id) => {
       const element = document.getElementById(id);
       if (element) observer.observe(element);
     });

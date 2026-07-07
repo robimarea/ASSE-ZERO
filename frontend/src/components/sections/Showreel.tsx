@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
 import { VideoPlayerControls, VideoSpinner } from '@/components/ui/VideoPlayerControls';
+import { getLenis } from '@/lib/lenis';
 
 interface ShowreelProps {
   isVisible?: boolean;
@@ -68,14 +69,20 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     releaseCursor();
     setIsExpanded(false);
     setMuted(true);
-    play();
-  }, [releaseCursor, setMuted, play]);
+    if (isVisible) play();
+  }, [releaseCursor, setMuted, play, isVisible]);
 
   const expand = useCallback(() => {
     releaseCursor();
     setIsExpanded(true);
     setMuted(false);
-    containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const el = containerRef.current;
+    if (el) {
+      const lenis = getLenis();
+      lenis
+        ? lenis.scrollTo(el, { offset: -(window.innerHeight / 2 - el.offsetHeight / 2) })
+        : el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     play();
   }, [releaseCursor, setMuted, play]);
 
