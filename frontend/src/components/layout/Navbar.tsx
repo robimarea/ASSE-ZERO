@@ -5,8 +5,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { navLinks } from '@/data/navigation';
-import DarkVeil from '@/components/DarkVeil';
 import { useActiveSection } from '@/hooks/useActiveSection';
+import { scrollToSection } from '@/lib/scrollTo';
 
 const PANEL_WIDTH = '75%';
 const EASING = 'cubic-bezier(0.76, 0, 0.24, 1)';
@@ -58,26 +58,7 @@ export function Navbar() {
 
   const handleNavClick = (href: string) => {
     close();
-    const id = href.replace('#', '');
-    setTimeout(() => {
-      if (id === 'home') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        const element = document.getElementById(id);
-        if (element) {
-          const maskWrapper = element.closest('[data-mask-wrapper="true"]');
-          if (maskWrapper) {
-            // Il curtain è alto 100vh. Scrolliamo al top del wrapper + altezza viewport
-            // in modo che il curtain venga completamente rimosso.
-            const wrapperTop = maskWrapper.getBoundingClientRect().top + window.scrollY;
-            const targetScroll = wrapperTop + window.innerHeight;
-            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
-          } else {
-            element.scrollIntoView({ behavior: 'smooth' });
-          }
-        }
-      }
-    }, 450);
+    setTimeout(() => scrollToSection(href.replace('#', '')), 450);
   };
 
   return (
@@ -103,7 +84,7 @@ export function Navbar() {
           transition: 'opacity 0.3s ease',
         }}
       >
-        <span style={{ fontFamily: "'Satoshi', sans-serif", fontWeight: 700, fontSize: '24px', color: '#edf2f4', letterSpacing: '2px', textTransform: 'uppercase' }}>Menù</span>
+        <span style={{ fontWeight: 700, fontSize: '24px', color: '#edf2f4', letterSpacing: '2px', textTransform: 'uppercase' }}>Menù</span>
       </button>
 
       {/* ── BACKDROP semitrasparente (lato sinistro) ── */}
@@ -121,7 +102,7 @@ export function Navbar() {
         aria-hidden="true"
       />
 
-      {/* ── PANNELLO OVERLAY con DarkVeil come sfondo ── */}
+      {/* ── PANNELLO OVERLAY ── */}
       <div
         style={{
           position: 'fixed',
@@ -130,6 +111,7 @@ export function Navbar() {
           width: PANEL_WIDTH,
           height: '100vh',
           zIndex: 199,
+          backgroundColor: 'var(--color-dark)',
           transform: open ? 'translateX(0%)' : 'translateX(100%)',
           transition: `transform ${DURATION} ${EASING}`,
         }}
@@ -138,31 +120,7 @@ export function Navbar() {
         aria-label="Menu di navigazione"
         aria-hidden={!open}
       >
-        {/* DarkVeil sfondo — tonalità rossa */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-          {open && (
-            <>
-              <DarkVeil
-                speed={3}
-                hueShift={211}
-                noiseIntensity={0}
-                scanlineFrequency={5}
-                scanlineIntensity={0.15}
-                warpAmount={4.3}
-              />
-              {/* Overlay blu navy */}
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'rgba(8,18,58,0.55)',
-                pointerEvents: 'none',
-              }} />
-            </>
-          )}
-        </div>
-
-        {/* Contenuto sopra DarkVeil */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           {/* Header pannello */}
           <div style={{
             display: 'flex',

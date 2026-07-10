@@ -12,9 +12,10 @@ interface ContactHoverCardProps {
 }
 
 export function ContactHoverCard({ children, className = '' }: ContactHoverCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>(0);
-  const isMobile = useIsMobile();
+  const cardRef      = useRef<HTMLDivElement>(null);
+  const rafRef       = useRef<number>(0);
+  const leaveTimerId = useRef<number>(0);
+  const isMobile     = useIsMobile();
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -32,11 +33,12 @@ export function ContactHoverCard({ children, className = '' }: ContactHoverCardP
 
   const handleMouseLeave = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    window.clearTimeout(leaveTimerId.current);
     const card = cardRef.current;
     if (!card) return;
     card.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
     card.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';
-    setTimeout(() => { if (card) card.style.transition = ''; }, 500);
+    leaveTimerId.current = window.setTimeout(() => { card.style.transition = ''; }, 500);
   };
 
   return (

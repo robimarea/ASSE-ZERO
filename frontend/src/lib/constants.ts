@@ -3,9 +3,6 @@
 // ============================================
 
 export const SITE_NAME = 'ASSE ZERO';
-export const SITE_TAGLINE = 'Produzione Video & Social Media Management';
-export const SITE_DESCRIPTION =
-  'ASSE ZERO è un team creativo specializzato in produzione video professionale e social media management. Strategia, produzione e gestione completa per il tuo brand.';
 export const SITE_URL = 'https://assezero.com';
 
 export const SECTION_IDS = {
@@ -22,6 +19,10 @@ export const CONTACT_EMAIL = 'assezeroinfo@gmail.com';
 export const WHATSAPP_NUMBER = '393492425835'; // formato internazionale senza +
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Ciao ASSE ZERO! Vorrei parlarvi di un progetto.')}`;
 export const INSTAGRAM_URL = 'https://www.instagram.com/assezero?igsh=MTFsMDFmb2drcmQxMg==';
+
+// ── Easing condivisi ───────────────────────────────────────────────────────
+export const EASE_EXPO   = 'cubic-bezier(0.16, 1, 0.3, 1)';
+export const EASE_SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
 // ── Endpoint form contatti (Web3Forms — gratuito, invia a qualsiasi Gmail) ──
 // Registra l'email su https://web3forms.com/ e ricevi il tuo access_key.

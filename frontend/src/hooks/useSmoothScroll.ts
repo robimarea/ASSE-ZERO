@@ -1,15 +1,11 @@
 import { useEffect } from 'react';
-import Lenis from 'lenis';
+import { createLenis, destroyLenis } from '@/lib/lenis';
+import { notifyScroll } from '@/lib/scrollBridge';
 
 export function useSmoothScroll() {
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.8,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-      wheelMultiplier: 0.55,
-      touchMultiplier: 1.2,
-    });
+    const lenis = createLenis();
+    lenis.on('scroll', notifyScroll);
 
     let rafId = 0;
     const raf = (time: number) => {
@@ -20,7 +16,7 @@ export function useSmoothScroll() {
 
     return () => {
       cancelAnimationFrame(rafId);
-      lenis.destroy();
+      destroyLenis();
     };
   }, []);
 }

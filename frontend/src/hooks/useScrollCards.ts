@@ -1,26 +1,26 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { clamp } from '@/lib/math';
+import { onScrollSync } from '@/lib/scrollBridge';
+import { attachCarouselWheelWhenReady } from '@/lib/carouselWheel';
 
 interface Options {
   containerRef: React.RefObject<HTMLElement | null>;
   count: number;
   isVisible: boolean;
   paragraphRef?: React.RefObject<HTMLDivElement | null>;
-  /** Se true, il carosello segue lo scroll della pagina (es. team). Se false, controlli + rotella sulla zona card */
+  /** Se true, il carosello segue lo scroll della pagina. Default: rotella/controlli nella zona locale */
   scrollDriven?: boolean;
 }
 
 const TRAVEL_TWEEN_DURATION = 0.92;
-const WHEEL_SENSITIVITY = 0.00048;
-const MAX_WHEEL_STEP = 0.055;
 
 export function useScrollCards({
   containerRef,
   count,
   isVisible,
   paragraphRef,
-  scrollDriven = true,
+  scrollDriven = false,
 }: Options) {
   const cardRefs       = useRef<(HTMLElement | null)[]>([]);
   const overlayRefs    = useRef<(HTMLElement | null)[]>([]);
@@ -148,6 +148,7 @@ export function useScrollCards({
     const syncFromPageScroll = () => {
       frameId = 0;
       if (!containerRef.current) return;
+      travelTweenRef.current?.kill();
       const scrollable  = Math.max(1, sHeight - window.innerHeight * 2);
       const scrolled    = Math.max(0, window.scrollY - sTop - window.innerHeight);
       const scrollProg  = clamp(scrolled / scrollable, 0, 1);
@@ -163,33 +164,6 @@ export function useScrollCards({
       if (vb < sTop || window.scrollY > sTop + sHeight) return;
       if (frameId !== 0) return;
       frameId = requestAnimationFrame(syncFromPageScroll);
-    };
-
-    const wheelDelta = (e: WheelEvent) => {
-      let delta = e.deltaY;
-      if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) delta *= 16;
-      else if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) delta *= window.innerHeight * 0.85;
-      return delta;
-    };
-
-    const handleCardWheel = (e: Event) => {
-      if (!(e instanceof WheelEvent)) return;
-      const rawDelta = wheelDelta(e);
-      const travel = travelRef.current;
-      const atStart = travel <= 0.01;
-      const atEnd = travel >= count - 1 - 0.01;
-
-      if ((rawDelta > 0 && atEnd) || (rawDelta < 0 && atStart)) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      travelTweenRef.current?.kill();
-      const step = clamp(rawDelta * WHEEL_SENSITIVITY, -MAX_WHEEL_STEP, MAX_WHEEL_STEP);
-      const next = clamp(travel + step, 0, count - 1);
-      travelRef.current = next;
-      travelProxy.current.value = next;
-      applyTravel(next);
     };
 
     const paraEl = paragraphRef?.current;
@@ -215,27 +189,38 @@ export function useScrollCards({
     travelProxy.current.value = travelRef.current;
     applyTravel(travelRef.current);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', () => {
-      updateMetrics();
-      if (scrollDriven) handleScroll();
-    }, { passive: true });
+    const handleResize = () => { updateMetrics(); handleScroll(); };
 
-    if (scrollDriven) syncFromPageScroll();
+    let offLenisScroll = () => {};
+    if (scrollDriven) {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('resize', handleResize, { passive: true });
+      offLenisScroll = onScrollSync(handleScroll);
+      syncFromPageScroll();
+    }
 
-    const cardZone = !scrollDriven
-      ? containerRef.current?.querySelector('[data-vg-cards]')
-      : null;
-    cardZone?.addEventListener('wheel', handleCardWheel, { passive: false });
+    let detachWheel = () => {};
+    if (!scrollDriven) {
+      detachWheel = attachCarouselWheelWhenReady(containerRef.current, {
+        count,
+        getTravel: () => travelRef.current,
+        getActiveIndex: () => activeIndexRef.current,
+        goToIndex,
+      });
+    }
 
     return () => {
       if (frameId !== 0) cancelAnimationFrame(frameId);
       travelTweenRef.current?.kill();
-      window.removeEventListener('scroll', handleScroll);
-      cardZone?.removeEventListener('wheel', handleCardWheel);
+      offLenisScroll();
+      detachWheel();
+      if (scrollDriven) {
+        window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', handleResize);
+      }
       paraObserver?.disconnect();
     };
-  }, [isVisible, containerRef, count, paragraphRef, scrollDriven, applyTravel]);
+  }, [isVisible, containerRef, count, paragraphRef, scrollDriven, applyTravel, goToIndex]);
 
   return {
     cardRefs,

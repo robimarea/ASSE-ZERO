@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
 import { VideoPlayerControls, VideoSpinner } from '@/components/ui/VideoPlayerControls';
+import { getLenis } from '@/lib/lenis';
 
 interface ShowreelProps {
   isVisible?: boolean;
@@ -8,7 +9,7 @@ interface ShowreelProps {
 
 export function Showreel({ isVisible = true }: ShowreelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
   const hasLoadedRef = useRef(false);
 
   const [shouldLoad, setShouldLoad] = useState(false);
@@ -34,15 +35,29 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     }
   }, [isVisible]);
 
-  // Drive play/pause from section visibility
-  useEffect(() => {
+  const syncPlayback = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !shouldLoad) return;
+
     if (isVisible) {
       if (!isExpanded) setMuted(true);
-      play();
+      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        void play();
+      }
     } else {
       pause();
     }
-  }, [isVisible, isExpanded, play, pause, setMuted]);
+  }, [shouldLoad, isVisible, isExpanded, play, pause, setMuted]);
+
+  // Drive play/pause from section visibility (after src is assigned)
+  useEffect(() => {
+    syncPlayback();
+  }, [syncPlayback]);
+
+  const onVideoLoadedMetadata = useCallback(() => {
+    handleLoadedMetadata();
+    syncPlayback();
+  }, [handleLoadedMetadata, syncPlayback]);
 
   const releaseCursor = useCallback(() => {
     document.querySelectorAll('.cursor-target').forEach((el) => {
@@ -54,14 +69,20 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     releaseCursor();
     setIsExpanded(false);
     setMuted(true);
-    play();
-  }, [releaseCursor, setMuted, play]);
+    if (isVisible) play();
+  }, [releaseCursor, setMuted, play, isVisible]);
 
   const expand = useCallback(() => {
     releaseCursor();
     setIsExpanded(true);
     setMuted(false);
-    containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const el = containerRef.current;
+    if (el) {
+      const lenis = getLenis();
+      lenis
+        ? lenis.scrollTo(el, { offset: -(window.innerHeight / 2 - el.offsetHeight / 2) })
+        : el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     play();
   }, [releaseCursor, setMuted, play]);
 
@@ -86,10 +107,11 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
 
       <div
         style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+        onClick={!isExpanded ? expand : undefined}
         className={`relative transition-all duration-700 bg-black overflow-hidden group ${
           isExpanded
             ? 'fixed inset-0 w-screen h-[100dvh] z-[999] rounded-none border-none'
-            : 'w-[90vw] md:w-[75vw] lg:w-[65vw] aspect-video rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] hover:border-[#a90f21]/25 pointer-events-auto'
+            : 'w-[90vw] md:w-[75vw] lg:w-[65vw] aspect-video rounded-[2rem] border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] hover:border-[#a90f21]/25 pointer-events-auto cursor-pointer'
         }`}
       >
         {isLoading && <VideoSpinner />}
@@ -102,8 +124,8 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
           loop
           muted={isMuted}
           onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onClick={isExpanded ? togglePlay : expand}
+          onLoadedMetadata={onVideoLoadedMetadata}
+          onClick={isExpanded ? togglePlay : undefined}
           style={{ backfaceVisibility: 'hidden', transform: 'translate3d(0,0,0)' }}
           className={`w-full h-full select-none transition-all duration-700 ${
             isExpanded
@@ -132,7 +154,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
               </div>
               <h2
                 className="font-heading font-black text-4xl md:text-6xl tracking-tighter uppercase italic leading-none"
-                style={{ fontFamily: "'Nohemi', sans-serif" }}
               >
                 {[
                   { text: 'PRODUZIONE', color: 'white' },
@@ -153,17 +174,6 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
                 ))}
               </h2>
             </div>
-            <button
-              onClick={expand}
-              aria-label="Avvia video in modalità cinema"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-26 md:h-26 rounded-full flex items-center justify-center shadow-[0_15px_40px_rgba(169,15,33,0.45)] hover:shadow-[0_20px_50px_rgba(169,15,33,0.65)] transition-all duration-500 hover:scale-108 active:scale-95 group/btn cursor-target z-10"
-              style={{ backgroundColor: '#a90f21' }}
-            >
-              <svg className="w-8 h-8 md:w-9 md:h-9 text-white fill-current translate-x-0.5 group-hover/btn:scale-105 transition-transform duration-300" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              <div className="absolute inset-0 rounded-full border border-[#a90f21]/40 animate-ping" style={{ animationDuration: '2.5s' }} />
-            </button>
           </>
         )}
 

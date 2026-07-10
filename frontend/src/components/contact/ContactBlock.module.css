@@ -260,3 +260,11 @@
     margin-top: 0.25rem;
   }
 }
+
+/* ── Extra-small (< 480px): stack nome + email ── */
+@media (max-width: 480px) {
+  .row {
+    flex-direction: column;
+    gap: 0;
+  }
+}

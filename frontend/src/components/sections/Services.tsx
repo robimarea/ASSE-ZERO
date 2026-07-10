@@ -17,34 +17,8 @@ interface ServicesProps {
 }
 
 export function Services({ isVisible = true }: ServicesProps) {
-  const containerRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const pillsWrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const section = containerRef.current;
-    if (!section || !isVisible) return;
-
-    let lastScrollY = window.scrollY;
-    let rafId = 0;
-    let pendingUp = false;
-
-    const handleScroll = () => {
-      pendingUp = window.scrollY < lastScrollY;
-      lastScrollY = window.scrollY;
-      if (rafId !== 0) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = 0;
-        section.style.zIndex = pendingUp ? '50' : '0';
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      if (rafId !== 0) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [isVisible]);
 
   useEffect(() => {
     const header = headerRef.current;
@@ -71,7 +45,6 @@ export function Services({ isVisible = true }: ServicesProps) {
 
   return (
     <section
-      ref={containerRef}
       className="relative w-full z-0 bg-dark h-screen flex items-center justify-center overflow-hidden"
     >
       <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center py-6 md:py-10">

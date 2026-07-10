@@ -50,7 +50,7 @@ export function VideoPlayerControls({
           {title && (
             <h3
               className="text-white font-black tracking-tighter italic leading-none"
-              style={{ fontFamily: "'Nohemi', sans-serif", fontSize: 'clamp(1.1rem, 2vw, 1.7rem)' }}
+              style={{ fontSize: 'clamp(1.1rem, 2vw, 1.7rem)' }}
             >
               {title}
             </h3>
