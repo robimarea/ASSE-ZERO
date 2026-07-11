@@ -21,6 +21,7 @@ function formatIndex(n: number) {
 export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   const playerRef    = useRef<HTMLDivElement>(null);
   const videoRef     = useRef<HTMLVideoElement>(null);
+  const stripRef     = useRef<HTMLDivElement>(null);
   const hasLoadedRef = useRef(false);
 
   const [shouldLoad, setShouldLoad]       = useState(false);
@@ -48,6 +49,31 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
       video.pause();
     }
   }, [shouldLoad, isVisible, expandedIndex, activeIndex]);
+
+  // Cambia video e centra la sua thumbnail nella barra orizzontale
+  const goTo = useCallback((index: number) => {
+    const clamped = Math.max(0, Math.min(VIDEO_ITEMS.length - 1, index));
+    setActiveIndex(clamped);
+    const strip = stripRef.current;
+    const thumb = strip?.children[clamped] as HTMLElement | undefined;
+    if (strip && thumb) {
+      strip.scrollTo({
+        left: thumb.offsetLeft - (strip.clientWidth - thumb.clientWidth) / 2,
+        behavior: 'smooth',
+      });
+    }
+  }, []);
+
+  // Tasti freccia ← → : scorrono i video (con lightbox chiusa)
+  useEffect(() => {
+    if (!isVisible || expandedIndex !== null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); goTo(activeIndex + 1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(activeIndex - 1); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isVisible, expandedIndex, activeIndex, goTo]);
 
   const openExpanded = useCallback(() => {
     setLightboxOrigin(playerRef.current?.getBoundingClientRect() ?? null);
@@ -164,18 +190,32 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
           </a>
         </div>
 
-        {/* ── Barra orizzontale: thumbnail scorrevoli ── */}
-        <div
-          className="mt-4 md:mt-5 flex gap-3 overflow-x-auto scrollbar-hidden snap-x pb-1"
-          style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain' }}
-        >
+        {/* ── Barra orizzontale: thumbnail scorrevoli con frecce ── */}
+        <div className="mt-4 md:mt-5 flex items-center gap-2 md:gap-3">
+          <button
+            type="button"
+            onClick={() => goTo(activeIndex - 1)}
+            disabled={activeIndex === 0}
+            aria-label="Video precedente"
+            className="vg-nav-btn cursor-target shrink-0"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          <div
+            ref={stripRef}
+            className="flex-1 min-w-0 flex gap-3 overflow-x-auto scrollbar-hidden snap-x pb-1"
+            style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain' }}
+          >
           {VIDEO_ITEMS.map((item, i) => {
             const isActive = i === activeIndex;
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setActiveIndex(i)}
+                onClick={() => goTo(i)}
                 aria-label={`Mostra ${item.title}`}
                 aria-current={isActive}
                 className={`cursor-target relative shrink-0 snap-start w-36 md:w-44 aspect-video rounded-xl overflow-hidden border transition-all duration-300 ${
@@ -200,6 +240,19 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
               </button>
             );
           })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => goTo(activeIndex + 1)}
+            disabled={activeIndex === VIDEO_ITEMS.length - 1}
+            aria-label="Video successivo"
+            className="vg-nav-btn cursor-target shrink-0"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
 
       </div>
