@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useVideoPlayer } from '@/hooks/useVideoPlayer';
 import { VideoPlayerControls, VideoSpinner } from '@/components/ui/VideoPlayerControls';
 import { getLenis } from '@/lib/lenis';
+import { getViewportHeight } from '@/lib/viewport';
 
 interface ShowreelProps {
   isVisible?: boolean;
@@ -79,9 +80,8 @@ export function Showreel({ isVisible = true }: ShowreelProps) {
     const el = containerRef.current;
     if (el) {
       const lenis = getLenis();
-      lenis
-        ? lenis.scrollTo(el, { offset: -(window.innerHeight / 2 - el.offsetHeight / 2) })
-        : el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (lenis) lenis.scrollTo(el, { offset: -(getViewportHeight() / 2 - el.offsetHeight / 2) });
+      else el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     play();
   }, [releaseCursor, setMuted, play]);

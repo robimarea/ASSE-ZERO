@@ -109,7 +109,7 @@ export function Navbar() {
           top: 0,
           right: 0,
           width: PANEL_WIDTH,
-          height: '100vh',
+          height: '100dvh',
           zIndex: 199,
           backgroundColor: 'var(--color-dark)',
           transform: open ? 'translateX(0%)' : 'translateX(100%)',

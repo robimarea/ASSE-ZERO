@@ -1,10 +1,16 @@
 import { getLenis } from '@/lib/lenis';
+import { MASK_PHASES, scrollYForMaskProgress } from '@/lib/maskProgress';
+import { getViewportHeight } from '@/lib/viewport';
+
+function scrollToTop(top: number): void {
+  const lenis = getLenis();
+  if (lenis) lenis.scrollTo(top);
+  else window.scrollTo({ top, behavior: 'smooth' });
+}
 
 export function scrollToSection(id: string): void {
-  const lenis = getLenis();
-
   if (id === 'home') {
-    lenis ? lenis.scrollTo(0) : window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop(0);
     return;
   }
 
@@ -13,13 +19,12 @@ export function scrollToSection(id: string): void {
 
   const maskWrapper = element.closest('[data-mask-wrapper="true"]') as HTMLElement | null;
   if (maskWrapper) {
-    // Target pct=0.80 (stable-content phase): wrapperTop + 0.80 * (wrapperH - vh)
-    const wrapperTop = maskWrapper.getBoundingClientRect().top + window.scrollY;
-    const wrapperH   = maskWrapper.offsetHeight;
-    const vh         = window.innerHeight;
-    const target     = wrapperTop + 0.80 * (wrapperH - vh);
-    lenis ? lenis.scrollTo(target) : window.scrollTo({ top: target, behavior: 'smooth' });
-  } else {
-    lenis ? lenis.scrollTo(element) : element.scrollIntoView({ behavior: 'smooth' });
+    /* Atterra nella fase di contenuto stabile (dopo il wipe-out del curtain) */
+    scrollToTop(scrollYForMaskProgress(maskWrapper, MASK_PHASES.contentStable, getViewportHeight()));
+    return;
   }
+
+  const lenis = getLenis();
+  if (lenis) lenis.scrollTo(element);
+  else element.scrollIntoView({ behavior: 'smooth' });
 }

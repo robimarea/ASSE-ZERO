@@ -36,7 +36,7 @@ export function Hero() {
   return (
     <section
       id={SECTION_IDS.home}
-      className="w-full min-h-screen bg-primary text-white relative overflow-visible"
+      className="w-full min-h-dvh bg-primary text-white relative overflow-visible"
     >
       <div
         className="absolute top-0 left-0 w-full flex justify-center z-10 overflow-visible"
@@ -50,40 +50,12 @@ export function Hero() {
         </Suspense>
       </div>
 
-      <div className="relative z-0 flex flex-col items-center justify-center md:justify-end w-full min-h-screen pt-[38vh] md:pt-0 pb-10 md:pb-16">
-        <h1
-          className="uppercase font-black leading-none text-center"
-          style={{
-            fontFamily: "'Satoshi', sans-serif",
-            fontSize: 'clamp(3rem, 10vw, 8rem)',
-            textShadow: '0 0 20px rgba(0,0,0,0.2)',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            alignItems: 'flex-end',
-            gap: '0 0.22em',
-          }}
-        >
-          {['Video', '&', 'Media'].map((word, i) => (
-            <span
-              key={word}
-              style={{ overflow: 'hidden', display: 'inline-block', verticalAlign: 'bottom' }}
-            >
-              <span
-                style={{
-                  display: 'inline-block',
-                  color: 'white',
-                  transform: revealed ? 'translateY(0)' : 'translateY(110%)',
-                  transition: `transform 0.85s ${EXPO} ${i * 120}ms`,
-                }}
-              >
-                {word}
-              </span>
-            </span>
-          ))}
-        </h1>
+      <div className="relative z-0 flex flex-col items-center justify-center md:justify-end w-full min-h-dvh pt-[38vh] md:pt-0 pb-10 md:pb-16">
+        {/* Il titolo "Video & Media" vive nella scena 3D (parete della stanza,
+            dietro il logo — vedi Logo3D). Qui resta solo per SEO/screen reader. */}
+        <h1 className="sr-only">Video &amp; Media — ASSE ZERO</h1>
 
-        <div style={{ overflow: 'hidden', marginTop: '1.1rem' }}>
+        <div style={{ overflow: 'hidden' }}>
           <p
             style={{
               fontWeight: 300,

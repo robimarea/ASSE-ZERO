@@ -1,11 +1,8 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { gsap } from 'gsap';
-import { VIDEO_PILLS, VIDEO_DESCRIPTION } from '@/data/services';
 import { VIDEO_ITEMS } from '@/data/videos';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useScrollCards } from '@/hooks/useScrollCards';
 import { VideoLightbox } from '@/components/ui/VideoLightbox';
-import { SectionHeroTitle } from '@/components/ui/SectionHeroTitle';
 
 interface VideoGalleryProps {
   isVisible?: boolean;
@@ -21,12 +18,8 @@ function formatIndex(n: number) {
 
 export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
   const isMobile = useIsMobile();
-  const containerRef     = useRef<HTMLElement>(null);
   const mobileCounterRef = useRef<HTMLSpanElement>(null);
   const mobileProgressRef = useRef<HTMLDivElement>(null);
-  const paragraphRef     = useRef<HTMLDivElement>(null);
-  const panelRef         = useRef<HTMLDivElement>(null);
-  const pillsWrapRef     = useRef<HTMLDivElement>(null);
   const playBtnRefs      = useRef<(HTMLDivElement | null)[]>([]);
   const prevActiveRef    = useRef(-1);
 
@@ -55,13 +48,9 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
     canGoPrev,
     canGoNext,
   } = useScrollCards({
-    containerRef,
     count: VIDEO_ITEMS.length,
     isVisible: isVisible && !isMobile,
-    paragraphRef,
-    scrollDriven: false,
   });
-
 
 
   useEffect(() => {
@@ -78,30 +67,6 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
     }
     return () => window.clearTimeout(t);
   }, [activeIndex]);
-
-  useEffect(() => {
-    if (isMobile) return;
-    const panel = panelRef.current;
-    const pills = pillsWrapRef.current;
-    if (!panel || !pills) return;
-
-    const pillEls = pills.querySelectorAll('[data-vg-pill]');
-
-    const ctx = gsap.context(() => {
-      gsap.killTweensOf(pillEls);
-      if (isVisible) {
-        gsap.fromTo(
-          pillEls,
-          { opacity: 0, y: 16 },
-          { opacity: 1, y: 0, duration: 0.5, stagger: 0.05, ease: 'power2.out', delay: 0.2 },
-        );
-      } else {
-        gsap.to(pillEls, { opacity: 0, y: -12, duration: 0.35, stagger: 0.03, ease: 'power2.in' });
-      }
-    }, panel);
-
-    return () => ctx.revert();
-  }, [isVisible, isMobile]);
 
   if (isMobile) {
     const handleCarouselScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -132,7 +97,7 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
     };
 
     return (
-      <section className="relative w-full bg-dark h-screen flex flex-col overflow-hidden">
+      <section className="relative w-full bg-dark h-dvh flex flex-col justify-center overflow-hidden">
         {expandedIndex !== null && (
           <VideoLightbox
             item={VIDEO_ITEMS[expandedIndex]}
@@ -142,18 +107,8 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
           />
         )}
 
-        <div className="px-5 pt-10 pb-4 flex items-end justify-between shrink-0">
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.35em] mb-2" style={{ color: 'rgba(255,255,255,0.25)' }}>
-              Portfolio Video
-            </p>
-            <SectionHeroTitle
-              text="Video"
-              variant="video"
-              isVisible={isVisible}
-              className="sht-size-video sht--align-start"
-            />
-          </div>
+        {/* Solo player: titolo/pill/descrizione vivono nella curtain VideoInfo */}
+        <div className="px-5 pb-4 flex items-end justify-end shrink-0">
           <div className="pb-1 text-right">
             <span
               ref={mobileCounterRef}
@@ -205,44 +160,19 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
           ))}
         </div>
 
-        <div className="mx-5 mt-3 mb-2 shrink-0 h-px overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+        <div className="mx-5 mt-3 shrink-0 h-px overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
           <div
             ref={mobileProgressRef}
             className="h-full origin-left rounded-full"
             style={{ transform: 'scaleX(0)', background: 'linear-gradient(90deg, #a90f21, #ebdb00)', transition: 'transform 0.12s linear' }}
           />
         </div>
-
-        <div className="flex flex-wrap gap-2 px-5 shrink-0 justify-center">
-          {VIDEO_PILLS.map((pill, i) => (
-            <span
-              key={pill}
-              className="shrink-0 flex items-center gap-2 border border-white/[0.07] border-l-2 border-l-[#a90f21]"
-              style={{
-                padding: '7px 12px',
-                borderRadius: '4px',
-                background: 'rgba(255,255,255,0.04)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <span className="text-[8px] font-black tabular-nums text-[#a90f21]">{formatIndex(i)}</span>
-              <span className="w-px h-2.5 shrink-0 bg-white/10" />
-              <span className="text-[10px] font-black tracking-[0.16em] uppercase text-white/55">{pill}</span>
-            </span>
-          ))}
-        </div>
-
-        <div className="px-5 mt-4 pb-8 flex-1 overflow-hidden">
-          <div className="text-sm leading-relaxed space-y-2" style={{ color: 'rgba(237,242,244,0.6)' }}>
-            {VIDEO_DESCRIPTION.map((text, idx) => <p key={idx} dangerouslySetInnerHTML={{ __html: text }} />)}
-          </div>
-        </div>
       </section>
     );
   }
 
   return (
-    <section ref={containerRef} className="relative w-full bg-dark z-0 h-screen">
+    <section className="relative w-full bg-dark z-0 h-dvh">
       {expandedIndex !== null && (
         <VideoLightbox
           item={VIDEO_ITEMS[expandedIndex]}
@@ -253,13 +183,13 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
       )}
 
       <div
-        className="absolute pointer-events-none rounded-full blur-[90px] transition-[left,opacity] duration-500 ease-out"
+        className="absolute pointer-events-none rounded-full blur-[90px] transition-opacity duration-500 ease-out"
         style={{
           width: 'min(42vw, 520px)',
           height: 'min(42vw, 520px)',
-          left: activeIndex === 0 ? '8%' : activeIndex === VIDEO_ITEMS.length - 1 ? '28%' : '18%',
-          top: '42%',
-          transform: 'translateY(-50%)',
+          left: '50%',
+          top: '46%',
+          transform: 'translate(-50%, -50%)',
           background: VIDEO_ITEMS[activeIndex]?.gradient ?? 'transparent',
           opacity: 0.14,
           zIndex: 0,
@@ -267,22 +197,15 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         aria-hidden="true"
       />
 
-      <div
-        data-carousel-scroll
-        className="w-full h-full overflow-hidden bg-dark flex flex-col md:flex-row items-center justify-center relative z-[1] pointer-events-auto"
-        title="Scorri per cambiare video"
-      >
+      {/* Solo player: titolo/pill/descrizione vivono nella curtain VideoInfo */}
+      <div className="w-full h-full overflow-hidden bg-dark flex items-center justify-center relative z-[1] pointer-events-auto">
 
-        <div
-          data-vg-cards
-          className="relative w-full md:w-[50%] h-full flex items-center justify-center shrink-0 pointer-events-auto"
-          title="Scorri per cambiare video"
-        >
+        <div className="relative w-full h-full flex items-center justify-center">
           {VIDEO_ITEMS.map((item, index) => (
             <article
               key={item.id}
               ref={(el) => { cardRefs.current[index] = el; }}
-              className="absolute w-[80vw] md:w-[32vw] aspect-video origin-center will-change-transform"
+              className="absolute w-[80vw] md:w-[42vw] aspect-video origin-center will-change-transform"
               style={{ opacity: 0, transform: 'translate3d(0, 100vh, 0)' }}
             >
               <div
@@ -334,83 +257,41 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
           ))}
         </div>
 
-        <div className="relative w-full md:w-[50%] h-full flex flex-col justify-center items-center px-6 md:px-10 lg:px-12 z-20 py-8 pointer-events-none md:pointer-events-auto mt-[40vh] md:mt-0">
-          <div ref={panelRef} className="rounded-2xl p-6 md:p-8 shadow-2xl flex flex-col items-center gap-6 w-full bg-dark">
-            <SectionHeroTitle
-              text="Video"
-              variant="video"
-              isVisible={isVisible}
-              className="sht-size-video"
-            />
-
-            <div className="flex items-center justify-center gap-3 -mt-2 w-full relative z-30">
-              <button
-                type="button"
-                onClick={(e) => { if (!canGoPrev) return; e.stopPropagation(); goPrev(); }}
-                disabled={!canGoPrev}
-                aria-label="Video precedente"
-                className="vg-nav-btn cursor-target"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                  <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <div className="flex items-baseline gap-2 min-w-[5.5rem] justify-center">
-                <span
-                  className={`font-heading font-black leading-none tabular-nums transition-colors duration-300 ${counterFlash ? 'counter-flash' : ''}`}
-                  style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: 'var(--color-primary)' }}
-                >
-                  {formatIndex(activeIndex)}
-                </span>
-                <span className="text-sm font-black tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                  / {formatIndex(VIDEO_ITEMS.length - 1)}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => { if (!canGoNext) return; e.stopPropagation(); goNext(); }}
-                disabled={!canGoNext}
-                aria-label="Video successivo"
-                className="vg-nav-btn cursor-target"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                  <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-
-            <div ref={pillsWrapRef} className="flex flex-wrap justify-center gap-2 md:gap-2.5 vg-pills-static">
-              {VIDEO_PILLS.map((pill, i) => (
-                <div
-                  key={pill}
-                  data-vg-pill
-                  className="group relative overflow-hidden cursor-default border border-white/[0.07] border-l-2 border-l-[#a90f21] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(169,15,33,0.3)]"
-                  style={{ padding: '9px 16px', borderRadius: '4px', background: 'rgba(255,255,255,0.04)' }}
-                >
-                  <span className="absolute inset-0 bg-[#a90f21] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                  <span className="relative flex items-center gap-2.5">
-                    <span className="text-[9px] font-black tabular-nums text-[#a90f21] group-hover:text-white/50 transition-colors duration-200">{formatIndex(i)}</span>
-                    <span className="w-px h-3 shrink-0 bg-white/10 group-hover:bg-white/20 transition-colors duration-200" />
-                    <span className="text-[11px] font-black tracking-[0.16em] uppercase text-white/55 group-hover:text-white transition-colors duration-200">{pill}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div ref={paragraphRef} className="flex flex-col leading-snug text-center w-full" style={{ fontSize: 'clamp(0.9rem, 1.5vw, 1.4rem)', color: '#edf2f4' }}>
-              {VIDEO_DESCRIPTION.map((text, idx) => (
-                <p
-                  key={idx}
-                  dangerouslySetInnerHTML={{
-                    __html: text.replace(
-                      /<strong>/g,
-                      `<strong style="color:${idx === activeIndex ? '#ebdb00' : 'inherit'};transition:color 0.35s ease">`
-                    ),
-                  }}
-                />
-              ))}
-            </div>
+        {/* Controlli player: navigazione carosello */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 pointer-events-auto">
+          <button
+            type="button"
+            onClick={(e) => { if (!canGoPrev) return; e.stopPropagation(); goPrev(); }}
+            disabled={!canGoPrev}
+            aria-label="Video precedente"
+            className="vg-nav-btn cursor-target"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <div className="flex items-baseline gap-2 min-w-[5.5rem] justify-center">
+            <span
+              className={`font-heading font-black leading-none tabular-nums transition-colors duration-300 ${counterFlash ? 'counter-flash' : ''}`}
+              style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: 'var(--color-primary)' }}
+            >
+              {formatIndex(activeIndex)}
+            </span>
+            <span className="text-sm font-black tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              / {formatIndex(VIDEO_ITEMS.length - 1)}
+            </span>
           </div>
+          <button
+            type="button"
+            onClick={(e) => { if (!canGoNext) return; e.stopPropagation(); goNext(); }}
+            disabled={!canGoNext}
+            aria-label="Video successivo"
+            className="vg-nav-btn cursor-target"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+              <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
 
       </div>

@@ -15,7 +15,7 @@ export function Footer() {
     <footer
       className="bg-dark text-white w-full px-6 md:px-12 lg:px-20"
       id="footer"
-      style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+      style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
     >
       <div
         className="max-w-6xl mx-auto w-full"

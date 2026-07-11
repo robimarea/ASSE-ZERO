@@ -13,6 +13,7 @@ import { Contact } from '@/components/sections/Contact';
 import { MaskChangeUI } from '@/components/layout/MaskChange';
 import { Viewport } from '@/components/layout/Viewport';
 import { PercheScegliere } from '@/components/sections/PercheScegliere';
+import { VideoInfo } from '@/components/sections/VideoInfo';
 import { ChiSiamo } from '@/components/sections/ChiSiamo';
 import { IlNostroMetodo } from '@/components/sections/IlNostroMetodo';
 import { ScrollProgress } from '@/components/ui/ScrollProgress';
@@ -46,8 +47,8 @@ function App() {
 
         {/* ── Layer 0: Hero → Showreel ── */}
         <MaskChangeUI curtain={<Hero />} zIndex={50} layerOrder={0} extraStickyDistanceH={2.2}>
-          <ErrorBoundary fallback={<section className="min-h-screen bg-dark" />}>
-            <Suspense fallback={<section className="min-h-screen bg-dark" />}>
+          <ErrorBoundary fallback={<section className="min-h-dvh bg-dark" />}>
+            <Suspense fallback={<section className="min-h-dvh bg-dark" />}>
               <Viewport id={SECTION_IDS.showreel}>
                 {(isVisible) => <Showreel isVisible={isVisible} />}
               </Viewport>
@@ -62,8 +63,8 @@ function App() {
           </Viewport>
         </MaskChangeUI>
 
-        {/* ── Layer 2: Cover → Services ── */}
-        <MaskChangeUI curtain={<div className="w-full h-screen bg-primary" />} zIndex={40} layerOrder={2} extraStickyDistanceH={2.2} overlapPrev={true}>
+        {/* ── Layer 2: Video Info (parte testuale della sezione Video) → Services ── */}
+        <MaskChangeUI curtain={<VideoInfo />} zIndex={40} layerOrder={2} extraStickyDistanceH={2.2} overlapPrev={true}>
           <Viewport id={SECTION_IDS.smm}>
             {(isVisible) => <Services isVisible={isVisible} />}
           </Viewport>
@@ -82,15 +83,15 @@ function App() {
         </MaskChangeUI>
 
         {/* ── Layer 5: Cover → Contact ── */}
-        <MaskChangeUI curtain={<div className="w-full h-screen bg-primary" />} zIndex={25} layerOrder={5} extraStickyDistanceH={1.4} overlapPrev={true}>
+        <MaskChangeUI curtain={<div className="w-full h-dvh bg-primary" />} zIndex={25} layerOrder={5} extraStickyDistanceH={1.4} overlapPrev={true}>
           <Viewport id={SECTION_IDS.contact}>
             <Contact />
           </Viewport>
         </MaskChangeUI>
 
         {/* ── Layer 6: Cover → Footer ── */}
-        <MaskChangeUI curtain={<div className="w-full h-screen bg-primary" />} zIndex={20} layerOrder={6} extraStickyDistanceH={1.2} overlapPrev={true}>
-          <div className="bg-dark w-full flex flex-col justify-end min-h-screen">
+        <MaskChangeUI curtain={<div className="w-full h-dvh bg-primary" />} zIndex={20} layerOrder={6} extraStickyDistanceH={1.2} overlapPrev={true}>
+          <div className="bg-dark w-full flex flex-col justify-end min-h-dvh">
             <Footer />
           </div>
         </MaskChangeUI>

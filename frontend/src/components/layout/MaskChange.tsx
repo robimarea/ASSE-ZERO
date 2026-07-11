@@ -1,6 +1,72 @@
-import { useRef, useEffect, useMemo, type ReactNode } from 'react';
+import { useRef, useEffect, type ReactNode } from 'react';
+import { MASK_PHASES, getMaskProgress } from '@/lib/maskProgress';
+import { getViewportHeight } from '@/lib/viewport';
 
 const MAX_LAYERS = 60;
+const { wipeInEnd, wipeOutStart, wipeOutEnd } = MASK_PHASES;
+
+/* La linea neon sparisce poco prima del bordo della fase per non restare
+   visibile a clip ormai completato (frazione di pct, non di fase). */
+const WIPE_LINE_EPS = 0.01;
+
+const GLOW_DOWN = '0 -2px 10px rgba(169,15,33,0.6),0 0 15px 4px rgba(169,15,33,0.85),0 -10px 25px rgba(0,0,0,0.7)';
+const GLOW_UP   = '0 2px 10px rgba(169,15,33,0.6),0 0 15px 4px rgba(169,15,33,0.85),0 10px 25px rgba(0,0,0,0.7)';
+
+function setContentVisible(content: HTMLElement | null, visible: boolean) {
+  if (!content) return;
+  content.style.opacity    = visible ? '1' : '0';
+  content.style.visibility = visible ? 'visible' : 'hidden';
+}
+
+/* Curtain piena, children nascosti (fase stabile iniziale) */
+function applyCurtainFull(curtain: HTMLElement, content: HTMLElement | null, lineEl: HTMLElement | null) {
+  curtain.style.clipPath = 'inset(0% 0% 0% 0%)';
+  setContentVisible(content, false);
+  if (lineEl) lineEl.style.display = 'none';
+}
+
+/* Curtain completamente nascosta, children stabili e visibili */
+function applyCurtainHidden(curtain: HTMLElement, content: HTMLElement | null, lineEl: HTMLElement | null) {
+  curtain.style.clipPath = 'inset(0% 0% 100% 0%)';
+  setContentVisible(content, true);
+  if (lineEl) lineEl.style.display = 'none';
+}
+
+/* Curtain entra dall'alto (wipe-in, solo layer > 0) */
+function applyWipeIn(pct: number, curtain: HTMLElement, content: HTMLElement | null, lineEl: HTMLElement | null) {
+  const entryProg = pct / wipeInEnd;
+  const clipTop   = (1 - entryProg) * 100;
+  curtain.style.clipPath = `inset(${clipTop}% 0% 0% 0%)`;
+  setContentVisible(content, false);
+  if (lineEl) {
+    if (pct > WIPE_LINE_EPS) {
+      lineEl.style.display   = 'block';
+      lineEl.style.bottom    = 'auto';
+      lineEl.style.top       = `${clipTop}%`;
+      lineEl.style.boxShadow = GLOW_UP;
+    } else {
+      lineEl.style.display = 'none';
+    }
+  }
+}
+
+/* Curtain esce dal basso (wipe-out), children visibili sotto */
+function applyWipeOut(pct: number, curtain: HTMLElement, content: HTMLElement | null, lineEl: HTMLElement | null) {
+  const exitProg   = (pct - wipeOutStart) / (wipeOutEnd - wipeOutStart);
+  const clipBottom = exitProg * 100;
+  curtain.style.clipPath = `inset(0% 0% ${clipBottom}% 0%)`;
+  setContentVisible(content, true);
+  if (lineEl) {
+    if (pct < wipeOutEnd - WIPE_LINE_EPS) {
+      lineEl.style.display   = 'block';
+      lineEl.style.top       = 'auto';
+      lineEl.style.bottom    = `${clipBottom}%`;
+      lineEl.style.boxShadow = GLOW_DOWN;
+    } else {
+      lineEl.style.display = 'none';
+    }
+  }
+}
 
 interface MaskChangeProps {
   curtain: ReactNode;
@@ -25,34 +91,11 @@ export function MaskChangeUI({
 
   const isFirstLayer = layerOrder === 0;
 
-  /*
-   * Calcola l'altezza iniziale senza useState per evitare flash di layout.
-   * Il wrapper deve essere alto (1 + extraStickyDistanceH) * 100vh per creare
-   * lo spazio di scroll necessario all'effetto sticky.
-   */
-  const initialHeight = useMemo(
-    () => `${(1 + extraStickyDistanceH) * (typeof window !== 'undefined' ? window.innerHeight : 800)}px`,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-
-  /* ── Aggiorna l'altezza al resize ── */
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    const update = () => {
-      wrapper.style.minHeight = `${(1 + extraStickyDistanceH) * window.innerHeight}px`;
-    };
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, [extraStickyDistanceH]);
-
   /* ── Scroll handler: gestisce clipPath, opacità e z-index ── */
   useEffect(() => {
     let lastScrollY = window.scrollY;
     let rafId = 0;
-    let vh = window.innerHeight;
+    let vh = getViewportHeight();
 
     /* Cache della linea neon — elemento statico, non viene mai ricreato */
     const lineEl = wrapperRef.current?.querySelector<HTMLDivElement>('[data-wipe-line="true"]') ?? null;
@@ -63,129 +106,36 @@ export function MaskChangeUI({
       const content  = contentRef.current;
       if (!wrapper || !curtain) return;
 
-      const rect            = wrapper.getBoundingClientRect();
-      const wrapperH        = rect.height;
       const pendingUp       = window.scrollY < lastScrollY;
       lastScrollY           = window.scrollY;
 
       /* pct: 0 = wrapper appena entrato, 1 = wrapper quasi uscito */
-      const scrollProgress  = -rect.top;
-      const totalRange      = wrapperH - vh;
-      const pct             = totalRange > 0
-        ? Math.max(0, Math.min(1, scrollProgress / totalRange))
-        : 0;
+      const pct             = getMaskProgress(wrapper, vh);
 
       /* z-index dinamico sul wrapper per gestire la risalita */
       wrapper.style.zIndex = pendingUp
         ? String(MAX_LAYERS + layerOrder)
         : String(layerOrder);
 
-      /* ── PRIMO LAYER: Hero → Showreel ──
-       * Nessun wipe-in: la curtain è visibile dall'inizio.
-       * Wipe-out nella fase intermedia (pct 0.55 -> 0.75).
-       * Children stabili e visibili nella fase finale (pct > 0.75). */
       if (isFirstLayer) {
-        if (pct > 0.75) {
-          /* Fase 3 – curtain completamente nascosta, children stabili e visibili */
-          curtain.style.clipPath = 'inset(0% 0% 100% 0%)';
-          if (content) {
-            content.style.opacity    = '1';
-            content.style.visibility = 'visible';
-          }
-          if (lineEl) lineEl.style.display = 'none';
-        } else if (pct > 0.55) {
-          /* Fase 2 – curtain esce dal basso (wipe-out) */
-          const exitProg        = (pct - 0.55) / 0.20;
-          const clipBottom      = exitProg * 100;
-          curtain.style.clipPath = `inset(0% 0% ${clipBottom}% 0%)`;
-          if (content) {
-            content.style.opacity    = '1';
-            content.style.visibility = 'visible';
-          }
-          if (lineEl) {
-            if (pct < 0.74) {
-              lineEl.style.display   = 'block';
-              lineEl.style.top       = 'auto';
-              lineEl.style.bottom    = `${clipBottom}%`;
-              lineEl.style.boxShadow = '0 -2px 10px rgba(169,15,33,0.6),0 0 15px 4px rgba(169,15,33,0.85),0 -10px 25px rgba(0,0,0,0.7)';
-            } else {
-              lineEl.style.display = 'none';
-            }
-          }
-        } else {
-          /* Fase 1 – curtain stabile e visibile (Hero) */
-          curtain.style.clipPath = 'inset(0% 0% 0% 0%)';
-          if (content) {
-            content.style.opacity    = '0';
-            content.style.visibility = 'hidden';
-          }
-          if (lineEl) lineEl.style.display = 'none';
-        }
-
-      /* ── LAYER SUCCESSIVI: doppio Wipe-In + Stabile + Wipe-Out + Stabile Children ── */
+        /* ── PRIMO LAYER: Hero → Showreel ──
+         * Nessun wipe-in: la curtain è visibile dall'inizio. */
+        if (pct > wipeOutEnd)        applyCurtainHidden(curtain, content, lineEl);
+        else if (pct > wipeOutStart) applyWipeOut(pct, curtain, content, lineEl);
+        else                         applyCurtainFull(curtain, content, lineEl);
       } else {
-        if (pct < 0.20) {
-          /* Fase 1 – curtain entra dall'alto (wipe-in) */
-          const entryProg       = pct / 0.20;
-          const clipTop         = (1 - entryProg) * 100;
-          curtain.style.clipPath = `inset(${clipTop}% 0% 0% 0%)`;
-          if (content) {
-            content.style.opacity    = '0';
-            content.style.visibility = 'hidden';
-          }
-          if (lineEl) {
-            if (pct > 0.01) {
-              lineEl.style.display   = 'block';
-              lineEl.style.bottom    = 'auto';
-              lineEl.style.top       = `${clipTop}%`;
-              lineEl.style.boxShadow = '0 2px 10px rgba(169,15,33,0.6),0 0 15px 4px rgba(169,15,33,0.85),0 10px 25px rgba(0,0,0,0.7)';
-            } else {
-              lineEl.style.display = 'none';
-            }
-          }
-        } else if (pct < 0.55) {
-          /* Fase 2 – curtain stabile, children nascosti */
-          curtain.style.clipPath = 'inset(0% 0% 0% 0%)';
-          if (content) {
-            content.style.opacity    = '0';
-            content.style.visibility = 'hidden';
-          }
-          if (lineEl) lineEl.style.display = 'none';
-        } else if (pct < 0.75) {
-          /* Fase 3 – curtain esce dal basso (wipe-out) */
-          const exitProg        = (pct - 0.55) / 0.20;
-          const clipBottom      = exitProg * 100;
-          curtain.style.clipPath = `inset(0% 0% ${clipBottom}% 0%)`;
-          if (content) {
-            content.style.opacity    = '1';
-            content.style.visibility = 'visible';
-          }
-          if (lineEl) {
-            if (pct < 0.74) {
-              lineEl.style.display   = 'block';
-              lineEl.style.top       = 'auto';
-              lineEl.style.bottom    = `${clipBottom}%`;
-              lineEl.style.boxShadow = '0 -2px 10px rgba(169,15,33,0.6),0 0 15px 4px rgba(169,15,33,0.85),0 -10px 25px rgba(0,0,0,0.7)';
-            } else {
-              lineEl.style.display = 'none';
-            }
-          }
-        } else {
-          /* Fase 4 – curtain completamente nascosta, children stabili e visibili */
-          curtain.style.clipPath = 'inset(0% 0% 100% 0%)';
-          if (content) {
-            content.style.opacity    = '1';
-            content.style.visibility = 'visible';
-          }
-          if (lineEl) lineEl.style.display = 'none';
-        }
+        /* ── LAYER SUCCESSIVI: Wipe-In + Stabile + Wipe-Out + Stabile Children ── */
+        if (pct < wipeInEnd)         applyWipeIn(pct, curtain, content, lineEl);
+        else if (pct < wipeOutStart) applyCurtainFull(curtain, content, lineEl);
+        else if (pct < wipeOutEnd)   applyWipeOut(pct, curtain, content, lineEl);
+        else                         applyCurtainHidden(curtain, content, lineEl);
       }
 
       /* ── Pointer-events: solo chi è visibile cattura i click ── */
       if (pct <= 0.05) {
         curtain.style.pointerEvents = isFirstLayer ? 'auto' : 'none';
         if (content) content.style.pointerEvents = isFirstLayer ? 'none' : 'auto';
-      } else if (pct >= 0.75) {
+      } else if (pct >= wipeOutEnd) {
         curtain.style.pointerEvents = 'none';
         if (content) content.style.pointerEvents = 'auto';
       } else {
@@ -199,7 +149,7 @@ export function MaskChangeUI({
       rafId = requestAnimationFrame(() => { rafId = 0; handleScroll(); });
     };
 
-    const onResize = () => { vh = window.innerHeight; handleScroll(); };
+    const onResize = () => { vh = getViewportHeight(); handleScroll(); };
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize, { passive: true });
@@ -216,10 +166,12 @@ export function MaskChangeUI({
     <div
       ref={wrapperRef}
       data-mask-wrapper="true"
-      className="relative w-full font-sans"
+      className="relative w-full font-sans pointer-events-none"
       style={{
-        minHeight: initialHeight,
-        marginTop: overlapPrev ? '-100vh' : '0',
+        /* (1 + extra) viewport di spazio scroll per lo sticky; in dvh il
+           browser lo tiene in lockstep con sticky/curtain senza JS. */
+        minHeight: `calc(${1 + extraStickyDistanceH} * 100dvh)`,
+        marginTop: overlapPrev ? '-100dvh' : '0',
         zIndex: layerOrder,
       }}
     >
@@ -229,10 +181,15 @@ export function MaskChangeUI({
        * │  Dentro: children e curtain sono entrambi           │
        * │  absolute inset-0, sovrapposti.                     │
        * │  Nessun secondo sticky → zero sezioni "allungate".  │
+       * │  Wrapper e sticky sono pointer-events-none: i layer │
+       * │  si sovrappongono (overlapPrev) e i contenitori     │
+       * │  trasparenti non devono rubare il mouse al layer    │
+       * │  sotto; curtain/children riattivano i pointer       │
+       * │  events in base alla fase (handleScroll).           │
        * └─────────────────────────────────────────────────────┘
        */}
       <div
-        className="sticky top-0 w-full h-screen overflow-hidden"
+        className="sticky top-0 w-full h-dvh overflow-hidden pointer-events-none"
         style={{ zIndex }}
       >
         {/* ── Children (sotto) ── */}
