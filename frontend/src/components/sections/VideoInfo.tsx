@@ -14,6 +14,9 @@ import {
 } from '@/components/layout/maskCurtain';
 import { VIDEO_PILLS, VIDEO_DESCRIPTION } from '@/data/services';
 
+// Griglia bento su 3 colonne: cella larga + cella singola, poi riga piena
+const BENTO_SPANS = ['mask-bento__cell--span2', '', 'mask-bento__cell--full'];
+
 export function VideoInfo() {
   const { ref, isRevealed } = useReveal({ threshold: 0.2 });
 
@@ -46,18 +49,14 @@ export function VideoInfo() {
         </div>
       </header>
 
-      <div className="mask-curtain__rows">
+      <div className={`mask-bento ${isRevealed ? 'mask-bento--revealed' : ''}`}>
         {VIDEO_DESCRIPTION.map((text, i) => (
           <div
             key={i}
-            className="mask-curtain__row"
-            style={{
-              opacity: isRevealed ? 1 : 0,
-              transform: isRevealed ? 'translateY(0)' : 'translateY(28px)',
-              transition: `opacity 0.7s ease ${480 + i * 120}ms, transform 0.7s ${MASK_EXPO} ${480 + i * 120}ms`,
-            }}
+            className={`mask-bento__cell ${BENTO_SPANS[i] ?? ''}`}
+            style={{ transitionDelay: `${480 + i * 130}ms` }}
           >
-            <span className="mask-index" aria-hidden="true">
+            <span className="mask-bento__num" aria-hidden="true">
               {String(i + 1).padStart(2, '0')}
             </span>
             <p

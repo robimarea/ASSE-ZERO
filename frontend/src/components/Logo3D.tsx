@@ -17,28 +17,34 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 const SPRING_K          = 120;
 const MASS              = 1;
 const MAGNET_STRENGTH   = 0.22;
-const TRIGGER_RADIUS_MULT = 0.6;
+const TRIGGER_RADIUS_MULT = 0.35; // zona magnete/jiggle stretta attorno al logo
 
 // ── Parametri Stanza invisibile + Tilt ────────────────────────────────────
 // La "stanza" è un Group senza pareti visibili: definisce solo lo spazio.
 // Logo al centro (0,0,0), testo sulla parete alta di fondo.
 const ROOM = {
-  width:  64,   // larghezza parete di fondo (unità scena)
+  width:  80,   // larghezza parete di fondo (unità scena)
   height: 36,
   depth:  36,   // il testo sta a -depth/2
 };
-const WALL_TEXT         = 'VIDEO & MEDIA';
-const WALL_TEXT_Y       = ROOM.height * 0.28;  // quota del testo sulla parete
-const WALL_TEXT_WIDTH   = ROOM.width * 0.92;   // larghezza del piano testo
-const WALL_TEXT_OPACITY = 0.95;                // titolo principale: ben visibile sul giallo
+const WALL_TEXT          = 'VIDEO & MEDIA';
+const WALL_TEXT_Y        = ROOM.height * 0.30;  // quota del testo sulla parete
+const WALL_TEXT_WIDTH    = ROOM.width * 0.92;   // larghezza piano testo (desktop)
+const WALL_TEXT_WIDTH_MOBILE = 56;              // frustum mobile più stretto
+const WALL_TEXT_OPACITY  = 0.95;                // titolo principale: ben visibile sul giallo
+// Layer "ghost": stessa scritta ridisegnata sopra il logo senza depth-test,
+// così dove il logo la copre resta comunque un'impronta leggibile.
+// Tenerla bassa: troppo alta fa sembrare il logo semi-trasparente.
+const WALL_TEXT_GHOST_OPACITY = 0.10;
 // Tilt mouse-follow: ruota l'intera stanza → parallasse logo/testo automatico
 const TILT_MAX_X  = 0.085; // rad (~5°) inclinazione verticale
 const TILT_MAX_Y  = 0.14;  // rad (~8°) inclinazione orizzontale
 const TILT_SMOOTH = 4.0;   // velocità del damping (più alto = più reattivo)
 
 // Piano con testo tipografico renderizzato su canvas (font brand Satoshi).
-// Ritorna anche la texture per il dispose in cleanup.
-function createWallText(): { mesh: THREE.Mesh; texture: THREE.CanvasTexture } {
+// Due layer: uno normale (occluso dal logo) + uno ghost senza depth-test
+// che resta visibile anche dietro il logo. Ritorna la texture per il dispose.
+function createWallText(width: number): { group: THREE.Group; texture: THREE.CanvasTexture } {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
   const fontPx = 220;
@@ -66,8 +72,11 @@ function createWallText(): { mesh: THREE.Mesh; texture: THREE.CanvasTexture } {
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 4;
 
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(WALL_TEXT_WIDTH, WALL_TEXT_WIDTH * (canvas.height / canvas.width)),
+  const geometry = new THREE.PlaneGeometry(width, width * (canvas.height / canvas.width));
+
+  // Layer principale: occluso dal logo come un vero elemento sulla parete
+  const solid = new THREE.Mesh(
+    geometry,
     new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
@@ -75,7 +84,24 @@ function createWallText(): { mesh: THREE.Mesh; texture: THREE.CanvasTexture } {
       depthWrite: false,
     })
   );
-  mesh.position.set(0, WALL_TEXT_Y, -ROOM.depth / 2);
+
+  // Layer ghost: niente depth-test → si disegna sopra tutto, a bassa opacità.
+  // Dove il logo copre la scritta si vede comunque questa impronta.
+  const ghost = new THREE.Mesh(
+    geometry,
+    new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: WALL_TEXT_GHOST_OPACITY,
+      depthWrite: false,
+      depthTest: false,
+    })
+  );
+  ghost.renderOrder = 999; // dopo tutto il resto, sopra il logo
+
+  const group = new THREE.Group();
+  group.add(solid, ghost);
+  group.position.set(0, WALL_TEXT_Y, -ROOM.depth / 2);
 
   // Il font potrebbe non essere ancora caricato al primo draw: ridisegna quando
   // pronto e riallinea l'aspect del piano al nuovo canvas (Satoshi ≠ fallback)
@@ -83,10 +109,10 @@ function createWallText(): { mesh: THREE.Mesh; texture: THREE.CanvasTexture } {
   document.fonts.load(font).then(() => {
     draw();
     texture.needsUpdate = true;
-    mesh.scale.y = (canvas.height / canvas.width) / baseAspect;
+    group.scale.y = (canvas.height / canvas.width) / baseAspect;
   });
 
-  return { mesh, texture };
+  return { group, texture };
 }
 
 interface Logo3DProps {
@@ -170,7 +196,9 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     const room = new THREE.Group();
     scene.add(room);
 
-    const { mesh: wallText, texture: wallTextTexture } = createWallText();
+    const { group: wallText, texture: wallTextTexture } = createWallText(
+      isMobile ? WALL_TEXT_WIDTH_MOBILE : WALL_TEXT_WIDTH
+    );
     room.add(wallText);
 
     // ── Stato Fisico (desktop) ────────────────────────────

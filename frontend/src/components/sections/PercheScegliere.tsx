@@ -3,8 +3,15 @@ import {
   MaskCurtain,
   MaskEm,
   MaskRevealInline,
-  MASK_EXPO,
 } from '@/components/layout/maskCurtain';
+
+// Griglia bento su 3 colonne: cella alta a sinistra (2 righe),
+// due celle larghe impilate a destra
+const BENTO_SPANS = [
+  'mask-bento__cell--tall',
+  'mask-bento__cell--span2',
+  'mask-bento__cell--span2',
+];
 
 const reasons = [
   {
@@ -59,18 +66,14 @@ export function PercheScegliere() {
         </div>
       </header>
 
-      <div className="mask-curtain__rows">
+      <div className={`mask-bento ${isRevealed ? 'mask-bento--revealed' : ''}`}>
         {reasons.map((r, i) => (
           <div
             key={r.num}
-            className="mask-curtain__row"
-            style={{
-              opacity: isRevealed ? 1 : 0,
-              transform: isRevealed ? 'translateY(0)' : 'translateY(28px)',
-              transition: `opacity 0.7s ease ${420 + i * 120}ms, transform 0.7s ${MASK_EXPO} ${420 + i * 120}ms`,
-            }}
+            className={`mask-bento__cell ${BENTO_SPANS[i] ?? ''}`}
+            style={{ transitionDelay: `${420 + i * 130}ms` }}
           >
-            <span className="mask-index" aria-hidden="true">
+            <span className="mask-bento__num" aria-hidden="true">
               {r.num}
             </span>
             <p className="mask-body">{r.text}</p>

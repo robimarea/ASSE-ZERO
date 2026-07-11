@@ -1,15 +1,17 @@
+// ============================================
+// ASSE ZERO — Video Gallery
+// Player principale sopra (preview muta, click →
+// lightbox on-site) + bottone verso il post social.
+// Sotto: barra orizzontale di thumbnail scorrevoli.
+// Titolo/pill/descrizione vivono nella curtain VideoInfo.
+// ============================================
+
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { VIDEO_ITEMS } from '@/data/videos';
-import { useIsMobile } from '@/hooks/useIsMobile';
-import { useScrollCards } from '@/hooks/useScrollCards';
 import { VideoLightbox } from '@/components/ui/VideoLightbox';
 
 interface VideoGalleryProps {
   isVisible?: boolean;
-}
-
-function PlayIcon() {
-  return <svg className="w-6 h-6 text-white fill-current translate-x-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>;
 }
 
 function formatIndex(n: number) {
@@ -17,162 +19,48 @@ function formatIndex(n: number) {
 }
 
 export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
-  const isMobile = useIsMobile();
-  const mobileCounterRef = useRef<HTMLSpanElement>(null);
-  const mobileProgressRef = useRef<HTMLDivElement>(null);
-  const playBtnRefs      = useRef<(HTMLDivElement | null)[]>([]);
-  const prevActiveRef    = useRef(-1);
+  const playerRef    = useRef<HTMLDivElement>(null);
+  const videoRef     = useRef<HTMLVideoElement>(null);
+  const hasLoadedRef = useRef(false);
 
+  const [shouldLoad, setShouldLoad]       = useState(false);
+  const [activeIndex, setActiveIndex]     = useState(0);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [lightboxOrigin, setLightboxOrigin] = useState<DOMRect | null>(null);
-  const [counterFlash, setCounterFlash] = useState(false);
 
-  const openExpanded = useCallback((index: number, originEl?: HTMLElement | null) => {
-    setLightboxOrigin(originEl?.getBoundingClientRect() ?? null);
-    setExpandedIndex(index);
-  }, []);
+  const active = VIDEO_ITEMS[activeIndex];
+
+  // Lazy-load: i video partono solo la prima volta che la sezione è visibile
+  useEffect(() => {
+    if (isVisible && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      setShouldLoad(true);
+    }
+  }, [isVisible]);
+
+  // Preview muta: play solo con sezione visibile e lightbox chiusa
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !shouldLoad) return;
+    if (isVisible && expandedIndex === null) {
+      void video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [shouldLoad, isVisible, expandedIndex, activeIndex]);
+
+  const openExpanded = useCallback(() => {
+    setLightboxOrigin(playerRef.current?.getBoundingClientRect() ?? null);
+    setExpandedIndex(activeIndex);
+  }, [activeIndex]);
+
   const closeExpanded = useCallback(() => {
     setExpandedIndex(null);
     setLightboxOrigin(null);
   }, []);
 
-  const {
-    cardRefs,
-    overlayRefs,
-    textRefs,
-    gradientRefs,
-    numberRefs,
-    activeIndex,
-    goNext,
-    goPrev,
-    canGoPrev,
-    canGoNext,
-  } = useScrollCards({
-    count: VIDEO_ITEMS.length,
-    isVisible: isVisible && !isMobile,
-  });
-
-
-  useEffect(() => {
-    if (prevActiveRef.current === activeIndex) return;
-    prevActiveRef.current = activeIndex;
-    setCounterFlash(true);
-    const t = window.setTimeout(() => setCounterFlash(false), 450);
-
-    const playEl = playBtnRefs.current[activeIndex];
-    if (playEl) {
-      playEl.classList.remove('vg-play-pulse');
-      void playEl.offsetWidth;
-      playEl.classList.add('vg-play-pulse');
-    }
-    return () => window.clearTimeout(t);
-  }, [activeIndex]);
-
-  if (isMobile) {
-    const handleCarouselScroll = (e: React.UIEvent<HTMLDivElement>) => {
-      const el = e.currentTarget;
-      const { scrollLeft, clientWidth, scrollWidth } = el;
-      const step = clientWidth * 0.86 + 10;
-      const idx = Math.min(Math.round(scrollLeft / step), VIDEO_ITEMS.length - 1);
-
-      if (mobileCounterRef.current) {
-        mobileCounterRef.current.textContent = formatIndex(idx);
-        mobileCounterRef.current.classList.remove('counter-flash');
-        void mobileCounterRef.current.offsetWidth;
-        mobileCounterRef.current.classList.add('counter-flash');
-      }
-
-      if (mobileProgressRef.current && scrollWidth > clientWidth) {
-        const max = scrollWidth - clientWidth;
-        mobileProgressRef.current.style.transform = `scaleX(${max > 0 ? scrollLeft / max : 0})`;
-      }
-
-      el.querySelectorAll<HTMLElement>('[data-mobile-card]').forEach((card, i) => {
-        const dist = Math.abs(i - idx);
-        const scale = i === idx ? 1 : clampMobileScale(dist);
-        const opacity = i === idx ? 1 : 0.58;
-        card.style.transform = `scale(${scale})`;
-        card.style.opacity = `${opacity}`;
-      });
-    };
-
-    return (
-      <section className="relative w-full bg-dark h-dvh flex flex-col justify-center overflow-hidden">
-        {expandedIndex !== null && (
-          <VideoLightbox
-            item={VIDEO_ITEMS[expandedIndex]}
-            itemIndex={expandedIndex}
-            onClose={closeExpanded}
-            originRect={lightboxOrigin}
-          />
-        )}
-
-        {/* Solo player: titolo/pill/descrizione vivono nella curtain VideoInfo */}
-        <div className="px-5 pb-4 flex items-end justify-end shrink-0">
-          <div className="pb-1 text-right">
-            <span
-              ref={mobileCounterRef}
-              className="font-heading font-black block leading-none counter-flash"
-              style={{ fontSize: '2.5rem', color: 'rgba(255,255,255,0.1)' }}
-            >
-              01
-            </span>
-            <span className="text-[11px] font-black tracking-widest" style={{ color: 'rgba(255,255,255,0.18)' }}>
-              / {String(VIDEO_ITEMS.length).padStart(2, '0')}
-            </span>
-          </div>
-        </div>
-
-        <div
-          className="overflow-x-auto scrollbar-hidden snap-x snap-mandatory flex gap-[10px] shrink-0"
-          style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain', paddingLeft: '1.25rem', paddingRight: '1.25rem' }}
-          onScroll={handleCarouselScroll}
-        >
-          {VIDEO_ITEMS.map((item, index) => (
-            <div key={item.id} className="snap-center shrink-0 w-[86vw]">
-              <div
-                data-mobile-card
-                className="overflow-hidden relative cursor-pointer transition-[transform,opacity] duration-300 ease-out"
-                style={{
-                  aspectRatio: '16/9',
-                  background: item.gradient,
-                  borderRadius: '1.25rem',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  boxShadow: '0 16px 48px rgba(0,0,0,0.7)',
-                  transform: index === 0 ? 'scale(1)' : 'scale(0.94)',
-                  opacity: index === 0 ? 1 : 0.58,
-                }}
-                onClick={(e) => openExpanded(index, e.currentTarget)}
-              >
-                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/85 via-black/20 to-black/35" />
-                <span className="absolute top-2 right-3 font-heading font-black select-none pointer-events-none" style={{ fontSize: '5rem', lineHeight: 1, color: 'rgba(255,255,255,0.05)' }}>
-                  {formatIndex(index)}
-                </span>
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full flex items-center justify-center z-10 pointer-events-none" style={{ backgroundColor: '#a90f21', boxShadow: '0 8px 24px rgba(169,15,33,0.5)' }}>
-                  <PlayIcon />
-                </div>
-                <div className="absolute bottom-5 left-4 pointer-events-none">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] block mb-1" style={{ color: '#a90f21' }}>{item.subtitle}</span>
-                  <h3 className="text-white font-black leading-none tracking-tighter italic" style={{ fontSize: '1.3rem' }}>{item.title}</h3>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mx-5 mt-3 shrink-0 h-px overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
-          <div
-            ref={mobileProgressRef}
-            className="h-full origin-left rounded-full"
-            style={{ transform: 'scaleX(0)', background: 'linear-gradient(90deg, #a90f21, #ebdb00)', transition: 'transform 0.12s linear' }}
-          />
-        </div>
-      </section>
-    );
-  }
-
   return (
-    <section className="relative w-full bg-dark z-0 h-dvh">
+    <section className="relative w-full bg-dark h-dvh flex flex-col items-center justify-center overflow-hidden z-0">
       {expandedIndex !== null && (
         <VideoLightbox
           item={VIDEO_ITEMS[expandedIndex]}
@@ -182,125 +70,139 @@ export function VideoGallery({ isVisible = true }: VideoGalleryProps) {
         />
       )}
 
+      {/* Glow ambientale del video attivo */}
       <div
-        className="absolute pointer-events-none rounded-full blur-[90px] transition-opacity duration-500 ease-out"
+        className="absolute pointer-events-none rounded-full blur-[90px] transition-opacity duration-500"
         style={{
-          width: 'min(42vw, 520px)',
-          height: 'min(42vw, 520px)',
+          width: 'min(46vw, 560px)',
+          height: 'min(46vw, 560px)',
           left: '50%',
-          top: '46%',
+          top: '42%',
           transform: 'translate(-50%, -50%)',
-          background: VIDEO_ITEMS[activeIndex]?.gradient ?? 'transparent',
-          opacity: 0.14,
+          background: active.gradient,
+          opacity: 0.16,
           zIndex: 0,
         }}
         aria-hidden="true"
       />
 
-      {/* Solo player: titolo/pill/descrizione vivono nella curtain VideoInfo */}
-      <div className="w-full h-full overflow-hidden bg-dark flex items-center justify-center relative z-[1] pointer-events-auto">
+      <div className="relative z-[1] w-[90vw] md:w-[64vw] lg:w-[56vw] flex flex-col pointer-events-auto">
 
-        <div className="relative w-full h-full flex items-center justify-center">
-          {VIDEO_ITEMS.map((item, index) => (
-            <article
-              key={item.id}
-              ref={(el) => { cardRefs.current[index] = el; }}
-              className="absolute w-[80vw] md:w-[42vw] aspect-video origin-center will-change-transform"
-              style={{ opacity: 0, transform: 'translate3d(0, 100vh, 0)' }}
-            >
-              <div
-                className="w-full h-full rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] relative bg-black pointer-events-auto cursor-pointer group hover:border-[#a90f21]/25 transition-colors duration-500"
-                onClick={(e) => openExpanded(index, e.currentTarget)}
-              >
-                <span
-                  ref={(el) => { numberRefs.current[index] = el; }}
-                  className="absolute top-3 right-5 font-heading font-black select-none pointer-events-none z-[2] transition-[opacity,transform] duration-150"
-                  style={{ fontSize: 'clamp(4rem, 10vw, 7rem)', lineHeight: 1, color: 'rgba(255,255,255,0.08)' }}
-                  aria-hidden="true"
-                >
-                  {formatIndex(index)}
-                </span>
+        {/* ── Player principale (click → guardalo sul sito) ── */}
+        <div
+          ref={playerRef}
+          onClick={openExpanded}
+          className="relative w-full aspect-video rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.85)] bg-black cursor-pointer cursor-target group hover:border-[#a90f21]/25 transition-colors duration-500"
+        >
+          <div className="absolute inset-0" style={{ background: active.gradient }} aria-hidden="true" />
+          {/* key: al cambio video il tag si rimonta e riparte la preview */}
+          <video
+            key={active.id}
+            ref={videoRef}
+            src={shouldLoad ? active.src : undefined}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="relative w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/30 pointer-events-none" />
 
-                <div
-                  ref={(el) => { gradientRefs.current[index] = el; }}
-                  data-card-gradient
-                  className="w-full h-full opacity-80 vg-card-gradient"
-                  style={{ background: item.gradient }}
-                  aria-hidden="true"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/35 pointer-events-none" />
-                <div
-                  ref={(el) => { overlayRefs.current[index] = el; }}
-                  className="absolute inset-0 vg-card-overlay pointer-events-none"
-                  aria-hidden="true"
-                  style={{ background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.85) 10px, rgba(0,0,0,0.85) 20px)', backgroundColor: 'rgba(0,0,0,0.55)' }}
-                />
-                <div
-                  ref={(el) => { playBtnRefs.current[index] = el; }}
-                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-[0_15px_40px_rgba(169,15,33,0.45)] group-hover:shadow-[0_20px_50px_rgba(169,15,33,0.65)] group-hover:scale-110 transition-[box-shadow,transform] duration-500 z-10 pointer-events-none"
-                  style={{ backgroundColor: '#a90f21' }}
-                >
-                  <svg className="w-6 h-6 md:w-8 md:h-8 text-white fill-current translate-x-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                </div>
-                <div
-                  ref={(el) => { textRefs.current[index] = el; }}
-                  className="absolute bottom-6 left-6 transition-all duration-500 ease-out pointer-events-none"
-                  style={{ opacity: 0, transform: 'translate3d(0,20px,0)' }}
-                >
-                  <span className="text-xs font-black uppercase tracking-[0.35em] block mb-1" style={{ color: '#a90f21' }}>{item.subtitle}</span>
-                  <h3 className="text-white font-black tracking-tighter italic leading-none" style={{ fontSize: 'clamp(1.2rem, 2vw, 1.8rem)' }}>
-                    {item.title}
-                  </h3>
-                </div>
-              </div>
-            </article>
-          ))}
+          <span
+            className="absolute top-3 right-5 font-heading font-black select-none pointer-events-none"
+            style={{ fontSize: 'clamp(3.5rem, 8vw, 6rem)', lineHeight: 1, color: 'rgba(255,255,255,0.08)' }}
+            aria-hidden="true"
+          >
+            {formatIndex(activeIndex)}
+          </span>
+
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-20 md:h-20 rounded-full flex items-center justify-center z-10 pointer-events-none shadow-[0_15px_40px_rgba(169,15,33,0.45)] group-hover:shadow-[0_20px_50px_rgba(169,15,33,0.65)] group-hover:scale-110 transition-[box-shadow,transform] duration-500"
+            style={{ backgroundColor: '#a90f21' }}
+          >
+            <svg className="w-5 h-5 md:w-8 md:h-8 text-white fill-current translate-x-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+          </div>
+
+          <div className="absolute bottom-4 left-5 md:bottom-7 md:left-8 pointer-events-none">
+            <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.35em] block mb-1" style={{ color: '#a90f21' }}>
+              {active.subtitle}
+            </span>
+            <h3 className="text-white font-black tracking-tighter italic leading-none" style={{ fontSize: 'clamp(1.2rem, 2.4vw, 2rem)' }}>
+              {active.title}
+            </h3>
+          </div>
         </div>
 
-        {/* Controlli player: navigazione carosello */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 pointer-events-auto">
-          <button
-            type="button"
-            onClick={(e) => { if (!canGoPrev) return; e.stopPropagation(); goPrev(); }}
-            disabled={!canGoPrev}
-            aria-label="Video precedente"
-            className="vg-nav-btn cursor-target"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-              <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <div className="flex items-baseline gap-2 min-w-[5.5rem] justify-center">
+        {/* ── Sotto il player: contatore + link al post social ── */}
+        <div className="flex items-center justify-between mt-3 md:mt-4">
+          <div className="flex items-baseline gap-2">
             <span
-              className={`font-heading font-black leading-none tabular-nums transition-colors duration-300 ${counterFlash ? 'counter-flash' : ''}`}
-              style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', color: 'var(--color-primary)' }}
+              className="font-heading font-black leading-none tabular-nums"
+              style={{ fontSize: 'clamp(1.6rem, 3vw, 2.5rem)', color: 'var(--color-primary)' }}
             >
               {formatIndex(activeIndex)}
             </span>
-            <span className="text-sm font-black tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            <span className="text-xs md:text-sm font-black tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
               / {formatIndex(VIDEO_ITEMS.length - 1)}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={(e) => { if (!canGoNext) return; e.stopPropagation(); goNext(); }}
-            disabled={!canGoNext}
-            aria-label="Video successivo"
-            className="vg-nav-btn cursor-target"
+
+          <a
+            href={active.socialUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="cursor-target group/social inline-flex items-center gap-2.5 rounded-full border border-white/10 px-4 py-2.5 md:px-5 transition-colors duration-300 hover:bg-[#a90f21] hover:border-[#a90f21]"
+            style={{ background: 'rgba(255,255,255,0.04)' }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-              <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+            <span className="text-[10px] md:text-[11px] font-black tracking-[0.18em] uppercase text-white/70 group-hover/social:text-white transition-colors duration-200">
+              Guarda su {active.socialLabel}
+            </span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/50 group-hover/social:text-white transition-colors duration-200" aria-hidden="true">
+              <path d="M7 17L17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </button>
+          </a>
+        </div>
+
+        {/* ── Barra orizzontale: thumbnail scorrevoli ── */}
+        <div
+          className="mt-4 md:mt-5 flex gap-3 overflow-x-auto scrollbar-hidden snap-x pb-1"
+          style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain' }}
+        >
+          {VIDEO_ITEMS.map((item, i) => {
+            const isActive = i === activeIndex;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveIndex(i)}
+                aria-label={`Mostra ${item.title}`}
+                aria-current={isActive}
+                className={`cursor-target relative shrink-0 snap-start w-36 md:w-44 aspect-video rounded-xl overflow-hidden border transition-all duration-300 ${
+                  isActive
+                    ? 'border-[#a90f21] opacity-100'
+                    : 'border-white/10 opacity-55 hover:opacity-85 scale-[0.97]'
+                }`}
+                style={{ background: item.gradient }}
+              >
+                <span className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" aria-hidden="true" />
+                <span
+                  className="absolute top-1 right-2 font-heading font-black select-none pointer-events-none"
+                  style={{ fontSize: '1.6rem', lineHeight: 1, color: 'rgba(255,255,255,0.12)' }}
+                  aria-hidden="true"
+                >
+                  {formatIndex(i)}
+                </span>
+                <span className="absolute bottom-2 left-2.5 right-2 text-left text-[10px] md:text-[11px] font-black uppercase tracking-wide text-white/85 leading-tight truncate">
+                  {item.title}
+                </span>
+                {isActive && <span className="absolute inset-x-0 bottom-0 h-[3px] bg-[#a90f21]" aria-hidden="true" />}
+              </button>
+            );
+          })}
         </div>
 
       </div>
     </section>
   );
-}
-
-function clampMobileScale(dist: number) {
-  if (dist >= 2) return 0.9;
-  if (dist === 1) return 0.94;
-  return 0.97;
 }
