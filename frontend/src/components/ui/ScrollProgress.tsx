@@ -4,6 +4,7 @@
 // ============================================
 
 import { useEffect, useRef } from 'react';
+import { getViewportHeight } from '@/lib/viewport';
 
 export function ScrollProgress() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -17,7 +18,7 @@ export function ScrollProgress() {
       if (!barRef.current || !containerRef.current) return;
 
       const scrollY = window.scrollY;
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollHeight = document.documentElement.scrollHeight - getViewportHeight();
 
       if (scrollHeight > 0) {
         const pct = Math.min(100, Math.max(0, (scrollY / scrollHeight) * 100));

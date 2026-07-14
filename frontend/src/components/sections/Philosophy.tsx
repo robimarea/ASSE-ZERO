@@ -10,7 +10,7 @@ export function Philosophy() {
   ];
 
   return (
-    <section ref={ref} className="w-full h-screen bg-dark flex flex-col items-center justify-center px-6 md:px-16 lg:px-24 overflow-hidden">
+    <section ref={ref} className="w-full h-dvh bg-dark flex flex-col items-center justify-center px-6 md:px-16 lg:px-24 overflow-hidden">
       <h2
         style={{
           fontWeight: 900,

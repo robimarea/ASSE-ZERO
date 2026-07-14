@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { SECTION_IDS } from '@/lib/constants';
 import { TEAM_MEMBERS } from '@/data/team';
 import { useScrollTeam } from '@/hooks/useScrollTeam';
@@ -11,16 +10,14 @@ interface TeamProps {
 }
 
 export function Team({ isVisible = true }: TeamProps) {
-  const containerRef = useRef<HTMLElement>(null);
   const isMobile = useIsMobile();
   const { textRefs, photoRefs, counterRef, goNext, goPrev, canGoNext, canGoPrev } = useScrollTeam({
-    containerRef,
     count: COUNT,
     isVisible,
   });
 
   return (
-    <section ref={containerRef} id={SECTION_IDS.team} className="relative w-full bg-dark h-full">
+    <section id={SECTION_IDS.team} className="relative w-full bg-dark h-full">
       <div className="sticky top-0 h-[100dvh] w-full flex items-start md:items-center justify-center overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-16 py-5 md:py-0 h-full flex flex-col justify-center min-h-0">
 
@@ -42,11 +39,7 @@ export function Team({ isVisible = true }: TeamProps) {
             </div>
           </div>
 
-          <div
-            data-carousel-scroll
-            className="flex flex-col md:flex-row items-stretch gap-4 md:gap-32 min-h-0 flex-1 md:flex-none pointer-events-auto"
-            title="Scorri per cambiare profilo"
-          >
+          <div className="flex flex-col md:flex-row items-stretch gap-4 md:gap-32 min-h-0 flex-1 md:flex-none pointer-events-auto">
 
             {/* Testo (Bio e Ruolo) */}
             <div className="w-full md:w-5/12 relative order-2 md:order-1 min-h-0" style={{ minHeight: isMobile ? 'auto' : 'min(300px, 35vh)' }}>

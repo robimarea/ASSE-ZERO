@@ -9,7 +9,6 @@ export function createLenis(): Lenis {
     smoothWheel: true,
     wheelMultiplier: 0.55,
     touchMultiplier: 1.2,
-    prevent: (node) => node instanceof Element && Boolean(node.closest('[data-carousel-scroll]')),
   });
   return instance;
 }

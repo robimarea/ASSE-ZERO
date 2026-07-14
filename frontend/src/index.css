@@ -280,7 +280,7 @@ h1, h2, h3, h4, h5, h6 {
    ============================================ */
 
 .section {
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: var(--spacing-section) 2rem;
   position: relative;
   width: 100%;

@@ -1,8 +1,11 @@
 // ============================================
 // ASSE ZERO — Logo 3D
-// CINEMATICA "DYNAMIC JELLY MAGNET"
-// Desktop: fisica a molla + magnete mouse
-// Mobile: idle-spin leggero (no fisica, dpr=1, no antialias)
+// STANZA INVISIBILE + CINEMATICA "DYNAMIC JELLY MAGNET"
+// Logo al centro della stanza, testo tipografico sulla parete
+// alta di fondo; il tilt mouse-follow ruota l'intera stanza
+// (parallasse di profondità logo/testo).
+// Desktop: fisica a molla + magnete mouse + tilt stanza
+// Mobile: idle-spin leggero + sway stanza (no fisica, no antialias)
 // ============================================
 
 import { useEffect, useRef } from 'react';
@@ -14,7 +17,95 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 const SPRING_K          = 120;
 const MASS              = 1;
 const MAGNET_STRENGTH   = 0.22;
-const TRIGGER_RADIUS_MULT = 0.6;
+const TRIGGER_RADIUS_MULT = 0.35; // zona magnete/jiggle stretta attorno al logo
+
+// ── Inquadratura ───────────────────────────────────────────────────────────
+// Il canvas copre tutto il viewport (h-dvh) così le animazioni bouncy non
+// vengono mai tagliate ai bordi; l'inquadratura della scena resta però quella
+// storica (38vh mobile / 75vh desktop) tramite camera.setViewOffset: il render
+// si estende semplicemente verso il basso oltre il frame originale.
+const FRAME_FRACTION_MOBILE  = 0.38;
+const FRAME_FRACTION_DESKTOP = 0.75;
+
+// ── Parametri Stanza invisibile + Tilt ────────────────────────────────────
+// La "stanza" è un Group senza pareti visibili: definisce solo lo spazio.
+// Logo al centro (0,0,0), testo sulla parete alta di fondo.
+const ROOM = {
+  width:  100,  // larghezza parete di fondo (unità scena)
+  height: 36,
+  depth:  36,   // il testo sta a -depth/2
+};
+// La stanza è abbassata rispetto alla camera: il logo scende un po' e sopra
+// resta più aria per la scritta a parete
+const ROOM_OFFSET_Y = -3.5;
+const WALL_TEXT          = 'VIDEO & MEDIA';
+const WALL_TEXT_Y        = ROOM.height * 0.52;  // ben sopra il logo
+const WALL_TEXT_WIDTH    = ROOM.width * 0.92;   // larghezza piano testo (desktop)
+const WALL_TEXT_WIDTH_MOBILE = 58;              // frustum mobile più stretto
+const WALL_TEXT_OPACITY  = 0.95;                // titolo principale: ben visibile sul giallo
+// Tilt mouse-follow: ruota l'intera stanza → parallasse logo/testo automatico
+const TILT_MAX_X  = 0.085; // rad (~5°) inclinazione verticale
+const TILT_MAX_Y  = 0.14;  // rad (~8°) inclinazione orizzontale
+const TILT_SMOOTH = 4.0;   // velocità del damping (più alto = più reattivo)
+
+// Piano con testo tipografico renderizzato su canvas (font brand Satoshi).
+// Ritorna la texture per il dispose in cleanup.
+function createWallText(width: number): { group: THREE.Group; texture: THREE.CanvasTexture } {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+  const fontPx = 220;
+  const font = `900 ${fontPx}px 'Satoshi', sans-serif`;
+
+  const draw = () => {
+    ctx.font = font;
+    const metrics = ctx.measureText(WALL_TEXT);
+    const pad = fontPx * 0.35; // spazio per l'ombra, non deve tagliarsi ai bordi
+    canvas.width  = Math.ceil(metrics.width + pad * 2);
+    canvas.height = Math.ceil(fontPx * 1.3 + pad);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = font; // il resize del canvas resetta il contesto
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // Stessa ombra morbida dell'h1 originale: stacca il bianco dal giallo
+    ctx.shadowColor = 'rgba(0,0,0,0.28)';
+    ctx.shadowBlur = fontPx * 0.14;
+    ctx.fillText(WALL_TEXT, canvas.width / 2, canvas.height / 2);
+  };
+  draw();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+
+  const geometry = new THREE.PlaneGeometry(width, width * (canvas.height / canvas.width));
+
+  // Occluso normalmente dal logo: nessun layer sopra, logo sempre solido
+  const solid = new THREE.Mesh(
+    geometry,
+    new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: WALL_TEXT_OPACITY,
+      depthWrite: false,
+    })
+  );
+
+  const group = new THREE.Group();
+  group.add(solid);
+  group.position.set(0, WALL_TEXT_Y, -ROOM.depth / 2);
+
+  // Il font potrebbe non essere ancora caricato al primo draw: ridisegna quando
+  // pronto e riallinea l'aspect del piano al nuovo canvas (Satoshi ≠ fallback)
+  const baseAspect = canvas.height / canvas.width;
+  document.fonts.load(font).then(() => {
+    draw();
+    texture.needsUpdate = true;
+    group.scale.y = (canvas.height / canvas.width) / baseAspect;
+  });
+
+  return { group, texture };
+}
 
 interface Logo3DProps {
   isVisible?: boolean;
@@ -33,7 +124,12 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     const scene = new THREE.Scene();
     const w = container.clientWidth;
     const h = container.clientHeight;
-    const camera = new THREE.PerspectiveCamera(65, w / h, 0.1, 2000);
+    const frameFraction = isMobile ? FRAME_FRACTION_MOBILE : FRAME_FRACTION_DESKTOP;
+    const frameH = h * frameFraction;
+    const camera = new THREE.PerspectiveCamera(65, w / frameH, 0.1, 2000);
+    camera.setViewOffset(w, frameH, 0, 0, w, h);
+    const targetSize = 28.0; // dimensione di riferimento del logo
+    camera.position.set(0, 0, targetSize * 0.9);
 
     const renderer = new THREE.WebGLRenderer({
       antialias: !isMobile,
@@ -43,7 +139,7 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
+    renderer.toneMappingExposure = 1.08;
 
     renderer.domElement.style.display  = 'block';
     renderer.domElement.style.maxWidth = 'none';
@@ -51,12 +147,15 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     renderer.domElement.style.height   = '100%';
     container.appendChild(renderer.domElement);
 
-    // ── Rig da set — scatter ambientale + 7 sorgenti ────────
-    // Ambient: simula la luce diffusa dell'ambiente del set, non buio totale
-    scene.add(new THREE.AmbientLight(0x101828, 0.45));
+    // ── Rig da set — luce pulita su fondo giallo brand ──────
+    // Ambient neutro: le ombre restano leggibili, non "sporche" di blu
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+
+    // Hemisphere: cielo neutro sopra + rimbalzo del pavimento giallo del sito
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xb8a812, 0.6));
 
     // Key — softbox grande, alto-sinistra, bianco caldo (orbita lentamente)
-    const keyLight = new THREE.SpotLight(0xfff4e0, 5.5);
+    const keyLight = new THREE.SpotLight(0xfff4e0, 6.0);
     keyLight.position.set(-10, 12, 16);
     keyLight.angle = Math.PI / 4;      // cono largo = softbox
     keyLight.penumbra = 0.75;          // bordi morbidissimi
@@ -64,35 +163,39 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     scene.add(keyLight);
     scene.add(keyLight.target);
 
-    // Fill principale — softbox destra, freddo, riduce le ombre laterali pesanti
-    const fillMain = new THREE.DirectionalLight(0xe0eeff, 2.2);
+    // Fill principale — softbox destra, quasi neutro, riduce le ombre laterali
+    const fillMain = new THREE.DirectionalLight(0xf0f4ff, 1.7);
     fillMain.position.set(14, 4, 12);
     scene.add(fillMain);
 
     // Fill basso-frontale — elimina le ombre dure sotto e sui lati bassi
-    const fillFront = new THREE.DirectionalLight(0xeef0ff, 1.1);
+    const fillFront = new THREE.DirectionalLight(0xf4f5ff, 1.0);
     fillFront.position.set(0, -5, 18);
     scene.add(fillFront);
 
     // Top overhead — LED panel dal soffitto, bianco leggermente caldo
-    const topLight = new THREE.DirectionalLight(0xffeedd, 1.8);
+    const topLight = new THREE.DirectionalLight(0xffeedd, 1.6);
     topLight.position.set(0, 20, 4);
     scene.add(topLight);
 
-    // Kicker — pannello laterale destra-dietro, blu accento
-    const kickerLight = new THREE.DirectionalLight(0x7090ff, 1.0);
-    kickerLight.position.set(12, 5, -10);
-    scene.add(kickerLight);
-
     // Rim — rosso brand da dietro, separa dal fondo
-    const rimLight = new THREE.DirectionalLight(0xa90f21, 2.5);
+    const rimLight = new THREE.DirectionalLight(0xa90f21, 2.2);
     rimLight.position.set(-2, 7, -16);
     scene.add(rimLight);
 
-    // Bounce — riflesso caldo dal "pavimento del set"
-    const bounceLight = new THREE.DirectionalLight(0xff8030, 0.5);
-    bounceLight.position.set(0, -16, 6);
-    scene.add(bounceLight);
+    // ── Stanza invisibile ─────────────────────────────────
+    // Group che contiene logo + testo parete: il tilt ruota tutto insieme
+    // attorno al centro (dove sta il logo) → il testo, più lontano, si
+    // muove di più = parallasse di profondità. Le luci restano in world
+    // space, come un set reale dove si muove la camera e non i fari.
+    const room = new THREE.Group();
+    room.position.y = ROOM_OFFSET_Y;
+    scene.add(room);
+
+    const { group: wallText, texture: wallTextTexture } = createWallText(
+      isMobile ? WALL_TEXT_WIDTH_MOBILE : WALL_TEXT_WIDTH
+    );
+    room.add(wallText);
 
     // ── Stato Fisico (desktop) ────────────────────────────
     const rot    = { x: 0, y: 0 }, velRot = { x: 0, y: 0 };
@@ -103,15 +206,18 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     let isMagnetized = false;
 
     let onMouseMove: ((e: MouseEvent) => void) | null = null;
+    let onMouseLeave: (() => void) | null = null;
     if (!isMobile) {
       onMouseMove = (e: MouseEvent) => { mx = e.clientX; my = e.clientY; };
       window.addEventListener('mousemove', onMouseMove, { passive: true });
+      // Mouse fuori dalla pagina: il tilt rientra dolcemente a zero
+      onMouseLeave = () => { mx = -9999; my = -9999; };
+      document.documentElement.addEventListener('mouseleave', onMouseLeave);
     }
 
     // ── Caricamento GLB ────────────────────────────────────
     let model: THREE.Group | null = null;
     let baseScale = 1;
-    const targetSize = 28.0;
 
     const loader = new GLTFLoader();
     loader.load(
@@ -141,10 +247,8 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
         gltfScene.position.set(-center.x, -center.y, -center.z);
         baseScale = targetSize / Math.max(size.x, size.y, size.z);
         pivot.scale.setScalar(0);
-        scene.add(pivot);
+        room.add(pivot); // al centro della stanza: il tilt lo ruota insieme al testo
         model = pivot;
-        camera.position.set(0, 0, targetSize * 0.9);
-        camera.updateProjectionMatrix();
       },
       undefined,
       (err: ErrorEvent) => console.error('[Logo3D] error:', err),
@@ -157,9 +261,11 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     const updateRect = () => {
       if (!container) return;
       const rect = container.getBoundingClientRect();
+      // Il logo sta al centro dell'inquadratura (frame), non del canvas full-viewport
+      const frameHpx = rect.height * frameFraction;
       cx = rect.left + rect.width / 2;
-      cy = rect.top + rect.height / 2;
-      triggerRadius = Math.hypot(rect.width, rect.height) * TRIGGER_RADIUS_MULT;
+      cy = rect.top + frameHpx / 2;
+      triggerRadius = Math.hypot(rect.width, frameHpx) * TRIGGER_RADIUS_MULT;
     };
 
     const scheduleRectUpdate = () => {
@@ -259,6 +365,22 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
         }
       }
 
+      // ── Tilt della stanza (mouse-follow con damping esponenziale) ──
+      let tiltTargetX = 0, tiltTargetY = 0;
+      if (!isMobile && mx > -9999) {
+        const nx = (mx / window.innerWidth)  * 2 - 1; // -1..1
+        const ny = (my / window.innerHeight) * 2 - 1;
+        tiltTargetX = -ny * TILT_MAX_X;
+        tiltTargetY =  nx * TILT_MAX_Y;
+      } else if (isMobile) {
+        // Niente mouse: sway idle leggerissimo per non lasciare la parete statica
+        tiltTargetX = Math.sin(t * 0.2)  * TILT_MAX_X * 0.35;
+        tiltTargetY = Math.sin(t * 0.25) * TILT_MAX_Y * 0.35;
+      }
+      const tiltEase = 1 - Math.exp(-TILT_SMOOTH * dt);
+      room.rotation.x += (tiltTargetX - room.rotation.x) * tiltEase;
+      room.rotation.y += (tiltTargetY - room.rotation.y) * tiltEase;
+
       // Key light — orbita lenta attorno al modello
       keyLight.position.x = -12 * Math.cos(t * 0.06);
       keyLight.position.z = 18 * Math.sin(t * 0.06 + Math.PI / 2);
@@ -271,9 +393,13 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     }
 
     const ro = new ResizeObserver(() => {
-      camera.aspect = container.clientWidth / container.clientHeight;
+      const cw = container.clientWidth;
+      const ch = container.clientHeight;
+      const fh = ch * frameFraction;
+      camera.aspect = cw / fh;
+      camera.setViewOffset(cw, fh, 0, 0, cw, ch);
       camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setSize(cw, ch);
     });
     ro.observe(container);
 
@@ -284,6 +410,8 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
       if (!isMobile) window.removeEventListener('scroll', scheduleRectUpdate);
       window.removeEventListener('resize', scheduleRectUpdate);
       if (onMouseMove) window.removeEventListener('mousemove', onMouseMove);
+      if (onMouseLeave) document.documentElement.removeEventListener('mouseleave', onMouseLeave);
+      wallTextTexture.dispose();
       scene.traverse((obj) => {
         if (!(obj instanceof THREE.Mesh)) return;
         obj.geometry.dispose();
@@ -299,7 +427,7 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
   return (
     <div
       ref={containerRef}
-      className="w-[100vw] h-[38vh] md:h-[75vh] cursor-none"
+      className="w-[100vw] h-dvh cursor-none"
     />
   );
 }

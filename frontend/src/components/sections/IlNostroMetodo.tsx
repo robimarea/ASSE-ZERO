@@ -2,8 +2,16 @@ import { useReveal } from '@/hooks/useReveal';
 import {
   MaskCurtain,
   MaskRevealLine,
-  MASK_EXPO,
 } from '@/components/layout/maskCurtain';
+
+// Bento su 6 colonne: due celle da metà riga, poi tre da un terzo
+const BENTO_SPANS = [
+  'mask-bento__cell--span3',
+  'mask-bento__cell--span3',
+  'mask-bento__cell--span2',
+  'mask-bento__cell--span2',
+  'mask-bento__cell--span2',
+];
 
 const steps = [
   {
@@ -44,21 +52,17 @@ export function IlNostroMetodo() {
         </h2>
       </header>
 
-      <div className="mask-curtain__rows">
+      <div className={`mask-bento mask-bento--cols-6 ${isRevealed ? 'mask-bento--revealed' : ''}`}>
         {steps.map((step, i) => (
           <div
             key={step.title}
-            className="mask-curtain__row mask-curtain__row--thin"
-            style={{
-              opacity: isRevealed ? 1 : 0,
-              transform: isRevealed ? 'translateX(0)' : 'translateX(-28px)',
-              transition: `opacity 0.65s ease ${220 + i * 90}ms, transform 0.65s ${MASK_EXPO} ${220 + i * 90}ms`,
-            }}
+            className={`mask-bento__cell ${BENTO_SPANS[i] ?? ''}`}
+            style={{ transitionDelay: `${220 + i * 110}ms` }}
           >
-            <span className="mask-step-num" aria-hidden="true">
-              {i + 1}
+            <span className="mask-bento__num" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
             </span>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0">
               <p className="mask-step-title">{step.title}</p>
               <p className="mask-step-desc hidden sm:block">{step.desc}</p>
             </div>

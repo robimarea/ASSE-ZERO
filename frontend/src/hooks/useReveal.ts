@@ -1,4 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { MASK_PHASES, REVEAL_HYSTERESIS, getMaskProgress } from '@/lib/maskProgress';
+import { getViewportHeight } from '@/lib/viewport';
+
+const REVEAL_PCT = MASK_PHASES.contentStable;
+const HIDE_PCT   = MASK_PHASES.wipeOutEnd + REVEAL_HYSTERESIS;
 
 interface UseRevealOptions {
   threshold?: number;
@@ -27,8 +32,8 @@ export function useReveal(options: UseRevealOptions = {}) {
   return { ref, isRevealed };
 }
 
-/** Philosophy: reveal quando il curtain è uscito (pct >= revealPct), hide quando torna a coprire (pct < hidePct) */
-export function useMaskCurtainReveal(revealPct = 0.80, hidePct = 0.76) {
+/** Philosophy: reveal quando il curtain è uscito (pct >= REVEAL_PCT), hide quando torna a coprire (pct < HIDE_PCT) */
+export function useMaskCurtainReveal() {
   const ref = useRef<HTMLElement>(null);
   const [isRevealed, setIsRevealed] = useState(false);
 
@@ -43,19 +48,11 @@ export function useMaskCurtainReveal(revealPct = 0.80, hidePct = 0.76) {
       const wrapper = el.closest('[data-mask-wrapper]');
       if (!wrapper) return;
 
-      const rect = wrapper.getBoundingClientRect();
-      const wrapperH = rect.height;
-      const vh = window.innerHeight;
-      const scrollProgress = -rect.top;
-      const totalRange = wrapperH - vh;
-
-      const pct = totalRange > 0
-        ? Math.max(0, Math.min(1, scrollProgress / totalRange))
-        : 0;
+      const pct = getMaskProgress(wrapper, getViewportHeight());
 
       setIsRevealed((prev) => {
-        if (!prev && pct >= revealPct) return true;
-        if (prev && pct < hidePct) return false;
+        if (!prev && pct >= REVEAL_PCT) return true;
+        if (prev && pct < HIDE_PCT) return false;
         return prev;
       });
     };
@@ -74,7 +71,7 @@ export function useMaskCurtainReveal(revealPct = 0.80, hidePct = 0.76) {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', check);
     };
-  }, [revealPct, hidePct]);
+  }, []);
 
   return { ref, isRevealed };
 }

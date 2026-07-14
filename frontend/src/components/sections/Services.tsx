@@ -11,6 +11,7 @@ import { SectionHeroTitle } from '@/components/ui/SectionHeroTitle';
 import '@/components/social-pricing.css';
 import { SMM_PILLS, SMM_PRICE_PLANS } from '@/data/services';
 import { SECTION_IDS } from '@/lib/constants';
+import { scrollToSection } from '@/lib/scrollTo';
 
 interface ServicesProps {
   isVisible?: boolean;
@@ -45,7 +46,7 @@ export function Services({ isVisible = true }: ServicesProps) {
 
   return (
     <section
-      className="relative w-full z-0 bg-dark h-screen flex items-center justify-center overflow-hidden"
+      className="relative w-full z-0 bg-dark h-dvh flex items-center justify-center overflow-hidden"
     >
       <div className="w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center py-6 md:py-10">
 
@@ -101,17 +102,7 @@ export function Services({ isVisible = true }: ServicesProps) {
                   <Button
                     variant="primary"
                     className="w-full"
-                    onClick={() => {
-                      const el = document.getElementById(SECTION_IDS.contact);
-                      if (!el) return;
-                      const maskWrapper = el.closest('[data-mask-wrapper="true"]');
-                      if (maskWrapper) {
-                        const top = maskWrapper.getBoundingClientRect().top + window.scrollY + window.innerHeight;
-                        window.scrollTo({ top, behavior: 'smooth' });
-                      } else {
-                        el.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}
+                    onClick={() => scrollToSection(SECTION_IDS.contact)}
                   >
                     {plan.cta}
                   </Button>
