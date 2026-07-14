@@ -19,6 +19,14 @@ const MASS              = 1;
 const MAGNET_STRENGTH   = 0.22;
 const TRIGGER_RADIUS_MULT = 0.35; // zona magnete/jiggle stretta attorno al logo
 
+// ── Inquadratura ───────────────────────────────────────────────────────────
+// Il canvas copre tutto il viewport (h-dvh) così le animazioni bouncy non
+// vengono mai tagliate ai bordi; l'inquadratura della scena resta però quella
+// storica (38vh mobile / 75vh desktop) tramite camera.setViewOffset: il render
+// si estende semplicemente verso il basso oltre il frame originale.
+const FRAME_FRACTION_MOBILE  = 0.38;
+const FRAME_FRACTION_DESKTOP = 0.75;
+
 // ── Parametri Stanza invisibile + Tilt ────────────────────────────────────
 // La "stanza" è un Group senza pareti visibili: definisce solo lo spazio.
 // Logo al centro (0,0,0), testo sulla parete alta di fondo.
@@ -116,7 +124,10 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     const scene = new THREE.Scene();
     const w = container.clientWidth;
     const h = container.clientHeight;
-    const camera = new THREE.PerspectiveCamera(65, w / h, 0.1, 2000);
+    const frameFraction = isMobile ? FRAME_FRACTION_MOBILE : FRAME_FRACTION_DESKTOP;
+    const frameH = h * frameFraction;
+    const camera = new THREE.PerspectiveCamera(65, w / frameH, 0.1, 2000);
+    camera.setViewOffset(w, frameH, 0, 0, w, h);
     const targetSize = 28.0; // dimensione di riferimento del logo
     camera.position.set(0, 0, targetSize * 0.9);
 
@@ -250,9 +261,11 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     const updateRect = () => {
       if (!container) return;
       const rect = container.getBoundingClientRect();
+      // Il logo sta al centro dell'inquadratura (frame), non del canvas full-viewport
+      const frameHpx = rect.height * frameFraction;
       cx = rect.left + rect.width / 2;
-      cy = rect.top + rect.height / 2;
-      triggerRadius = Math.hypot(rect.width, rect.height) * TRIGGER_RADIUS_MULT;
+      cy = rect.top + frameHpx / 2;
+      triggerRadius = Math.hypot(rect.width, frameHpx) * TRIGGER_RADIUS_MULT;
     };
 
     const scheduleRectUpdate = () => {
@@ -380,9 +393,13 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
     }
 
     const ro = new ResizeObserver(() => {
-      camera.aspect = container.clientWidth / container.clientHeight;
+      const cw = container.clientWidth;
+      const ch = container.clientHeight;
+      const fh = ch * frameFraction;
+      camera.aspect = cw / fh;
+      camera.setViewOffset(cw, fh, 0, 0, cw, ch);
       camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setSize(cw, ch);
     });
     ro.observe(container);
 
@@ -410,7 +427,7 @@ export function Logo3D({ isVisible = true }: Logo3DProps) {
   return (
     <div
       ref={containerRef}
-      className="w-[100vw] h-[38vh] md:h-[75vh] cursor-none"
+      className="w-[100vw] h-dvh cursor-none"
     />
   );
 }

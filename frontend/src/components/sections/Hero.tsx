@@ -19,7 +19,7 @@ const Logo3D = lazy(() =>
 function LogoPlaceholder() {
   return (
     <div
-      className="w-[100vw] h-[38vh] md:h-[75vh]"
+      className="w-[100vw] h-dvh"
       aria-hidden="true"
     />
   );
